@@ -1,0 +1,29 @@
+{
+  "name": "bancroftbrewbowl",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev:api": "pnpm --filter @bbb/api dev",
+    "dev:dashboard": "pnpm --filter @bbb/dashboard dev",
+    "build": "pnpm -r build",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "db:generate": "pnpm --filter @bbb/api db:generate",
+    "db:migrate": "pnpm --filter @bbb/api db:migrate",
+    "db:push": "pnpm --filter @bbb/api db:push",
+    "db:studio": "pnpm --filter @bbb/api db:studio",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "eslint": "^9.15.0",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^2.1.8"
+  }
+}
