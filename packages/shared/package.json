@@ -3,11 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./enums": "./src/enums.ts"
+    ".": "./dist/index.js",
+    "./enums": "./dist/enums.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "zod": "^3.24.1"
