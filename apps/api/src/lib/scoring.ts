@@ -1,6 +1,6 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, lt, sql } from "drizzle-orm";
 import { db } from "../db/client.js";
-import { entries, games, picks, pools } from "../db/schema.js";
+import { entries, games, picks, pools, wipeoutEvents } from "../db/schema.js";
 import type { RulesConfig } from "@bbb/shared";
 
 type ScoreGamePoolResult = {
@@ -17,8 +17,9 @@ type ScoreGamePoolResult = {
  * result is shared across all of them (see the `games` table comment).
  * If resolving this game would eliminate every remaining alive entry in a
  * pool for this week (a "wipeout" week), that pool's eliminations are held
- * back rather than applied automatically — the rules' tiebreaker needs real
- * playoff data we don't have, so an admin resolves it manually.
+ * back and persisted to `wipeoutEvents` rather than applied automatically —
+ * the rules' tiebreaker needs real playoff data we don't have, so an admin
+ * resolves it manually via POST /pools/:poolId/wipeouts/:wipeoutId/resolve.
  */
 export async function scoreGame(gameId: string): Promise<ScoreGamePoolResult[]> {
   const game = await db.query.games.findFirst({ where: eq(games.id, gameId) });
@@ -31,18 +32,23 @@ export async function scoreGame(gameId: string): Promise<ScoreGamePoolResult[]> 
 
   const results: ScoreGamePoolResult[] = [];
   for (const pool of affectedPools) {
-    results.push(await scorePoolForGame(pool, game));
+    // One transaction per pool (not across the whole loop) — pools are
+    // independent, so a failure scoring one shouldn't roll back another.
+    results.push(
+      await db.transaction((tx) => scorePoolForGame(tx, pool, game))
+    );
   }
   return results;
 }
 
 async function scorePoolForGame(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   pool: typeof pools.$inferSelect,
   game: typeof games.$inferSelect
 ): Promise<ScoreGamePoolResult> {
   const rules = pool.rules as RulesConfig;
 
-  const weekPicks = await db.query.picks.findMany({
+  const weekPicks = await tx.query.picks.findMany({
     where: eq(picks.weekNumber, game.weekNumber),
     with: { entry: true },
   });
@@ -59,36 +65,90 @@ async function scorePoolForGame(
   for (const pick of gamePicks) {
     const pickResult =
       game.result === "tie" ? "tie" : pick.teamCode === winningTeam ? "win" : "loss";
-    await db.update(picks).set({ result: pickResult }).where(eq(picks.id, pick.id));
+    await tx.update(picks).set({ result: pickResult }).where(eq(picks.id, pick.id));
   }
 
-  const entriesToEliminate = gamePicks.filter((pick) => {
+  const losingPicks = gamePicks.filter((pick) => {
     if (pick.teamCode === winningTeam) return false;
     if (game.result === "tie") return rules.tie_counts_as === "elimination";
     return true;
   });
 
-  const aliveEntries = await db.query.entries.findMany({
+  // Mulligans: consumed per losing pick, not per week — a double-pick-week
+  // entry that loses both picks will burn a mulligan on whichever loss is
+  // scored first. Uses an atomic conditional UPDATE (not read-then-write)
+  // so two games in the same week scored close together can't both see the
+  // same stale mulligan count and both consume it.
+  const survivedByMulligan = new Set<string>();
+  if (rules.mulligans_allowed > 0) {
+    for (const pick of losingPicks) {
+      if (pick.entry.status !== "alive") continue;
+      const [saved] = await tx
+        .update(entries)
+        .set({ mulligansUsed: sql`${entries.mulligansUsed} + 1` })
+        .where(
+          and(
+            eq(entries.id, pick.entryId),
+            eq(entries.status, "alive"),
+            lt(entries.mulligansUsed, rules.mulligans_allowed)
+          )
+        )
+        .returning();
+      if (saved) survivedByMulligan.add(pick.entryId);
+    }
+  }
+
+  // Dedupe: a double-pick entry can appear twice in `losingPicks` if it
+  // picked both teams facing each other in this same game.
+  const entriesToEliminateIds = [
+    ...new Set(
+      losingPicks
+        .filter((pick) => pick.entry.status === "alive" && !survivedByMulligan.has(pick.entryId))
+        .map((pick) => pick.entryId)
+    ),
+  ];
+
+  const aliveEntries = await tx.query.entries.findMany({
     where: and(eq(entries.poolId, pool.id), eq(entries.status, "alive")),
   });
-  const wouldWipeOutPool = entriesToEliminate.length >= aliveEntries.length;
+  const wouldWipeOutPool =
+    entriesToEliminateIds.length > 0 && entriesToEliminateIds.length >= aliveEntries.length;
 
   if (wouldWipeOutPool) {
+    await tx
+      .insert(wipeoutEvents)
+      .values({
+        poolId: pool.id,
+        weekNumber: game.weekNumber,
+        gameId: game.id,
+        candidateEntryIds: entriesToEliminateIds,
+      })
+      .onConflictDoUpdate({
+        target: [wipeoutEvents.poolId, wipeoutEvents.gameId],
+        targetWhere: sql`${wipeoutEvents.resolvedAt} IS NULL`,
+        set: { candidateEntryIds: entriesToEliminateIds },
+      });
+
     return {
       poolId: pool.id,
       scored: gamePicks.length,
       eliminated: 0,
       wipeout: true,
-      pendingEliminationEntryIds: entriesToEliminate.map((pick) => pick.entryId),
+      pendingEliminationEntryIds: entriesToEliminateIds,
     };
   }
 
-  for (const pick of entriesToEliminate) {
-    await db
+  for (const entryId of entriesToEliminateIds) {
+    await tx
       .update(entries)
       .set({ status: "eliminated", eliminatedWeek: game.weekNumber })
-      .where(eq(entries.id, pick.entryId));
+      .where(eq(entries.id, entryId));
   }
 
-  return { poolId: pool.id, scored: gamePicks.length, eliminated: entriesToEliminate.length, wipeout: false };
+  return {
+    poolId: pool.id,
+    scored: gamePicks.length,
+    eliminated: entriesToEliminateIds.length,
+    wipeout: false,
+  };
 }

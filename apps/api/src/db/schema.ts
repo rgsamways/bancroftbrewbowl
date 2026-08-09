@@ -9,8 +9,9 @@ import {
   boolean,
   index,
   unique,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { POOL_STATUSES, ENTRY_STATUSES, PICK_RESULTS, GAME_RESULTS } from "@bbb/shared/enums";
 import type { RulesConfig } from "@bbb/shared";
 
@@ -147,6 +148,7 @@ export const entries = pgTable("entries", {
   invitedName: text("invited_name"),
   status: entryStatusEnum("status").notNull().default("alive"),
   eliminatedWeek: integer("eliminated_week"),
+  mulligansUsed: integer("mulligans_used").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -194,7 +196,38 @@ export const picks = pgTable(
     lockedAt: timestamp("locked_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => [unique("picks_entry_week_unique").on(table.entryId, table.weekNumber)]
+  (table) => [
+    unique("picks_entry_week_team_unique").on(table.entryId, table.weekNumber, table.teamCode),
+  ]
+);
+
+// Persists a "wipeout" decision (a game result that would eliminate every
+// remaining alive entry in a pool) so it survives past the HTTP response
+// that first detected it — see scorePoolForGame in lib/scoring.ts, which
+// holds back eliminations and writes a row here instead. An admin resolves
+// it later via POST /pools/:poolId/wipeouts/:wipeoutId/resolve.
+export const wipeoutEvents = pgTable(
+  "wipeout_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    poolId: uuid("pool_id")
+      .notNull()
+      .references(() => pools.id, { onDelete: "cascade" }),
+    weekNumber: integer("week_number").notNull(),
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    candidateEntryIds: jsonb("candidate_entry_ids").$type<string[]>().notNull(),
+    survivingEntryIds: jsonb("surviving_entry_ids").$type<string[]>(),
+    resolvedAt: timestamp("resolved_at"),
+    resolvedBy: text("resolved_by").references(() => user.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("wipeout_events_pool_game_unresolved_unique")
+      .on(table.poolId, table.gameId)
+      .where(sql`${table.resolvedAt} IS NULL`),
+  ]
 );
 
 export const poolsRelations = relations(pools, ({ many }) => ({
@@ -209,4 +242,10 @@ export const entriesRelations = relations(entries, ({ one, many }) => ({
 
 export const picksRelations = relations(picks, ({ one }) => ({
   entry: one(entries, { fields: [picks.entryId], references: [entries.id] }),
+}));
+
+export const wipeoutEventsRelations = relations(wipeoutEvents, ({ one }) => ({
+  pool: one(pools, { fields: [wipeoutEvents.poolId], references: [pools.id] }),
+  game: one(games, { fields: [wipeoutEvents.gameId], references: [games.id] }),
+  resolver: one(user, { fields: [wipeoutEvents.resolvedBy], references: [user.id] }),
 }));

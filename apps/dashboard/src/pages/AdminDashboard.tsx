@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router";
+import { TIE_HANDLING, type RulesConfig } from "@bbb/shared";
 import { api } from "../lib/api";
 import { WeekPills, WeekStatus, type Week } from "../components/WeekWidgets";
 
-type Pool = { id: string; name: string; seasonYear: number; status: string };
+type Pool = { id: string; name: string; seasonYear: number; status: string; rules: RulesConfig };
 type Entry = { id: string; displayName: string; email: string; status: string };
 type Game = {
   id: string;
@@ -14,7 +15,7 @@ type Game = {
   result: string;
 };
 
-const TABS = ["Pools", "Games", "Entries", "Picks"] as const;
+const TABS = ["Pools", "Settings", "Games", "Entries", "Picks"] as const;
 type Tab = (typeof TABS)[number];
 
 export function AdminDashboard() {
@@ -50,10 +51,146 @@ export function AdminDashboard() {
       </div>
 
       {tab === "Pools" && <PoolsTab currentPoolId={poolId} />}
+      {tab === "Settings" && poolId && <SettingsTab poolId={poolId} />}
       {tab === "Games" && poolId && <GamesTab poolId={poolId} />}
       {tab === "Entries" && poolId && <EntriesTab poolId={poolId} />}
       {tab === "Picks" && poolId && <PicksTab poolId={poolId} />}
     </div>
+  );
+}
+
+function SettingsTab({ poolId }: { poolId: string }) {
+  const [pool, setPool] = useState<Pool | null>(null);
+  const [weeks, setWeeks] = useState<Week[]>([]);
+  const [rules, setRules] = useState<RulesConfig | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api<Pool>(`/pools/${poolId}`).then((fetched) => {
+      setPool(fetched);
+      setRules(fetched.rules);
+    });
+  }, [poolId]);
+
+  useEffect(() => {
+    if (!pool) return;
+    api<Week[]>(`/nfl/weeks?year=${pool.seasonYear}`).then(setWeeks);
+  }, [pool]);
+
+  function toggleDoublePickWeek(weekNumber: number) {
+    setRules((current) => {
+      if (!current) return current;
+      const has = current.double_pick_weeks.includes(weekNumber);
+      return {
+        ...current,
+        double_pick_weeks: has
+          ? current.double_pick_weeks.filter((w) => w !== weekNumber)
+          : [...current.double_pick_weeks, weekNumber].sort((a, b) => a - b),
+      };
+    });
+  }
+
+  async function save(event: React.FormEvent) {
+    event.preventDefault();
+    if (!rules) return;
+    setError(null);
+    setSaved(false);
+    try {
+      const updated = await api<Pool>(`/pools/${poolId}/rules`, {
+        method: "PATCH",
+        body: JSON.stringify(rules),
+      });
+      setPool(updated);
+      setRules(updated.rules);
+      setSaved(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save settings");
+    }
+  }
+
+  if (!rules) return null;
+
+  return (
+    <form
+      onSubmit={save}
+      className="flex max-w-xl flex-col gap-4 rounded border border-brand-border bg-brand-surface p-4"
+    >
+      <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-brand-muted">Rules</h2>
+
+      <label className="flex items-center gap-2 text-sm text-brand-text">
+        <input
+          type="checkbox"
+          checked={rules.allow_repeat_teams}
+          onChange={(event) => setRules({ ...rules, allow_repeat_teams: event.target.checked })}
+          className="accent-brand-accent"
+        />
+        Allow picking the same team more than once
+      </label>
+
+      <label className="flex flex-col gap-1 text-sm text-brand-text">
+        Tied game counts as
+        <select
+          value={rules.tie_counts_as}
+          onChange={(event) =>
+            setRules({ ...rules, tie_counts_as: event.target.value as RulesConfig["tie_counts_as"] })
+          }
+          className="rounded border border-brand-border bg-brand-bg px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none"
+        >
+          {TIE_HANDLING.map((value) => (
+            <option key={value} value={value}>
+              {value.replace(/_/g, " ")}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="flex flex-col gap-1 text-sm text-brand-text">
+        Mulligans allowed
+        <input
+          type="number"
+          min={0}
+          value={rules.mulligans_allowed}
+          onChange={(event) => setRules({ ...rules, mulligans_allowed: Number(event.target.value) })}
+          className="rounded border border-brand-border bg-brand-bg px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none"
+        />
+        <span className="text-xs text-brand-muted">
+          An entry that would be eliminated automatically survives on a mulligan, up to this many times.
+        </span>
+      </label>
+
+      <div className="flex flex-col gap-1 text-sm text-brand-text">
+        Double-pick weeks
+        <div className="flex flex-wrap gap-1">
+          {weeks.map((w) => (
+            <button
+              key={w.weekNumber}
+              type="button"
+              onClick={() => toggleDoublePickWeek(w.weekNumber)}
+              className={`rounded px-3 py-1 text-sm font-medium ${
+                rules.double_pick_weeks.includes(w.weekNumber)
+                  ? "bg-brand-accent text-white"
+                  : "bg-brand-surface-raised text-brand-muted hover:text-brand-text"
+              }`}
+            >
+              {w.weekNumber}
+            </button>
+          ))}
+        </div>
+        <span className="text-xs text-brand-muted">
+          Entries submit two picks in these weeks — eliminated if either loses.
+        </span>
+      </div>
+
+      <button
+        type="submit"
+        className="self-start rounded bg-brand-accent px-3 py-2 font-display font-semibold text-white hover:bg-brand-accent-hover"
+      >
+        Save
+      </button>
+      {saved && <p className="text-sm text-emerald-400">Saved.</p>}
+      {error && <p className="text-sm text-red-400">{error}</p>}
+    </form>
   );
 }
 
@@ -216,6 +353,89 @@ function PoolsTab({ currentPoolId }: { currentPoolId: string | undefined }) {
   );
 }
 
+type WipeoutEntry = { id: string; displayName: string; email: string; status: string };
+type WipeoutEvent = {
+  id: string;
+  weekNumber: number;
+  game: { homeTeam: string; awayTeam: string } | null;
+  candidateEntries: WipeoutEntry[];
+};
+
+function WipeoutBanner({ poolId, onResolved }: { poolId: string; onResolved: () => void }) {
+  const [wipeouts, setWipeouts] = useState<WipeoutEvent[]>([]);
+  const [survivors, setSurvivors] = useState<Record<string, Set<string>>>({});
+
+  function refresh() {
+    api<WipeoutEvent[]>(`/pools/${poolId}/wipeouts`).then(setWipeouts);
+  }
+
+  useEffect(refresh, [poolId]);
+
+  function toggleSurvivor(wipeoutId: string, entryId: string) {
+    setSurvivors((current) => {
+      const set = new Set(current[wipeoutId] ?? []);
+      if (set.has(entryId)) set.delete(entryId);
+      else set.add(entryId);
+      return { ...current, [wipeoutId]: set };
+    });
+  }
+
+  async function resolve(wipeoutId: string) {
+    const surviving = [...(survivors[wipeoutId] ?? [])];
+    await api(`/pools/${poolId}/wipeouts/${wipeoutId}/resolve`, {
+      method: "POST",
+      body: JSON.stringify({ surviving_entry_ids: surviving }),
+    });
+    refresh();
+    onResolved();
+  }
+
+  if (wipeouts.length === 0) return null;
+
+  return (
+    <div className="space-y-4">
+      {wipeouts.map((w) => (
+        <div key={w.id} className="rounded border border-amber-800 bg-amber-950 p-4">
+          <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-amber-400">
+            Wipeout — Week {w.weekNumber}
+            {w.game && (
+              <span className="normal-case text-amber-400/70">
+                {" "}
+                ({w.game.awayTeam} @ {w.game.homeTeam})
+              </span>
+            )}
+          </h3>
+          <p className="mb-3 mt-1 text-sm text-amber-200">
+            This result would eliminate every remaining entry. Pick which entries survive, if any.
+          </p>
+          <div className="mb-3 flex flex-wrap gap-1">
+            {w.candidateEntries.map((entry) => (
+              <button
+                key={entry.id}
+                type="button"
+                onClick={() => toggleSurvivor(w.id, entry.id)}
+                className={`rounded px-3 py-1 text-sm font-medium ${
+                  survivors[w.id]?.has(entry.id)
+                    ? "bg-emerald-600 text-white"
+                    : "bg-brand-surface-raised text-brand-muted hover:text-brand-text"
+                }`}
+              >
+                {entry.displayName}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => resolve(w.id)}
+            className="rounded bg-brand-accent px-3 py-2 font-display text-sm font-semibold text-white hover:bg-brand-accent-hover"
+          >
+            Resolve
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function EntriesTab({ poolId }: { poolId: string }) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [entryName, setEntryName] = useState("");
@@ -240,6 +460,8 @@ function EntriesTab({ poolId }: { poolId: string }) {
 
   return (
     <div className="space-y-6">
+      <WipeoutBanner poolId={poolId} onResolved={refresh} />
+
       <ul className="divide-y divide-brand-border rounded border border-brand-border bg-brand-surface">
         {entries.map((e) => (
           <li key={e.id} className="flex justify-between px-3 py-2 text-sm text-brand-text">

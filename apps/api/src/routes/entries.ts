@@ -20,7 +20,7 @@ type EntryRow = {
 /** Resolves an entry's public shape — name/email always come from the linked
  * account when one exists, falling back to the admin's invite details until
  * that person signs in and the entry gets claimed. */
-function resolveEntry(entry: EntryRow) {
+export function resolveEntry(entry: EntryRow) {
   return {
     id: entry.id,
     poolId: entry.poolId,

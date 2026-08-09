@@ -9,6 +9,14 @@ export const createPoolSchema = z.object({
 });
 export type CreatePoolInput = z.infer<typeof createPoolSchema>;
 
+export const updatePoolRulesSchema = rulesConfigSchema.partial();
+export type UpdatePoolRulesInput = z.infer<typeof updatePoolRulesSchema>;
+
+export const resolveWipeoutSchema = z.object({
+  surviving_entry_ids: z.array(z.string().uuid()),
+});
+export type ResolveWipeoutInput = z.infer<typeof resolveWipeoutSchema>;
+
 export const createEntrySchema = z.object({
   display_name: z.string().min(1),
   email: z.string().email(),

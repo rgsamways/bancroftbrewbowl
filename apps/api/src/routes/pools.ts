@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { desc, eq } from "drizzle-orm";
-import { createPoolSchema, defaultRulesConfig } from "@bbb/shared";
+import { createPoolSchema, defaultRulesConfig, rulesConfigSchema, updatePoolRulesSchema } from "@bbb/shared";
+import type { RulesConfig } from "@bbb/shared";
 import { db } from "../db/client.js";
 import { pools } from "../db/schema.js";
 import { requireAdmin, requireSession } from "../lib/guards.js";
@@ -40,5 +41,23 @@ export async function poolRoutes(fastify: FastifyInstance) {
       return;
     }
     reply.send(pool);
+  });
+
+  fastify.patch("/pools/:poolId/rules", async (request, reply) => {
+    if (!(await requireAdmin(request, reply))) return;
+
+    const { poolId } = request.params as { poolId: string };
+    const body = parseBody(updatePoolRulesSchema, request.body, reply);
+    if (!body) return;
+
+    const pool = await db.query.pools.findFirst({ where: eq(pools.id, poolId) });
+    if (!pool) {
+      reply.status(404).send({ error: "Pool not found" });
+      return;
+    }
+
+    const mergedRules = rulesConfigSchema.parse({ ...(pool.rules as RulesConfig), ...body });
+    const [updated] = await db.update(pools).set({ rules: mergedRules }).where(eq(pools.id, poolId)).returning();
+    reply.send(updated);
   });
 }

@@ -1,25 +1,31 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
-import { NFL_TEAMS } from "@bbb/shared";
+import { NFL_TEAMS, type RulesConfig } from "@bbb/shared";
 import { api } from "../lib/api";
 
-type Pool = { id: string; seasonYear: number };
+type Pool = { id: string; seasonYear: number; rules: RulesConfig };
 type Week = { weekNumber: number; pickDeadline: string; locked: boolean };
 type Pick = { weekNumber: number; teamCode: string; result: string };
 
 export function PickScreen() {
   const { poolId, entryId } = useParams();
+  const [pool, setPool] = useState<Pool | null>(null);
   const [weeks, setWeeks] = useState<Week[]>([]);
   const [picks, setPicks] = useState<Pick[]>([]);
-  const [selectedTeam, setSelectedTeam] = useState("");
   const [status, setStatus] = useState<string | null>(null);
+
+  function refreshPicks() {
+    if (!entryId) return;
+    api<Pick[]>(`/entries/${entryId}/picks`).then(setPicks);
+  }
 
   useEffect(() => {
     if (!poolId || !entryId) return;
-    api<Pool>(`/pools/${poolId}`).then((pool) => {
-      api<Week[]>(`/nfl/weeks?year=${pool.seasonYear}`).then(setWeeks);
+    api<Pool>(`/pools/${poolId}`).then((fetched) => {
+      setPool(fetched);
+      api<Week[]>(`/nfl/weeks?year=${fetched.seasonYear}`).then(setWeeks);
     });
-    api<Pick[]>(`/entries/${entryId}/picks`).then(setPicks);
+    refreshPicks();
   }, [poolId, entryId]);
 
   const currentWeek = useMemo(
@@ -27,24 +33,34 @@ export function PickScreen() {
     [weeks]
   );
 
-  const usedTeams = useMemo(() => new Set(picks.map((p) => p.teamCode)), [picks]);
-  const currentPick = picks.find((p) => p.weekNumber === currentWeek?.weekNumber);
+  const limit =
+    currentWeek && pool?.rules.double_pick_weeks.includes(currentWeek.weekNumber) ? 2 : 1;
+  const currentWeekPicks = picks.filter((p) => p.weekNumber === currentWeek?.weekNumber);
+  const otherWeekTeams = useMemo(
+    () => new Set(picks.filter((p) => p.weekNumber !== currentWeek?.weekNumber).map((p) => p.teamCode)),
+    [picks, currentWeek]
+  );
 
-  async function submitPick() {
-    if (!currentWeek || !selectedTeam) return;
+  async function pickTeam(teamCode: string) {
+    if (!currentWeek) return;
     setStatus(null);
+    const alreadyPicked = currentWeekPicks.find((p) => p.teamCode === teamCode);
     try {
-      await api(`/entries/${entryId}/picks`, {
-        method: "POST",
-        body: JSON.stringify({ week_number: currentWeek.weekNumber, team_code: selectedTeam }),
-      });
-      setPicks((prev) => [
-        ...prev.filter((p) => p.weekNumber !== currentWeek.weekNumber),
-        { weekNumber: currentWeek.weekNumber, teamCode: selectedTeam, result: "pending" },
-      ]);
-      setStatus("Pick submitted.");
+      if (alreadyPicked) {
+        await api(`/entries/${entryId}/picks/${currentWeek.weekNumber}/${teamCode}`, { method: "DELETE" });
+      } else {
+        if (currentWeekPicks.length >= limit) {
+          setStatus(`Remove a pick first — only ${limit} allowed this week.`);
+          return;
+        }
+        await api(`/entries/${entryId}/picks`, {
+          method: "POST",
+          body: JSON.stringify({ week_number: currentWeek.weekNumber, team_code: teamCode }),
+        });
+      }
+      refreshPicks();
     } catch (e) {
-      setStatus(e instanceof Error ? e.message : "Failed to submit pick");
+      setStatus(e instanceof Error ? e.message : "Failed to update pick");
     }
   }
 
@@ -53,24 +69,36 @@ export function PickScreen() {
   return (
     <div className="mx-auto max-w-lg p-6">
       <h1 className="font-display text-2xl font-bold text-brand-text">
-        Week {currentWeek.weekNumber} pick
+        Week {currentWeek.weekNumber} pick{limit === 2 ? "s" : ""}
       </h1>
-      {currentPick && (
+      {limit === 2 && (
+        <p className="mt-1 text-sm text-brand-muted">
+          Double-pick week — choose two teams. You're eliminated if either loses.
+        </p>
+      )}
+      {currentWeekPicks.length > 0 && (
         <p className="mt-2 text-sm text-brand-muted">
-          Current pick: <span className="font-semibold text-brand-text">{currentPick.teamCode}</span>
+          Current pick{currentWeekPicks.length > 1 ? "s" : ""}:{" "}
+          {currentWeekPicks.map((p) => (
+            <span key={p.teamCode} className="font-semibold text-brand-text">
+              {p.teamCode}{" "}
+            </span>
+          ))}
         </p>
       )}
 
       <div className="mt-4 grid grid-cols-4 gap-2">
         {NFL_TEAMS.map((team) => {
-          const disabled = usedTeams.has(team.code) && currentPick?.teamCode !== team.code;
+          const selected = currentWeekPicks.some((p) => p.teamCode === team.code);
+          const disabled =
+            !selected && (otherWeekTeams.has(team.code) || currentWeekPicks.length >= limit);
           return (
             <button
               key={team.code}
               disabled={disabled}
-              onClick={() => setSelectedTeam(team.code)}
+              onClick={() => pickTeam(team.code)}
               className={`rounded border px-2 py-2 text-sm font-medium ${
-                selectedTeam === team.code
+                selected
                   ? "border-brand-accent bg-brand-accent text-white"
                   : disabled
                     ? "cursor-not-allowed border-brand-border text-brand-muted/40"
@@ -83,14 +111,7 @@ export function PickScreen() {
         })}
       </div>
 
-      <button
-        onClick={submitPick}
-        disabled={!selectedTeam}
-        className="mt-4 rounded bg-brand-accent px-4 py-2 font-display font-semibold text-white hover:bg-brand-accent-hover disabled:opacity-40"
-      >
-        Submit pick
-      </button>
-      {status && <p className="mt-2 text-sm text-brand-text">{status}</p>}
+      {status && <p className="mt-4 text-sm text-brand-text">{status}</p>}
     </div>
   );
 }
