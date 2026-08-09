@@ -1,6 +1,6 @@
 {
   "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm --filter @bbb/dashboard build",
+  "buildCommand": "pnpm --filter @bbb/dashboard... build",
   "outputDirectory": "apps/dashboard/dist",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
