@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from "react-router";
-import { Menu, Settings } from "lucide-react";
+import { Menu, CircleHelp } from "lucide-react";
 import { MobileNavProvider, useMobileNav } from "./MobileNavContext";
 import { RightPanelProvider, useRightPanel } from "./RightPanelContext";
 import { AdminPanelProvider, useAdminPanel } from "./AdminPanelContext";
@@ -20,8 +20,8 @@ function MobileTopBar() {
           Bancroft Brew Bowl
         </span>
       </div>
-      <button onClick={() => setRightOpen(true)} aria-label="Open panel" className="text-brand-text">
-        <Settings className="h-5 w-5" />
+      <button onClick={() => setRightOpen(true)} aria-label="Page help" className="text-brand-text">
+        <CircleHelp className="h-5 w-5" />
       </button>
     </div>
   );

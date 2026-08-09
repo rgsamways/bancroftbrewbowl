@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router";
-import { Plus } from "lucide-react";
+import { Plus, Cog } from "lucide-react";
 import { TIE_HANDLING, type RulesConfig } from "@bbb/shared";
 import { api } from "../lib/api";
 import { WeekPills, WeekStatus, type Week } from "../components/WeekWidgets";
@@ -19,7 +19,7 @@ type Game = {
   result: string;
 };
 
-const TABS = ["Pools", "Settings", "Games", "Entries", "Picks"] as const;
+const TABS = ["Pools", "Games", "Entries", "Picks"] as const;
 type Tab = (typeof TABS)[number];
 
 export function AdminDashboard() {
@@ -27,6 +27,7 @@ export function AdminDashboard() {
   const { poolId } = useParams();
   const [tab, setTab] = useState<Tab>(poolId ? "Games" : "Pools");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const { setPoolId, setPoolName } = useAdminPanel();
 
   useEffect(() => {
@@ -75,13 +76,23 @@ export function AdminDashboard() {
             );
           })}
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          aria-label="Create a pool"
-          className="mb-1 rounded bg-brand-accent p-1.5 text-white hover:bg-brand-accent-hover"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
+        <div className="mb-1 flex gap-2">
+          <button
+            onClick={() => setShowSettingsModal(true)}
+            disabled={!poolId}
+            aria-label="Pool settings"
+            className="rounded border border-brand-border p-1.5 text-brand-text hover:border-brand-accent disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Cog className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            aria-label="Create a pool"
+            className="rounded bg-brand-accent p-1.5 text-white hover:bg-brand-accent-hover"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       <Modal open={showCreateModal} onClose={() => setShowCreateModal(false)}>
@@ -93,8 +104,19 @@ export function AdminDashboard() {
         />
       </Modal>
 
+      {poolId && (
+        <Modal open={showSettingsModal} onClose={() => setShowSettingsModal(false)} maxWidthClassName="max-w-xl">
+          <SettingsTab
+            poolId={poolId}
+            onDeleted={() => {
+              setShowSettingsModal(false);
+              navigate("/admin");
+            }}
+          />
+        </Modal>
+      )}
+
       {tab === "Pools" && <PoolsTab currentPoolId={poolId} />}
-      {tab === "Settings" && poolId && <SettingsTab poolId={poolId} />}
       {tab === "Games" && poolId && <GamesTab poolId={poolId} />}
       {tab === "Entries" && poolId && <EntriesTab poolId={poolId} />}
       {tab === "Picks" && poolId && <PicksTab poolId={poolId} />}
@@ -102,8 +124,7 @@ export function AdminDashboard() {
   );
 }
 
-function SettingsTab({ poolId }: { poolId: string }) {
-  const navigate = useNavigate();
+function SettingsTab({ poolId, onDeleted }: { poolId: string; onDeleted: () => void }) {
   const [pool, setPool] = useState<Pool | null>(null);
   const [seasons, setSeasons] = useState<number[]>([]);
   const [weeks, setWeeks] = useState<Week[]>([]);
@@ -180,8 +201,8 @@ function SettingsTab({ poolId }: { poolId: string }) {
   if (!pool || !rules) return null;
 
   return (
-    <div className="max-w-xl space-y-4">
-      <form onSubmit={save} className="flex flex-col gap-4 rounded border border-brand-border bg-brand-surface p-4">
+    <div className="space-y-4">
+      <form onSubmit={save} className="flex flex-col gap-4">
         <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-brand-muted">
           Pool settings
         </h2>
@@ -314,11 +335,7 @@ function SettingsTab({ poolId }: { poolId: string }) {
       </div>
 
       <Modal open={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
-        <DeletePoolForm
-          pool={pool}
-          onClose={() => setShowDeleteModal(false)}
-          onDeleted={() => navigate("/admin")}
-        />
+        <DeletePoolForm pool={pool} onClose={() => setShowDeleteModal(false)} onDeleted={onDeleted} />
       </Modal>
     </div>
   );

@@ -1,6 +1,16 @@
 import type { ReactNode } from "react";
 
-export function Modal({ open, onClose, children }: { open: boolean; onClose: () => void; children: ReactNode }) {
+export function Modal({
+  open,
+  onClose,
+  children,
+  maxWidthClassName = "max-w-md",
+}: {
+  open: boolean;
+  onClose: () => void;
+  children: ReactNode;
+  maxWidthClassName?: string;
+}) {
   if (!open) return null;
 
   return (
@@ -10,7 +20,7 @@ export function Modal({ open, onClose, children }: { open: boolean; onClose: () 
     >
       <div
         onClick={(event) => event.stopPropagation()}
-        className="w-full max-w-md rounded border border-brand-border bg-brand-surface p-4 shadow-xl"
+        className={`w-full ${maxWidthClassName} max-h-[90vh] overflow-y-auto rounded border border-brand-border bg-brand-surface p-4 shadow-xl`}
       >
         {children}
       </div>

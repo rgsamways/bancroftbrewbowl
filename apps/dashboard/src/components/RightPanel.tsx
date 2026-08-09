@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router";
 import { X } from "lucide-react";
 import { useRightPanel } from "./RightPanelContext";
+import { getPageHelp } from "../lib/nav";
 
 const MIN_WIDTH = 280;
 const MAX_WIDTH = 640;
@@ -12,12 +14,14 @@ function getStoredWidth() {
   return stored >= MIN_WIDTH && stored <= MAX_WIDTH ? stored : DEFAULT_WIDTH;
 }
 
-// Content TBD — for now this just establishes the desktop column / mobile
-// drawer scaffolding, opened via the cog button in the mobile top bar. On
-// laptop the left edge is a drag handle that resizes the column (width is
-// remembered in localStorage); on mobile it's just a full-screen drawer.
+// Shows contextual help for whichever page is currently open, via the "?"
+// button in the mobile top bar. On laptop the left edge is a drag handle
+// that resizes the column (width is remembered in localStorage); on mobile
+// it's a full-screen drawer.
 export function RightPanel() {
   const { open, setOpen } = useRightPanel();
+  const { pathname } = useLocation();
+  const help = getPageHelp(pathname);
   const [width, setWidth] = useState(getStoredWidth);
   const widthRef = useRef(width);
   const draggingRef = useRef(false);
@@ -83,7 +87,16 @@ export function RightPanel() {
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-4" />
+        <div className="flex-1 overflow-y-auto p-4">
+          {help && (
+            <>
+              <h2 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-brand-muted">
+                {help.title}
+              </h2>
+              <p className="text-sm text-brand-text">{help.body}</p>
+            </>
+          )}
+        </div>
       </aside>
     </>
   );
