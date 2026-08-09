@@ -2,7 +2,7 @@ import { Outlet, useLocation } from "react-router";
 import { Menu, Settings } from "lucide-react";
 import { MobileNavProvider, useMobileNav } from "./MobileNavContext";
 import { RightPanelProvider, useRightPanel } from "./RightPanelContext";
-import { AdminPanelProvider } from "./AdminPanelContext";
+import { AdminPanelProvider, useAdminPanel } from "./AdminPanelContext";
 import { Sidebar } from "./Sidebar";
 import { RightPanel } from "./RightPanel";
 import { matchNav, NAV_LABELS } from "../lib/nav";
@@ -30,11 +30,14 @@ function MobileTopBar() {
 function PageHeader() {
   const { pathname } = useLocation();
   const navKey = matchNav(pathname);
+  const { poolName } = useAdminPanel();
   if (!navKey) return null;
+
+  const title = navKey === "pools" && poolName ? `${NAV_LABELS[navKey]} - ${poolName}` : NAV_LABELS[navKey];
 
   return (
     <h1 className="px-6 pb-6 pt-6 font-display text-2xl font-bold uppercase tracking-wide text-brand-text">
-      {NAV_LABELS[navKey]}
+      {title}
     </h1>
   );
 }

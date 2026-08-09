@@ -22,7 +22,7 @@ type Tab = (typeof TABS)[number];
 export function AdminDashboard() {
   const { poolId } = useParams();
   const [tab, setTab] = useState<Tab>(poolId ? "Games" : "Pools");
-  const { setPoolId, setShowCreatePool } = useAdminPanel();
+  const { setPoolId, setPoolName, setShowCreatePool } = useAdminPanel();
 
   useEffect(() => {
     setTab(poolId ? "Games" : "Pools");
@@ -30,7 +30,12 @@ export function AdminDashboard() {
 
   useEffect(() => {
     setPoolId(poolId ?? null);
-  }, [poolId, setPoolId]);
+    if (!poolId) {
+      setPoolName(null);
+      return;
+    }
+    api<Pool>(`/pools/${poolId}`).then((pool) => setPoolName(pool.name));
+  }, [poolId, setPoolId, setPoolName]);
 
   useEffect(() => {
     setShowCreatePool(tab === "Pools");
@@ -41,9 +46,10 @@ export function AdminDashboard() {
   useEffect(() => {
     return () => {
       setPoolId(null);
+      setPoolName(null);
       setShowCreatePool(false);
     };
-  }, [setPoolId, setShowCreatePool]);
+  }, [setPoolId, setPoolName, setShowCreatePool]);
 
   return (
     <div className="w-full px-6 pb-6">
