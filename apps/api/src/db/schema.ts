@@ -152,6 +152,22 @@ export const entries = pgTable("entries", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Promotions belong to an NFL season/week, not a pool — same reasoning as
+// `games`: a bar's "Survivor Sunday" special for week 3 isn't specific to
+// any one pool. Multiple promotions can exist for the same week.
+export const promotions = pgTable("promotions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  seasonYear: integer("season_year").notNull(),
+  weekNumber: integer("week_number").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
 // Games belong to an NFL season, not a pool — the real-world result of
 // KC @ BUF in week 3 of 2026 is the same fact for every pool that season,
 // so it's entered once here and every pool with a matching seasonYear

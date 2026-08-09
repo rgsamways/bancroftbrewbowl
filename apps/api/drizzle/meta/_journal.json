@@ -15,6 +15,13 @@
       "when": 1786237989382,
       "tag": "0001_sleepy_rhino",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786246468292,
+      "tag": "0002_chemical_king_bedlam",
+      "breakpoints": true
     }
   ]
 }

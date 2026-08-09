@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { desc, eq } from "drizzle-orm";
-import { createPoolSchema, defaultRulesConfig, rulesConfigSchema, updatePoolRulesSchema } from "@bbb/shared";
+import { createPoolSchema, defaultRulesConfig, rulesConfigSchema, updatePoolSchema, deletePoolSchema } from "@bbb/shared";
 import type { RulesConfig } from "@bbb/shared";
 import { db } from "../db/client.js";
 import { pools } from "../db/schema.js";
@@ -43,11 +43,11 @@ export async function poolRoutes(fastify: FastifyInstance) {
     reply.send(pool);
   });
 
-  fastify.patch("/pools/:poolId/rules", async (request, reply) => {
+  fastify.patch("/pools/:poolId", async (request, reply) => {
     if (!(await requireAdmin(request, reply))) return;
 
     const { poolId } = request.params as { poolId: string };
-    const body = parseBody(updatePoolRulesSchema, request.body, reply);
+    const body = parseBody(updatePoolSchema, request.body, reply);
     if (!body) return;
 
     const pool = await db.query.pools.findFirst({ where: eq(pools.id, poolId) });
@@ -56,8 +56,36 @@ export async function poolRoutes(fastify: FastifyInstance) {
       return;
     }
 
-    const mergedRules = rulesConfigSchema.parse({ ...(pool.rules as RulesConfig), ...body });
-    const [updated] = await db.update(pools).set({ rules: mergedRules }).where(eq(pools.id, poolId)).returning();
+    const updates: Partial<typeof pools.$inferInsert> = {};
+    if (body.name !== undefined) updates.name = body.name;
+    if (body.season_year !== undefined) updates.seasonYear = body.season_year;
+    if (body.status !== undefined) updates.status = body.status;
+    if (body.rules !== undefined) {
+      updates.rules = rulesConfigSchema.parse({ ...(pool.rules as RulesConfig), ...body.rules });
+    }
+
+    const [updated] = await db.update(pools).set(updates).where(eq(pools.id, poolId)).returning();
     reply.send(updated);
+  });
+
+  fastify.delete("/pools/:poolId", async (request, reply) => {
+    if (!(await requireAdmin(request, reply))) return;
+
+    const { poolId } = request.params as { poolId: string };
+    const body = parseBody(deletePoolSchema, request.body, reply);
+    if (!body) return;
+
+    const pool = await db.query.pools.findFirst({ where: eq(pools.id, poolId) });
+    if (!pool) {
+      reply.status(404).send({ error: "Pool not found" });
+      return;
+    }
+    if (body.confirm_name !== pool.name) {
+      reply.status(400).send({ error: "Name does not match" });
+      return;
+    }
+
+    const [deleted] = await db.delete(pools).where(eq(pools.id, poolId)).returning();
+    reply.send(deleted);
   });
 }

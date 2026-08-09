@@ -7,6 +7,7 @@ import { entryRoutes } from "./routes/entries.js";
 import { nflRoutes } from "./routes/nfl.js";
 import { pickRoutes } from "./routes/picks.js";
 import { wipeoutRoutes } from "./routes/wipeouts.js";
+import { promotionRoutes } from "./routes/promotions.js";
 
 const fastify = Fastify({ logger: true });
 
@@ -22,6 +23,7 @@ await fastify.register(entryRoutes);
 await fastify.register(nflRoutes);
 await fastify.register(pickRoutes);
 await fastify.register(wipeoutRoutes);
+await fastify.register(promotionRoutes);
 
 fastify.get("/health", async () => ({ ok: true }));
 

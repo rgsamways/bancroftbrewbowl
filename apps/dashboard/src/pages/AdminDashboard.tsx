@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, Link } from "react-router";
-import type { RulesConfig } from "@bbb/shared";
+import { useNavigate, useParams, Link } from "react-router";
+import { Plus } from "lucide-react";
+import { TIE_HANDLING, type RulesConfig } from "@bbb/shared";
 import { api } from "../lib/api";
 import { WeekPills, WeekStatus, type Week } from "../components/WeekWidgets";
 import { useAdminPanel } from "../components/AdminPanelContext";
+import { Modal } from "../components/Modal";
+import { CreatePoolForm } from "../components/AdminPoolsPanel";
 
 type Pool = { id: string; name: string; seasonYear: number; status: string; rules: RulesConfig };
 type Entry = { id: string; displayName: string; email: string; status: string };
@@ -16,13 +19,15 @@ type Game = {
   result: string;
 };
 
-const TABS = ["Pools", "Games", "Entries", "Picks"] as const;
+const TABS = ["Pools", "Settings", "Games", "Entries", "Picks"] as const;
 type Tab = (typeof TABS)[number];
 
 export function AdminDashboard() {
+  const navigate = useNavigate();
   const { poolId } = useParams();
   const [tab, setTab] = useState<Tab>(poolId ? "Games" : "Pools");
-  const { setPoolId, setPoolName, setShowCreatePool } = useAdminPanel();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const { setPoolId, setPoolName } = useAdminPanel();
 
   useEffect(() => {
     setTab(poolId ? "Games" : "Pools");
@@ -37,49 +42,345 @@ export function AdminDashboard() {
     api<Pool>(`/pools/${poolId}`).then((pool) => setPoolName(pool.name));
   }, [poolId, setPoolId, setPoolName]);
 
-  useEffect(() => {
-    setShowCreatePool(tab === "Pools");
-  }, [tab, setShowCreatePool]);
-
   // Leaving the admin section entirely (e.g. to Schedule or Home) should
-  // clear the right panel rather than leaving a stale pool's forms visible.
+  // clear the header title rather than leaving a stale pool's name visible.
   useEffect(() => {
     return () => {
       setPoolId(null);
       setPoolName(null);
-      setShowCreatePool(false);
     };
-  }, [setPoolId, setPoolName, setShowCreatePool]);
+  }, [setPoolId, setPoolName]);
 
   return (
     <div className="w-full px-6 pb-6">
-      <div className="mb-6 flex gap-1 border-b border-brand-border">
-        {TABS.map((t) => {
-          const disabled = t !== "Pools" && !poolId;
-          return (
-            <button
-              key={t}
-              disabled={disabled}
-              onClick={() => setTab(t)}
-              className={`-mb-px border-b-2 px-4 py-2 font-display text-sm font-semibold uppercase tracking-wide transition-colors ${
-                tab === t
-                  ? "border-brand-accent text-brand-accent"
-                  : disabled
-                    ? "border-transparent text-brand-muted/40"
-                    : "border-transparent text-brand-muted hover:text-brand-text"
-              }`}
-            >
-              {t}
-            </button>
-          );
-        })}
+      <div className="mb-6 flex items-center justify-between border-b border-brand-border">
+        <div className="flex gap-1">
+          {TABS.map((t) => {
+            const disabled = t !== "Pools" && !poolId;
+            return (
+              <button
+                key={t}
+                disabled={disabled}
+                onClick={() => setTab(t)}
+                className={`-mb-px border-b-2 px-4 py-2 font-display text-sm font-semibold uppercase tracking-wide transition-colors ${
+                  tab === t
+                    ? "border-brand-accent text-brand-accent"
+                    : disabled
+                      ? "border-transparent text-brand-muted/40"
+                      : "border-transparent text-brand-muted hover:text-brand-text"
+                }`}
+              >
+                {t}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          aria-label="Create a pool"
+          className="mb-1 rounded bg-brand-accent p-1.5 text-white hover:bg-brand-accent-hover"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
       </div>
 
+      <Modal open={showCreateModal} onClose={() => setShowCreateModal(false)}>
+        <CreatePoolForm
+          onCreated={(pool) => {
+            setShowCreateModal(false);
+            navigate(`/admin/${pool.id}`);
+          }}
+        />
+      </Modal>
+
       {tab === "Pools" && <PoolsTab currentPoolId={poolId} />}
+      {tab === "Settings" && poolId && <SettingsTab poolId={poolId} />}
       {tab === "Games" && poolId && <GamesTab poolId={poolId} />}
       {tab === "Entries" && poolId && <EntriesTab poolId={poolId} />}
       {tab === "Picks" && poolId && <PicksTab poolId={poolId} />}
     </div>
+  );
+}
+
+function SettingsTab({ poolId }: { poolId: string }) {
+  const navigate = useNavigate();
+  const [pool, setPool] = useState<Pool | null>(null);
+  const [seasons, setSeasons] = useState<number[]>([]);
+  const [weeks, setWeeks] = useState<Week[]>([]);
+  const [name, setName] = useState("");
+  const [seasonYear, setSeasonYear] = useState(new Date().getFullYear());
+  const [rules, setRules] = useState<RulesConfig | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  function refresh() {
+    setSaved(false);
+    setError(null);
+    api<Pool>(`/pools/${poolId}`).then((fetched) => {
+      setPool(fetched);
+      setName(fetched.name);
+      setSeasonYear(fetched.seasonYear);
+      setRules(fetched.rules);
+    });
+  }
+
+  useEffect(refresh, [poolId]);
+
+  useEffect(() => {
+    api<number[]>("/nfl/seasons").then(setSeasons);
+  }, []);
+
+  useEffect(() => {
+    api<Week[]>(`/nfl/weeks?year=${seasonYear}`).then(setWeeks);
+  }, [seasonYear]);
+
+  const locked = pool?.status !== "draft";
+  const seasonOptions = seasons.includes(seasonYear) ? seasons : [...seasons, seasonYear].sort();
+
+  function toggleDoublePickWeek(weekNumber: number) {
+    setRules((current) => {
+      if (!current) return current;
+      const has = current.double_pick_weeks.includes(weekNumber);
+      return {
+        ...current,
+        double_pick_weeks: has
+          ? current.double_pick_weeks.filter((w) => w !== weekNumber)
+          : [...current.double_pick_weeks, weekNumber].sort((a, b) => a - b),
+      };
+    });
+  }
+
+  async function save(event: React.FormEvent) {
+    event.preventDefault();
+    if (!rules) return;
+    setError(null);
+    setSaved(false);
+    try {
+      const updated = await api<Pool>(`/pools/${poolId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ name, season_year: seasonYear, rules }),
+      });
+      setPool(updated);
+      setSaved(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save settings");
+    }
+  }
+
+  async function toggleLock() {
+    if (!pool) return;
+    const updated = await api<Pool>(`/pools/${poolId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: locked ? "draft" : "active" }),
+    });
+    setPool(updated);
+  }
+
+  if (!pool || !rules) return null;
+
+  return (
+    <div className="max-w-xl space-y-4">
+      <form onSubmit={save} className="flex flex-col gap-4 rounded border border-brand-border bg-brand-surface p-4">
+        <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-brand-muted">
+          Pool settings
+        </h2>
+
+        <label className="flex flex-col gap-1 text-sm text-brand-text">
+          Name
+          <input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            disabled={locked}
+            required
+            className="rounded border border-brand-border bg-brand-bg px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none disabled:opacity-50"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm text-brand-text">
+          Season year
+          <select
+            value={seasonYear}
+            onChange={(event) => setSeasonYear(Number(event.target.value))}
+            disabled={locked}
+            className="rounded border border-brand-border bg-brand-bg px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none disabled:opacity-50"
+          >
+            {seasonOptions.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex items-center gap-2 text-sm text-brand-text">
+          <input
+            type="checkbox"
+            checked={rules.allow_repeat_teams}
+            onChange={(event) => setRules({ ...rules, allow_repeat_teams: event.target.checked })}
+            disabled={locked}
+            className="accent-brand-accent"
+          />
+          Allow picking the same team more than once
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm text-brand-text">
+          Tied game counts as
+          <select
+            value={rules.tie_counts_as}
+            onChange={(event) =>
+              setRules({ ...rules, tie_counts_as: event.target.value as RulesConfig["tie_counts_as"] })
+            }
+            disabled={locked}
+            className="rounded border border-brand-border bg-brand-bg px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none disabled:opacity-50"
+          >
+            {TIE_HANDLING.map((value) => (
+              <option key={value} value={value}>
+                {value.replace(/_/g, " ")}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm text-brand-text">
+          Mulligans allowed
+          <input
+            type="number"
+            min={0}
+            value={rules.mulligans_allowed}
+            onChange={(event) => setRules({ ...rules, mulligans_allowed: Number(event.target.value) })}
+            disabled={locked}
+            className="rounded border border-brand-border bg-brand-bg px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none disabled:opacity-50"
+          />
+          <span className="text-xs text-brand-muted">
+            An entry that would be eliminated automatically survives on a mulligan, up to this many times.
+          </span>
+        </label>
+
+        <div className="flex flex-col gap-1 text-sm text-brand-text">
+          Double-pick weeks
+          <div className="flex flex-wrap gap-1">
+            {weeks.map((w) => (
+              <button
+                key={w.weekNumber}
+                type="button"
+                disabled={locked}
+                onClick={() => toggleDoublePickWeek(w.weekNumber)}
+                className={`rounded px-3 py-1 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50 ${
+                  rules.double_pick_weeks.includes(w.weekNumber)
+                    ? "bg-brand-accent text-white"
+                    : "bg-brand-surface-raised text-brand-muted hover:text-brand-text"
+                }`}
+              >
+                {w.weekNumber}
+              </button>
+            ))}
+          </div>
+          <span className="text-xs text-brand-muted">
+            Entries submit two picks in these weeks — eliminated if either loses.
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="submit"
+            disabled={locked}
+            className="rounded bg-brand-accent px-3 py-2 font-display font-semibold text-white hover:bg-brand-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Save changes
+          </button>
+          <button
+            type="button"
+            onClick={toggleLock}
+            className="rounded border border-brand-border px-3 py-2 font-display font-semibold text-brand-text hover:border-brand-accent"
+          >
+            {locked ? "Unlock" : "Lock"}
+          </button>
+        </div>
+        {saved && <p className="text-sm text-emerald-400">Saved.</p>}
+        {error && <p className="text-sm text-red-400">{error}</p>}
+      </form>
+
+      <div className="rounded border border-red-900 bg-red-950/40 p-4">
+        <h2 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-red-400">
+          Danger zone
+        </h2>
+        <button
+          onClick={() => setShowDeleteModal(true)}
+          className="rounded border border-red-800 px-3 py-2 font-display text-sm font-semibold text-red-400 hover:bg-red-950"
+        >
+          Delete pool
+        </button>
+      </div>
+
+      <Modal open={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
+        <DeletePoolForm
+          pool={pool}
+          onClose={() => setShowDeleteModal(false)}
+          onDeleted={() => navigate("/admin")}
+        />
+      </Modal>
+    </div>
+  );
+}
+
+function DeletePoolForm({
+  pool,
+  onClose,
+  onDeleted,
+}: {
+  pool: Pool;
+  onClose: () => void;
+  onDeleted: () => void;
+}) {
+  const [confirmName, setConfirmName] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  async function remove(event: React.FormEvent) {
+    event.preventDefault();
+    setError(null);
+    try {
+      await api(`/pools/${pool.id}`, {
+        method: "DELETE",
+        body: JSON.stringify({ confirm_name: confirmName }),
+      });
+      onDeleted();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to delete pool");
+    }
+  }
+
+  return (
+    <form onSubmit={remove} className="flex flex-col gap-3">
+      <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-red-400">Delete pool</h2>
+      <p className="text-sm text-brand-text">
+        This permanently deletes <span className="font-semibold">{pool.name}</span> and every entry and pick
+        in it. Type the pool name to confirm.
+      </p>
+      <input
+        value={confirmName}
+        onChange={(event) => setConfirmName(event.target.value)}
+        placeholder={pool.name}
+        className="rounded border border-brand-border bg-brand-bg px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none"
+      />
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={confirmName !== pool.name}
+          className="rounded bg-red-700 px-3 py-2 font-display font-semibold text-white hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Delete
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded border border-brand-border px-3 py-2 font-display font-semibold text-brand-text hover:border-brand-accent"
+        >
+          Cancel
+        </button>
+      </div>
+      {error && <p className="text-sm text-red-400">{error}</p>}
+    </form>
   );
 }
 

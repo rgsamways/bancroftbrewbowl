@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { rulesConfigSchema } from "./rules-config.js";
 import { NFL_TEAM_CODES } from "./teams.js";
+import { POOL_STATUSES } from "./enums.js";
 
 export const createPoolSchema = z.object({
   name: z.string().min(1),
@@ -9,8 +10,18 @@ export const createPoolSchema = z.object({
 });
 export type CreatePoolInput = z.infer<typeof createPoolSchema>;
 
-export const updatePoolRulesSchema = rulesConfigSchema.partial();
-export type UpdatePoolRulesInput = z.infer<typeof updatePoolRulesSchema>;
+export const updatePoolSchema = z.object({
+  name: z.string().min(1).optional(),
+  season_year: z.number().int().min(2000).max(2100).optional(),
+  status: z.enum(POOL_STATUSES).optional(),
+  rules: rulesConfigSchema.partial().optional(),
+});
+export type UpdatePoolInput = z.infer<typeof updatePoolSchema>;
+
+export const deletePoolSchema = z.object({
+  confirm_name: z.string().min(1),
+});
+export type DeletePoolInput = z.infer<typeof deletePoolSchema>;
 
 export const resolveWipeoutSchema = z.object({
   surviving_entry_ids: z.array(z.string().uuid()),
@@ -43,3 +54,14 @@ export const submitPickSchema = z.object({
   team_code: z.enum(NFL_TEAM_CODES),
 });
 export type SubmitPickInput = z.infer<typeof submitPickSchema>;
+
+export const createPromotionSchema = z.object({
+  season_year: z.number().int().min(2000).max(2100),
+  week_number: z.number().int().min(1).max(22),
+  title: z.string().min(1),
+  description: z.string().min(1),
+});
+export type CreatePromotionInput = z.infer<typeof createPromotionSchema>;
+
+export const updatePromotionSchema = createPromotionSchema.partial();
+export type UpdatePromotionInput = z.infer<typeof updatePromotionSchema>;

@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { useRightPanel } from "./RightPanelContext";
-import { useAdminPanel } from "./AdminPanelContext";
-import { CreatePoolPanel, PoolRulesPanel } from "./AdminPoolsPanel";
 
 const MIN_WIDTH = 280;
 const MAX_WIDTH = 640;
@@ -14,15 +12,12 @@ function getStoredWidth() {
   return stored >= MIN_WIDTH && stored <= MAX_WIDTH ? stored : DEFAULT_WIDTH;
 }
 
-// Layout is generic (desktop column / mobile drawer, opened via the cog
-// button in the mobile top bar); content is admin-page-specific, driven by
-// AdminPanelContext since AdminDashboard is a routed sibling, not a parent,
-// of this component. On laptop the left edge is a drag handle that resizes
-// the column (width is remembered in localStorage); on mobile it's a
-// full-screen drawer.
+// Content TBD — for now this just establishes the desktop column / mobile
+// drawer scaffolding, opened via the cog button in the mobile top bar. On
+// laptop the left edge is a drag handle that resizes the column (width is
+// remembered in localStorage); on mobile it's just a full-screen drawer.
 export function RightPanel() {
   const { open, setOpen } = useRightPanel();
-  const { poolId, showCreatePool } = useAdminPanel();
   const [width, setWidth] = useState(getStoredWidth);
   const widthRef = useRef(width);
   const draggingRef = useRef(false);
@@ -88,10 +83,7 @@ export function RightPanel() {
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="flex-1 space-y-6 overflow-y-auto p-4">
-          {showCreatePool && <CreatePoolPanel />}
-          {poolId && <PoolRulesPanel poolId={poolId} />}
-        </div>
+        <div className="flex-1 overflow-y-auto p-4" />
       </aside>
     </>
   );

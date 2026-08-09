@@ -11,6 +11,15 @@ type MyEntry = {
   status: "alive" | "eliminated";
   pool: Pool;
 };
+type Week = { weekNumber: number; pickDeadline: string; locked: boolean };
+type Game = {
+  id: string;
+  weekNumber: number;
+  homeTeam: string;
+  awayTeam: string;
+  result: "pending" | "home_win" | "away_win" | "tie";
+};
+type Promotion = { id: string; seasonYear: number; weekNumber: number; title: string; description: string };
 
 export function Home() {
   const { data: session } = useSession();
@@ -79,7 +88,81 @@ export function Home() {
           </ul>
         </section>
       )}
+
+      <CurrentWeekSection />
     </div>
+  );
+}
+
+// "Current week" = the most recent season with games imported, its first
+// week that hasn't locked yet, or the most recent past week if the season
+// is over — there's no stored "current season" setting (see NFL routes).
+function CurrentWeekSection() {
+  const [seasonYear, setSeasonYear] = useState<number | null>(null);
+  const [currentWeek, setCurrentWeek] = useState<number | null>(null);
+  const [games, setGames] = useState<Game[]>([]);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+
+  useEffect(() => {
+    api<number[]>("/nfl/seasons").then((fetched) => {
+      if (fetched.length > 0) setSeasonYear(Math.max(...fetched));
+    });
+  }, []);
+
+  useEffect(() => {
+    if (seasonYear === null) return;
+    api<Week[]>(`/nfl/weeks?year=${seasonYear}`).then((weeks) => {
+      if (weeks.length === 0) return;
+      const firstUnlocked = weeks.find((w) => !w.locked);
+      setCurrentWeek(firstUnlocked ? firstUnlocked.weekNumber : weeks[weeks.length - 1].weekNumber);
+    });
+  }, [seasonYear]);
+
+  useEffect(() => {
+    if (seasonYear === null || currentWeek === null) return;
+    api<Game[]>(`/nfl/games?year=${seasonYear}&week=${currentWeek}`).then(setGames);
+    api<Promotion[]>(`/promotions?year=${seasonYear}&week=${currentWeek}`).then(setPromotions);
+  }, [seasonYear, currentWeek]);
+
+  if (seasonYear === null || currentWeek === null) return null;
+
+  return (
+    <>
+      <section className="mb-8">
+        <h2 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-brand-muted">
+          Week {currentWeek} games
+        </h2>
+        <ul className="divide-y divide-brand-border rounded border border-brand-border bg-brand-surface">
+          {games.map((g) => (
+            <li key={g.id} className="flex items-center justify-between px-3 py-2 text-sm text-brand-text">
+              <span>
+                {g.awayTeam} @ {g.homeTeam}
+              </span>
+              <span className="rounded bg-brand-surface-raised px-2 py-0.5 text-xs text-brand-muted">
+                {g.result === "pending" ? "pending" : g.result}
+              </span>
+            </li>
+          ))}
+          {games.length === 0 && <li className="px-3 py-2 text-sm text-brand-muted">No games this week</li>}
+        </ul>
+      </section>
+
+      {promotions.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-brand-muted">
+            This week's promotions
+          </h2>
+          <ul className="divide-y divide-brand-border rounded border border-brand-border bg-brand-surface">
+            {promotions.map((p) => (
+              <li key={p.id} className="px-3 py-2 text-sm">
+                <p className="font-semibold text-brand-text">{p.title}</p>
+                <p className="text-brand-muted">{p.description}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </>
   );
 }
 
