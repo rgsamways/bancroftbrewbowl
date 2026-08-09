@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router";
 import { Plus, Cog } from "lucide-react";
-import { TIE_HANDLING, type RulesConfig } from "@bbb/shared";
+import { TIE_HANDLING, type SurvivorRulesConfig } from "@bbb/shared";
 import { api } from "../lib/api";
 import { WeekPills, WeekStatus, type Week } from "../components/WeekWidgets";
 import { useAdminPanel } from "../components/AdminPanelContext";
 import { Modal } from "../components/Modal";
 import { CreatePoolForm } from "../components/AdminPoolsPanel";
 
-type Pool = { id: string; name: string; seasonYear: number; status: string; rules: RulesConfig };
+type Pool = { id: string; name: string; seasonYear: number; status: string; rules: SurvivorRulesConfig };
 type Entry = { id: string; displayName: string; email: string; status: string };
 type Game = {
   id: string;
@@ -130,7 +130,7 @@ function SettingsTab({ poolId, onDeleted }: { poolId: string; onDeleted: () => v
   const [weeks, setWeeks] = useState<Week[]>([]);
   const [name, setName] = useState("");
   const [seasonYear, setSeasonYear] = useState(new Date().getFullYear());
-  const [rules, setRules] = useState<RulesConfig | null>(null);
+  const [rules, setRules] = useState<SurvivorRulesConfig | null>(null);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -250,7 +250,7 @@ function SettingsTab({ poolId, onDeleted }: { poolId: string; onDeleted: () => v
           <select
             value={rules.tie_counts_as}
             onChange={(event) =>
-              setRules({ ...rules, tie_counts_as: event.target.value as RulesConfig["tie_counts_as"] })
+              setRules({ ...rules, tie_counts_as: event.target.value as SurvivorRulesConfig["tie_counts_as"] })
             }
             disabled={locked}
             className="rounded border border-brand-border bg-brand-bg px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none disabled:opacity-50"

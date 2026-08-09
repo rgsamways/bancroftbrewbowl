@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
-import { NFL_TEAMS, type RulesConfig } from "@bbb/shared";
+import { NFL_TEAMS, type SurvivorRulesConfig } from "@bbb/shared";
 import { api } from "../lib/api";
 
-type Pool = { id: string; seasonYear: number; rules: RulesConfig };
+type Pool = { id: string; seasonYear: number; rules: SurvivorRulesConfig };
 type Week = { weekNumber: number; pickDeadline: string; locked: boolean };
 type Pick = { weekNumber: number; teamCode: string; result: string };
 

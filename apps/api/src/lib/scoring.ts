@@ -1,7 +1,7 @@
 import { and, eq, lt, sql } from "drizzle-orm";
 import { db } from "../db/client.js";
 import { entries, games, picks, pools, wipeoutEvents } from "../db/schema.js";
-import type { RulesConfig } from "@bbb/shared";
+import type { SurvivorRulesConfig } from "@bbb/shared";
 
 type ScoreGamePoolResult = {
   poolId: string;
@@ -32,21 +32,25 @@ export async function scoreGame(gameId: string): Promise<ScoreGamePoolResult[]> 
 
   const results: ScoreGamePoolResult[] = [];
   for (const pool of affectedPools) {
+    // Pick 'em scoring isn't implemented yet — it needs a different model
+    // entirely (points per correct pick across every game, no elimination),
+    // not an extension of survivor's logic. Silently skipped for now.
+    if (pool.type !== "survivor") continue;
     // One transaction per pool (not across the whole loop) — pools are
     // independent, so a failure scoring one shouldn't roll back another.
     results.push(
-      await db.transaction((tx) => scorePoolForGame(tx, pool, game))
+      await db.transaction((tx) => scoreSurvivorPool(tx, pool, game))
     );
   }
   return results;
 }
 
-async function scorePoolForGame(
+async function scoreSurvivorPool(
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   pool: typeof pools.$inferSelect,
   game: typeof games.$inferSelect
 ): Promise<ScoreGamePoolResult> {
-  const rules = pool.rules as RulesConfig;
+  const rules = pool.rules as SurvivorRulesConfig;
 
   const weekPicks = await tx.query.picks.findMany({
     where: eq(picks.weekNumber, game.weekNumber),

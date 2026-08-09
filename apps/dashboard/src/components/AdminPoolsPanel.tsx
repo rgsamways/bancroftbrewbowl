@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import type { RulesConfig } from "@bbb/shared";
+import type { SurvivorRulesConfig } from "@bbb/shared";
 import { api } from "../lib/api";
 
-type Pool = { id: string; name: string; seasonYear: number; status: string; rules: RulesConfig };
+type Pool = { id: string; name: string; seasonYear: number; status: string; rules: SurvivorRulesConfig };
 
 export function CreatePoolForm({ onCreated }: { onCreated: (pool: Pool) => void }) {
   const [name, setName] = useState("");

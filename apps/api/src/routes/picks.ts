@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { and, eq, min, ne } from "drizzle-orm";
-import { submitPickSchema, type RulesConfig } from "@bbb/shared";
+import { submitPickSchema, type SurvivorRulesConfig } from "@bbb/shared";
 import { db } from "../db/client.js";
 import { entries, games, picks, pools } from "../db/schema.js";
 import { requireSession } from "../lib/guards.js";
@@ -29,7 +29,7 @@ export async function pickRoutes(fastify: FastifyInstance) {
       reply.status(404).send({ error: "Pool not found" });
       return;
     }
-    const rules = pool.rules as RulesConfig;
+    const rules = pool.rules as SurvivorRulesConfig;
 
     const [week] = await db
       .select({ pickDeadline: min(games.kickoffTime) })

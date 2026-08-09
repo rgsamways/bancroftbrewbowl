@@ -12,8 +12,15 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
-import { POOL_STATUSES, ENTRY_STATUSES, PICK_RESULTS, GAME_RESULTS, PROMOTION_KINDS } from "@bbb/shared/enums";
-import type { RulesConfig, CannedPromotionConfig } from "@bbb/shared";
+import {
+  POOL_STATUSES,
+  POOL_TYPES,
+  ENTRY_STATUSES,
+  PICK_RESULTS,
+  GAME_RESULTS,
+  PROMOTION_KINDS,
+} from "@bbb/shared/enums";
+import type { SurvivorRulesConfig, PickEmRulesConfig, CannedPromotionConfig } from "@bbb/shared";
 
 // better-auth's own tables, generated via `@better-auth/cli generate`.
 // Kept inline here (not a separate file) because drizzle-kit's loader
@@ -112,6 +119,7 @@ export const accountRelations = relations(account, ({ one }) => ({
 }));
 
 export const poolStatusEnum = pgEnum("pool_status", POOL_STATUSES);
+export const poolTypeEnum = pgEnum("pool_type", POOL_TYPES);
 export const entryStatusEnum = pgEnum("entry_status", ENTRY_STATUSES);
 export const pickResultEnum = pgEnum("pick_result", PICK_RESULTS);
 export const gameResultEnum = pgEnum("game_result", GAME_RESULTS);
@@ -124,7 +132,10 @@ export const pools = pgTable("pools", {
   logoUrl: text("logo_url"),
   primaryColor: text("primary_color"),
   secondaryColor: text("secondary_color"),
-  rules: jsonb("rules").$type<RulesConfig>().notNull(),
+  // Immutable after creation — switching a pool's type mid-season would
+  // corrupt whatever type-specific fields/scoring already ran against it.
+  type: poolTypeEnum("type").notNull().default("survivor"),
+  rules: jsonb("rules").$type<SurvivorRulesConfig | PickEmRulesConfig>().notNull(),
   status: poolStatusEnum("status").notNull().default("draft"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")

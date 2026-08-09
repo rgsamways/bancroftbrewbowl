@@ -1,13 +1,24 @@
 import { z } from "zod";
-import { rulesConfigSchema } from "./rules-config.js";
 import { cannedPromotionConfigSchema } from "./canned-promotions.js";
 import { NFL_TEAM_CODES } from "./teams.js";
-import { POOL_STATUSES } from "./enums.js";
+import { POOL_STATUSES, POOL_TYPES } from "./enums.js";
 
+// `rules` is intentionally loose here (not `survivorRulesConfigSchema` or
+// `pickEmRulesConfigSchema` directly) — which shape applies depends on
+// `type`, and `type` defaults rather than being a strict discriminant (so
+// the existing create-pool form, which never sends `type`, keeps working
+// unchanged). Real per-type validation happens in the route handler, which
+// knows (or picks) the pool's type before parsing `rules` against the
+// matching schema.
 export const createPoolSchema = z.object({
   name: z.string().min(1),
   season_year: z.number().int().min(2000).max(2100),
-  rules: rulesConfigSchema.partial().optional(),
+  // No `.default()` here deliberately — combined with `parseBody`'s generic
+  // signature, a defaulted field's input/output types diverge in a way
+  // TypeScript can't cleanly infer through. The route applies the
+  // "survivor" default explicitly instead.
+  type: z.enum(POOL_TYPES).optional(),
+  rules: z.record(z.string(), z.unknown()).optional(),
 });
 export type CreatePoolInput = z.infer<typeof createPoolSchema>;
 
@@ -15,7 +26,8 @@ export const updatePoolSchema = z.object({
   name: z.string().min(1).optional(),
   season_year: z.number().int().min(2000).max(2100).optional(),
   status: z.enum(POOL_STATUSES).optional(),
-  rules: rulesConfigSchema.partial().optional(),
+  // `type` is deliberately not updatable — immutable after creation.
+  rules: z.record(z.string(), z.unknown()).optional(),
 });
 export type UpdatePoolInput = z.infer<typeof updatePoolSchema>;
 

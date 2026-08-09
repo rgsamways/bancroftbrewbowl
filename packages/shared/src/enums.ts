@@ -26,3 +26,11 @@ export const PROMOTION_KINDS = [
   "hot_team_special",
 ] as const;
 export type PromotionKind = (typeof PROMOTION_KINDS)[number];
+
+export const POOL_TYPES = ["survivor", "pick_em"] as const;
+export type PoolType = (typeof POOL_TYPES)[number];
+
+// A tied/pushed game either counts for nobody or everybody who picked
+// either team — distinct from survivor's elimination-flavored TIE_HANDLING.
+export const PICK_EM_TIE_HANDLING = ["void", "everyone_correct"] as const;
+export type PickEmTieHandling = (typeof PICK_EM_TIE_HANDLING)[number];

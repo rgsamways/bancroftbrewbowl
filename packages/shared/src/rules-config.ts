@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TIE_HANDLING, TIEBREAKERS, PICK_DEADLINE_RULES } from "./enums.js";
 
-export const rulesConfigSchema = z.object({
+export const survivorRulesConfigSchema = z.object({
   allow_repeat_teams: z.boolean().default(false),
   tie_counts_as: z.enum(TIE_HANDLING).default("elimination"),
   mulligans_allowed: z.number().int().min(0).default(0),
@@ -10,6 +10,6 @@ export const rulesConfigSchema = z.object({
   pick_deadline_rule: z.enum(PICK_DEADLINE_RULES).default("first_kickoff_of_week"),
 });
 
-export type RulesConfig = z.infer<typeof rulesConfigSchema>;
+export type SurvivorRulesConfig = z.infer<typeof survivorRulesConfigSchema>;
 
-export const defaultRulesConfig: RulesConfig = rulesConfigSchema.parse({});
+export const defaultSurvivorRulesConfig: SurvivorRulesConfig = survivorRulesConfigSchema.parse({});
