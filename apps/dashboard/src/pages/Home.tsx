@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
+import { CANNED_PROMOTION_LABELS, type PromotionKind } from "@bbb/shared";
 import { useSession } from "../lib/auth-client";
 import { api } from "../lib/api";
 
@@ -20,6 +21,15 @@ type Game = {
   result: "pending" | "home_win" | "away_win" | "tie";
 };
 type Promotion = { id: string; seasonYear: number; weekNumber: number; title: string; description: string };
+type CannedPromotion = { id: string; kind: PromotionKind; enabled: boolean };
+type EligibleEntry = { id: string; displayName: string; poolName: string };
+type EligibleResponse = {
+  kind: PromotionKind;
+  weekNumber?: number | null;
+  eligibleEntries?: EligibleEntry[];
+  teamCode?: string | null;
+  pickCount?: number;
+};
 
 export function Home() {
   const { data: session } = useSession();
@@ -162,8 +172,84 @@ function CurrentWeekSection() {
           </ul>
         </section>
       )}
+
+      <CannedPromotionsSection seasonYear={seasonYear} />
     </>
   );
+}
+
+function CannedPromotionsSection({ seasonYear }: { seasonYear: number }) {
+  const [enabledKinds, setEnabledKinds] = useState<PromotionKind[]>([]);
+  const [eligible, setEligible] = useState<Record<string, EligibleResponse>>({});
+
+  useEffect(() => {
+    api<CannedPromotion[]>("/canned-promotions").then((fetched) => {
+      setEnabledKinds(fetched.filter((p) => p.enabled).map((p) => p.kind));
+    });
+  }, []);
+
+  useEffect(() => {
+    enabledKinds.forEach((kind) => {
+      api<EligibleResponse>(`/canned-promotions/${kind}/eligible?year=${seasonYear}`).then((result) => {
+        setEligible((current) => ({ ...current, [kind]: result }));
+      });
+    });
+  }, [enabledKinds, seasonYear]);
+
+  const blurbs = enabledKinds
+    .map((kind) => ({ kind, result: eligible[kind] }))
+    .filter(({ result }) => result)
+    .map(({ kind, result }) => describeCannedPromotion(kind, result!))
+    .filter((blurb): blurb is string => blurb !== null);
+
+  if (blurbs.length === 0) return null;
+
+  return (
+    <section className="mb-8">
+      <h2 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-brand-muted">
+        Active promotions
+      </h2>
+      <ul className="divide-y divide-brand-border rounded border border-brand-border bg-brand-surface">
+        {enabledKinds.map((kind) => {
+          const result = eligible[kind];
+          if (!result) return null;
+          const blurb = describeCannedPromotion(kind, result);
+          if (!blurb) return null;
+          return (
+            <li key={kind} className="px-3 py-2 text-sm">
+              <p className="font-semibold text-brand-text">{CANNED_PROMOTION_LABELS[kind]}</p>
+              <p className="text-brand-muted">{blurb}</p>
+              {result.eligibleEntries && result.eligibleEntries.length > 0 && (
+                <p className="mt-1 text-xs text-brand-muted">
+                  {result.eligibleEntries.map((e) => `${e.displayName} (${e.poolName})`).join(", ")}
+                </p>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+function describeCannedPromotion(kind: PromotionKind, result: EligibleResponse): string | null {
+  if (kind === "survivor_sunday") {
+    if (!result.eligibleEntries || result.eligibleEntries.length === 0) return null;
+    return `${result.eligibleEntries.length} entries still alive are eligible — check in at the bar.`;
+  }
+  if (kind === "elimination_consolation") {
+    if (!result.eligibleEntries || result.eligibleEntries.length === 0) return null;
+    return `Eliminated in week ${result.weekNumber} — show this to redeem a consolation offer.`;
+  }
+  if (kind === "milestone_reward") {
+    if (!result.eligibleEntries || result.eligibleEntries.length === 0) return null;
+    return `Survived to week ${result.weekNumber} — you've unlocked a reward!`;
+  }
+  if (kind === "hot_team_special") {
+    if (!result.teamCode) return null;
+    return `${result.teamCode} is this week's hot pick (${result.pickCount} entries) — themed special is on.`;
+  }
+  return null;
 }
 
 function JoinPoolRow({ pool, onJoined }: { pool: Pool; onJoined: () => void }) {

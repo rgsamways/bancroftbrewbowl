@@ -12,8 +12,8 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
-import { POOL_STATUSES, ENTRY_STATUSES, PICK_RESULTS, GAME_RESULTS } from "@bbb/shared/enums";
-import type { RulesConfig } from "@bbb/shared";
+import { POOL_STATUSES, ENTRY_STATUSES, PICK_RESULTS, GAME_RESULTS, PROMOTION_KINDS } from "@bbb/shared/enums";
+import type { RulesConfig, CannedPromotionConfig } from "@bbb/shared";
 
 // better-auth's own tables, generated via `@better-auth/cli generate`.
 // Kept inline here (not a separate file) because drizzle-kit's loader
@@ -162,6 +162,23 @@ export const promotions = pgTable("promotions", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const promotionKindEnum = pgEnum("promotion_kind", PROMOTION_KINDS);
+
+// One row per kind, bar-wide (not per-pool) — matches the template-per-
+// client deployment model where one deployment is one bar. Eligibility for
+// each kind is computed live off existing entries/games/picks data (see
+// GET /canned-promotions/:kind/eligible) rather than stored here.
+export const cannedPromotions = pgTable("canned_promotions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  kind: promotionKindEnum("kind").notNull().unique(),
+  enabled: boolean("enabled").notNull().default(false),
+  config: jsonb("config").$type<CannedPromotionConfig>().notNull().default({ milestone_weeks: [] }),
   updatedAt: timestamp("updated_at")
     .defaultNow()
     .$onUpdate(() => new Date())

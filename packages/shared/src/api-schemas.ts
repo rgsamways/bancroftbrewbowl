@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { rulesConfigSchema } from "./rules-config.js";
+import { cannedPromotionConfigSchema } from "./canned-promotions.js";
 import { NFL_TEAM_CODES } from "./teams.js";
 import { POOL_STATUSES } from "./enums.js";
 
@@ -65,3 +66,9 @@ export type CreatePromotionInput = z.infer<typeof createPromotionSchema>;
 
 export const updatePromotionSchema = createPromotionSchema.partial();
 export type UpdatePromotionInput = z.infer<typeof updatePromotionSchema>;
+
+export const updateCannedPromotionSchema = z.object({
+  enabled: z.boolean().optional(),
+  config: cannedPromotionConfigSchema.partial().optional(),
+});
+export type UpdateCannedPromotionInput = z.infer<typeof updateCannedPromotionSchema>;

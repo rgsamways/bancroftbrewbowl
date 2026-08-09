@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { CANNED_PROMOTION_LABELS, type CannedPromotionConfig, type PromotionKind } from "@bbb/shared";
 import { api } from "../lib/api";
 import { WeekPills, WeekStatus, type Week } from "../components/WeekWidgets";
 
@@ -8,6 +9,13 @@ type Promotion = {
   weekNumber: number;
   title: string;
   description: string;
+};
+
+type CannedPromotion = {
+  id: string;
+  kind: PromotionKind;
+  enabled: boolean;
+  config: CannedPromotionConfig;
 };
 
 export function PromotionsPage() {
@@ -44,6 +52,8 @@ export function PromotionsPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-6 pb-6">
+      <CannedPromotionsSection weeks={weeks} />
+
       <label className="flex w-28 flex-col gap-1 text-sm text-brand-muted">
         Season
         <select
@@ -80,6 +90,77 @@ export function PromotionsPage() {
           )}
         </>
       )}
+    </div>
+  );
+}
+
+function CannedPromotionsSection({ weeks }: { weeks: Week[] }) {
+  const [items, setItems] = useState<CannedPromotion[]>([]);
+
+  function refresh() {
+    api<CannedPromotion[]>("/canned-promotions").then(setItems);
+  }
+
+  useEffect(refresh, []);
+
+  async function toggle(kind: PromotionKind, enabled: boolean) {
+    const updated = await api<CannedPromotion>(`/canned-promotions/${kind}`, {
+      method: "PATCH",
+      body: JSON.stringify({ enabled }),
+    });
+    setItems((current) => current.map((item) => (item.kind === kind ? updated : item)));
+  }
+
+  async function toggleMilestoneWeek(item: CannedPromotion, weekNumber: number) {
+    const has = item.config.milestone_weeks.includes(weekNumber);
+    const milestone_weeks = has
+      ? item.config.milestone_weeks.filter((w) => w !== weekNumber)
+      : [...item.config.milestone_weeks, weekNumber].sort((a, b) => a - b);
+    const updated = await api<CannedPromotion>(`/canned-promotions/${item.kind}`, {
+      method: "PATCH",
+      body: JSON.stringify({ config: { milestone_weeks } }),
+    });
+    setItems((current) => current.map((i) => (i.kind === item.kind ? updated : i)));
+  }
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="space-y-3 rounded border border-brand-border bg-brand-surface p-4">
+      <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-brand-muted">
+        Canned promotions
+      </h2>
+      {items.map((item) => (
+        <div key={item.kind} className="border-b border-brand-border pb-3 last:border-0 last:pb-0">
+          <label className="flex items-center justify-between gap-3 text-sm text-brand-text">
+            <span>{CANNED_PROMOTION_LABELS[item.kind]}</span>
+            <input
+              type="checkbox"
+              checked={item.enabled}
+              onChange={(event) => toggle(item.kind, event.target.checked)}
+              className="accent-brand-accent"
+            />
+          </label>
+          {item.kind === "milestone_reward" && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {weeks.map((w) => (
+                <button
+                  key={w.weekNumber}
+                  type="button"
+                  onClick={() => toggleMilestoneWeek(item, w.weekNumber)}
+                  className={`rounded px-3 py-1 text-sm font-medium ${
+                    item.config.milestone_weeks.includes(w.weekNumber)
+                      ? "bg-brand-accent text-white"
+                      : "bg-brand-surface-raised text-brand-muted hover:text-brand-text"
+                  }`}
+                >
+                  {w.weekNumber}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

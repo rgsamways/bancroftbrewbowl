@@ -18,3 +18,11 @@ export type Tiebreaker = (typeof TIEBREAKERS)[number];
 
 export const PICK_DEADLINE_RULES = ["first_kickoff_of_week", "per_game_kickoff"] as const;
 export type PickDeadlineRule = (typeof PICK_DEADLINE_RULES)[number];
+
+export const PROMOTION_KINDS = [
+  "survivor_sunday",
+  "elimination_consolation",
+  "milestone_reward",
+  "hot_team_special",
+] as const;
+export type PromotionKind = (typeof PROMOTION_KINDS)[number];
