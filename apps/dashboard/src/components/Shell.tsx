@@ -2,6 +2,7 @@ import { Outlet, useLocation } from "react-router";
 import { Menu, Settings } from "lucide-react";
 import { MobileNavProvider, useMobileNav } from "./MobileNavContext";
 import { RightPanelProvider, useRightPanel } from "./RightPanelContext";
+import { AdminPanelProvider } from "./AdminPanelContext";
 import { Sidebar } from "./Sidebar";
 import { RightPanel } from "./RightPanel";
 import { matchNav, NAV_LABELS } from "../lib/nav";
@@ -42,17 +43,19 @@ export function Shell() {
   return (
     <MobileNavProvider>
       <RightPanelProvider>
-        <div className="flex min-h-screen bg-brand-bg">
-          <Sidebar />
-          <div className="flex min-w-0 flex-1 flex-col">
-            <MobileTopBar />
-            <main className="flex-1">
-              <PageHeader />
-              <Outlet />
-            </main>
+        <AdminPanelProvider>
+          <div className="flex min-h-screen bg-brand-bg">
+            <Sidebar />
+            <div className="flex min-w-0 flex-1 flex-col">
+              <MobileTopBar />
+              <main className="flex-1">
+                <PageHeader />
+                <Outlet />
+              </main>
+            </div>
+            <RightPanel />
           </div>
-          <RightPanel />
-        </div>
+        </AdminPanelProvider>
       </RightPanelProvider>
     </MobileNavProvider>
   );
