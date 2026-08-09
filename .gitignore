@@ -9,3 +9,5 @@ build/
 pnpm-lock.yaml.bak
 .turbo/
 coverage/
+
+.vercel
