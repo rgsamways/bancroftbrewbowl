@@ -1,8 +1,8 @@
 import type { FastifyInstance } from "fastify";
-import { and, asc, eq } from "drizzle-orm";
-import { createEntrySchema } from "@bbb/shared";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { createEntrySchema, type PickEmRulesConfig } from "@bbb/shared";
 import { db } from "../db/client.js";
-import { entries, user } from "../db/schema.js";
+import { entries, picks, pools, user } from "../db/schema.js";
 import { requireAdmin, requireSession } from "../lib/guards.js";
 import { parseBody } from "../lib/validate.js";
 
@@ -19,8 +19,10 @@ type EntryRow = {
 
 /** Resolves an entry's public shape — name/email always come from the linked
  * account when one exists, falling back to the admin's invite details until
- * that person signs in and the entry gets claimed. */
-export function resolveEntry(entry: EntryRow) {
+ * that person signs in and the entry gets claimed. `points` is only present
+ * when the caller passes one (pick 'em pools) — survivor's response shape
+ * is unchanged. */
+export function resolveEntry(entry: EntryRow, points?: number) {
   return {
     id: entry.id,
     poolId: entry.poolId,
@@ -29,7 +31,26 @@ export function resolveEntry(entry: EntryRow) {
     status: entry.status,
     eliminatedWeek: entry.eliminatedWeek,
     createdAt: entry.createdAt,
+    ...(points !== undefined ? { points } : {}),
   };
+}
+
+/** Pick 'em has no stored points total — standings are derived live from
+ * `picks.result` (written by scorePickEmPool in lib/scoring.ts) so that a
+ * corrected game result is automatically reflected, not just accumulated
+ * once and left stale. */
+async function computePickEmPoints(entryIds: string[], tieHandling: PickEmRulesConfig["tie_handling"]) {
+  if (entryIds.length === 0) return new Map<string, number>();
+  const rows = await db
+    .select({
+      entryId: picks.entryId,
+      wins: sql<number>`count(*) filter (where ${picks.result} = 'win')::int`,
+      ties: sql<number>`count(*) filter (where ${picks.result} = 'tie')::int`,
+    })
+    .from(picks)
+    .where(inArray(picks.entryId, entryIds))
+    .groupBy(picks.entryId);
+  return new Map(rows.map((row) => [row.entryId, row.wins + (tieHandling === "everyone_correct" ? row.ties : 0)]));
 }
 
 export async function entryRoutes(fastify: FastifyInstance) {
@@ -100,12 +121,21 @@ export async function entryRoutes(fastify: FastifyInstance) {
     if (!(await requireSession(request, reply))) return;
 
     const { poolId } = request.params as { poolId: string };
+    const pool = await db.query.pools.findFirst({ where: eq(pools.id, poolId) });
     const poolEntries = await db.query.entries.findMany({
       where: eq(entries.poolId, poolId),
       orderBy: [asc(entries.createdAt)],
       with: { user: true },
     });
-    reply.send(poolEntries.map(resolveEntry));
+
+    if (pool?.type === "pick_em") {
+      const tieHandling = (pool.rules as PickEmRulesConfig).tie_handling;
+      const pointsByEntry = await computePickEmPoints(poolEntries.map((e) => e.id), tieHandling);
+      reply.send(poolEntries.map((entry) => resolveEntry(entry, pointsByEntry.get(entry.id) ?? 0)));
+      return;
+    }
+
+    reply.send(poolEntries.map((entry) => resolveEntry(entry)));
   });
 
   fastify.patch("/entries/:entryId", async (request, reply) => {

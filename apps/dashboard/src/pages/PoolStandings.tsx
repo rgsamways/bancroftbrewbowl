@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router";
+import type { PoolType } from "@bbb/shared";
 import { api } from "../lib/api";
 
-type Pool = { id: string; name: string; seasonYear: number; status: string };
+type Pool = { id: string; name: string; seasonYear: number; status: string; type: PoolType };
 type Entry = {
   id: string;
   displayName: string;
   status: "alive" | "eliminated";
   eliminatedWeek: number | null;
+  points?: number;
 };
 
 export function PoolStandings() {
@@ -24,6 +26,27 @@ export function PoolStandings() {
 
   if (error) return <p className="p-6 text-red-400">{error}</p>;
   if (!pool) return <p className="p-6 text-brand-muted">Loading…</p>;
+
+  if (pool.type === "pick_em") {
+    const standings = [...entries].sort((a, b) => (b.points ?? 0) - (a.points ?? 0));
+    return (
+      <div className="mx-auto max-w-2xl p-6">
+        <h1 className="mb-6 font-display text-2xl font-bold text-brand-text">{pool.name}</h1>
+        <ul className="divide-y divide-brand-border rounded border border-brand-border bg-brand-surface">
+          {standings.map((entry, index) => (
+            <li key={entry.id} className="flex items-center justify-between px-3 py-2">
+              <span className="text-brand-text">
+                <span className="mr-2 text-brand-muted">#{index + 1}</span>
+                {entry.displayName}
+              </span>
+              <span className="text-brand-muted">{entry.points ?? 0} pts</span>
+            </li>
+          ))}
+          {standings.length === 0 && <li className="px-3 py-2 text-brand-muted">Nobody yet</li>}
+        </ul>
+      </div>
+    );
+  }
 
   const alive = entries.filter((e) => e.status === "alive");
   const eliminated = entries.filter((e) => e.status === "eliminated");

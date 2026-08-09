@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { and, eq, min, ne } from "drizzle-orm";
+import { and, count, eq, min, ne } from "drizzle-orm";
 import { submitPickSchema, type SurvivorRulesConfig } from "@bbb/shared";
 import { db } from "../db/client.js";
 import { entries, games, picks, pools } from "../db/schema.js";
@@ -29,7 +29,6 @@ export async function pickRoutes(fastify: FastifyInstance) {
       reply.status(404).send({ error: "Pool not found" });
       return;
     }
-    const rules = pool.rules as SurvivorRulesConfig;
 
     const [week] = await db
       .select({ pickDeadline: min(games.kickoffTime) })
@@ -44,7 +43,9 @@ export async function pickRoutes(fastify: FastifyInstance) {
       return;
     }
 
-    if (!rules.allow_repeat_teams) {
+    // Reusing the same team across weeks is normal for pick 'em (you'd
+    // pick a strong team most weeks) — this check is survivor-only.
+    if (pool.type === "survivor" && !(pool.rules as SurvivorRulesConfig).allow_repeat_teams) {
       const priorUse = await db.query.picks.findFirst({
         where: and(
           eq(picks.entryId, entryId),
@@ -58,7 +59,19 @@ export async function pickRoutes(fastify: FastifyInstance) {
       }
     }
 
-    const limit = rules.double_pick_weeks.includes(body.week_number) ? 2 : 1;
+    // Survivor: 1 pick per week, or 2 in a designated double-pick week.
+    // Pick 'em: one pick per game scheduled that week (pick a winner for
+    // every game), so the limit is however many games there are.
+    let limit: number;
+    if (pool.type === "survivor") {
+      limit = (pool.rules as SurvivorRulesConfig).double_pick_weeks.includes(body.week_number) ? 2 : 1;
+    } else {
+      const [gameCount] = await db
+        .select({ count: count() })
+        .from(games)
+        .where(and(eq(games.seasonYear, pool.seasonYear), eq(games.weekNumber, body.week_number)));
+      limit = gameCount?.count ?? 1;
+    }
     const weekPicks = await db.query.picks.findMany({
       where: and(eq(picks.entryId, entryId), eq(picks.weekNumber, body.week_number)),
     });

@@ -32,26 +32,25 @@ export async function scoreGame(gameId: string): Promise<ScoreGamePoolResult[]> 
 
   const results: ScoreGamePoolResult[] = [];
   for (const pool of affectedPools) {
-    // Pick 'em scoring isn't implemented yet — it needs a different model
-    // entirely (points per correct pick across every game, no elimination),
-    // not an extension of survivor's logic. Silently skipped for now.
-    if (pool.type !== "survivor") continue;
     // One transaction per pool (not across the whole loop) — pools are
     // independent, so a failure scoring one shouldn't roll back another.
-    results.push(
-      await db.transaction((tx) => scoreSurvivorPool(tx, pool, game))
-    );
+    if (pool.type === "survivor") {
+      results.push(await db.transaction((tx) => scoreSurvivorPool(tx, pool, game)));
+    } else {
+      results.push(await db.transaction((tx) => scorePickEmPool(tx, pool, game)));
+    }
   }
   return results;
 }
 
-async function scoreSurvivorPool(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
-  pool: typeof pools.$inferSelect,
-  game: typeof games.$inferSelect
-): Promise<ScoreGamePoolResult> {
-  const rules = pool.rules as SurvivorRulesConfig;
+type TxLike = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
+/** Resolves every pick tied to this game for this pool to win/loss/tie and
+ * writes the result — the only part of scoring that's identical regardless
+ * of pool type. What happens after (elimination vs. nothing, since pick 'em
+ * points are derived from `picks.result` at read time rather than stored)
+ * is entirely type-specific. */
+async function markGamePicks(tx: TxLike, pool: typeof pools.$inferSelect, game: typeof games.$inferSelect) {
   const weekPicks = await tx.query.picks.findMany({
     where: eq(picks.weekNumber, game.weekNumber),
     with: { entry: true },
@@ -71,6 +70,32 @@ async function scoreSurvivorPool(
       game.result === "tie" ? "tie" : pick.teamCode === winningTeam ? "win" : "loss";
     await tx.update(picks).set({ result: pickResult }).where(eq(picks.id, pick.id));
   }
+
+  return { gamePicks, winningTeam };
+}
+
+/** Pick 'em has no elimination and stores no running total — standings are
+ * computed live from `picks.result` (see computePickEmPoints in
+ * routes/entries.ts), so once results are written there's nothing further
+ * to do here. This also makes re-scoring a corrected result self-correcting,
+ * unlike survivor's elimination state. */
+async function scorePickEmPool(
+  tx: TxLike,
+  pool: typeof pools.$inferSelect,
+  game: typeof games.$inferSelect
+): Promise<ScoreGamePoolResult> {
+  const { gamePicks } = await markGamePicks(tx, pool, game);
+  return { poolId: pool.id, scored: gamePicks.length, eliminated: 0, wipeout: false };
+}
+
+async function scoreSurvivorPool(
+  tx: TxLike,
+  pool: typeof pools.$inferSelect,
+  game: typeof games.$inferSelect
+): Promise<ScoreGamePoolResult> {
+  const rules = pool.rules as SurvivorRulesConfig;
+
+  const { gamePicks, winningTeam } = await markGamePicks(tx, pool, game);
 
   const losingPicks = gamePicks.filter((pick) => {
     if (pick.teamCode === winningTeam) return false;

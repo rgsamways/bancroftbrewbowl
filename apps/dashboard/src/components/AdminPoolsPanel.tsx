@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react";
-import type { SurvivorRulesConfig } from "@bbb/shared";
+import { POOL_TYPES, type PoolType, type SurvivorRulesConfig } from "@bbb/shared";
 import { api } from "../lib/api";
 
 type Pool = { id: string; name: string; seasonYear: number; status: string; rules: SurvivorRulesConfig };
+
+const POOL_TYPE_LABELS: Record<PoolType, string> = {
+  survivor: "Survivor",
+  pick_em: "Pick 'em",
+};
 
 export function CreatePoolForm({ onCreated }: { onCreated: (pool: Pool) => void }) {
   const [name, setName] = useState("");
   const [seasons, setSeasons] = useState<number[]>([new Date().getFullYear()]);
   const [seasonYear, setSeasonYear] = useState(new Date().getFullYear());
+  const [type, setType] = useState<PoolType>("survivor");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -24,7 +30,7 @@ export function CreatePoolForm({ onCreated }: { onCreated: (pool: Pool) => void 
     try {
       const pool = await api<Pool>("/pools", {
         method: "POST",
-        body: JSON.stringify({ name, season_year: seasonYear }),
+        body: JSON.stringify({ name, season_year: seasonYear, type }),
       });
       setName("");
       onCreated(pool);
@@ -53,6 +59,17 @@ export function CreatePoolForm({ onCreated }: { onCreated: (pool: Pool) => void 
         {seasons.map((year) => (
           <option key={year} value={year}>
             {year}
+          </option>
+        ))}
+      </select>
+      <select
+        value={type}
+        onChange={(event) => setType(event.target.value as PoolType)}
+        className="rounded border border-brand-border bg-brand-bg px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none"
+      >
+        {POOL_TYPES.map((value) => (
+          <option key={value} value={value}>
+            {POOL_TYPE_LABELS[value]}
           </option>
         ))}
       </select>

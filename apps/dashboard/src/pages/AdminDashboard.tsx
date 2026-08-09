@@ -1,15 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router";
 import { Plus, Cog } from "lucide-react";
-import { TIE_HANDLING, type SurvivorRulesConfig } from "@bbb/shared";
+import {
+  TIE_HANDLING,
+  PICK_EM_TIE_HANDLING,
+  type PoolType,
+  type SurvivorRulesConfig,
+  type PickEmRulesConfig,
+} from "@bbb/shared";
 import { api } from "../lib/api";
 import { WeekPills, WeekStatus, type Week } from "../components/WeekWidgets";
 import { useAdminPanel } from "../components/AdminPanelContext";
 import { Modal } from "../components/Modal";
 import { CreatePoolForm } from "../components/AdminPoolsPanel";
 
-type Pool = { id: string; name: string; seasonYear: number; status: string; rules: SurvivorRulesConfig };
-type Entry = { id: string; displayName: string; email: string; status: string };
+type Pool = {
+  id: string;
+  name: string;
+  seasonYear: number;
+  status: string;
+  type: PoolType;
+  rules: SurvivorRulesConfig | PickEmRulesConfig;
+};
+type Entry = { id: string; displayName: string; email: string; status: string; points?: number };
 type Game = {
   id: string;
   weekNumber: number;
@@ -130,7 +143,7 @@ function SettingsTab({ poolId, onDeleted }: { poolId: string; onDeleted: () => v
   const [weeks, setWeeks] = useState<Week[]>([]);
   const [name, setName] = useState("");
   const [seasonYear, setSeasonYear] = useState(new Date().getFullYear());
-  const [rules, setRules] = useState<SurvivorRulesConfig | null>(null);
+  const [rules, setRules] = useState<SurvivorRulesConfig | PickEmRulesConfig | null>(null);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -161,7 +174,7 @@ function SettingsTab({ poolId, onDeleted }: { poolId: string; onDeleted: () => v
 
   function toggleDoublePickWeek(weekNumber: number) {
     setRules((current) => {
-      if (!current) return current;
+      if (!current || !("double_pick_weeks" in current)) return current;
       const has = current.double_pick_weeks.includes(weekNumber);
       return {
         ...current,
@@ -234,73 +247,100 @@ function SettingsTab({ poolId, onDeleted }: { poolId: string; onDeleted: () => v
           </select>
         </label>
 
-        <label className="flex items-center gap-2 text-sm text-brand-text">
-          <input
-            type="checkbox"
-            checked={rules.allow_repeat_teams}
-            onChange={(event) => setRules({ ...rules, allow_repeat_teams: event.target.checked })}
-            disabled={locked}
-            className="accent-brand-accent"
-          />
-          Allow picking the same team more than once
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm text-brand-text">
-          Tied game counts as
-          <select
-            value={rules.tie_counts_as}
-            onChange={(event) =>
-              setRules({ ...rules, tie_counts_as: event.target.value as SurvivorRulesConfig["tie_counts_as"] })
-            }
-            disabled={locked}
-            className="rounded border border-brand-border bg-brand-bg px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none disabled:opacity-50"
-          >
-            {TIE_HANDLING.map((value) => (
-              <option key={value} value={value}>
-                {value.replace(/_/g, " ")}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm text-brand-text">
-          Mulligans allowed
-          <input
-            type="number"
-            min={0}
-            value={rules.mulligans_allowed}
-            onChange={(event) => setRules({ ...rules, mulligans_allowed: Number(event.target.value) })}
-            disabled={locked}
-            className="rounded border border-brand-border bg-brand-bg px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none disabled:opacity-50"
-          />
-          <span className="text-xs text-brand-muted">
-            An entry that would be eliminated automatically survives on a mulligan, up to this many times.
-          </span>
-        </label>
-
-        <div className="flex flex-col gap-1 text-sm text-brand-text">
-          Double-pick weeks
-          <div className="flex flex-wrap gap-1">
-            {weeks.map((w) => (
-              <button
-                key={w.weekNumber}
-                type="button"
+        {pool.type === "survivor" && "allow_repeat_teams" in rules && (
+          <>
+            <label className="flex items-center gap-2 text-sm text-brand-text">
+              <input
+                type="checkbox"
+                checked={rules.allow_repeat_teams}
+                onChange={(event) => setRules({ ...rules, allow_repeat_teams: event.target.checked })}
                 disabled={locked}
-                onClick={() => toggleDoublePickWeek(w.weekNumber)}
-                className={`rounded px-3 py-1 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50 ${
-                  rules.double_pick_weeks.includes(w.weekNumber)
-                    ? "bg-brand-accent text-white"
-                    : "bg-brand-surface-raised text-brand-muted hover:text-brand-text"
-                }`}
+                className="accent-brand-accent"
+              />
+              Allow picking the same team more than once
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm text-brand-text">
+              Tied game counts as
+              <select
+                value={rules.tie_counts_as}
+                onChange={(event) =>
+                  setRules({ ...rules, tie_counts_as: event.target.value as SurvivorRulesConfig["tie_counts_as"] })
+                }
+                disabled={locked}
+                className="rounded border border-brand-border bg-brand-bg px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none disabled:opacity-50"
               >
-                {w.weekNumber}
-              </button>
-            ))}
-          </div>
-          <span className="text-xs text-brand-muted">
-            Entries submit two picks in these weeks — eliminated if either loses.
-          </span>
-        </div>
+                {TIE_HANDLING.map((value) => (
+                  <option key={value} value={value}>
+                    {value.replace(/_/g, " ")}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm text-brand-text">
+              Mulligans allowed
+              <input
+                type="number"
+                min={0}
+                value={rules.mulligans_allowed}
+                onChange={(event) => setRules({ ...rules, mulligans_allowed: Number(event.target.value) })}
+                disabled={locked}
+                className="rounded border border-brand-border bg-brand-bg px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none disabled:opacity-50"
+              />
+              <span className="text-xs text-brand-muted">
+                An entry that would be eliminated automatically survives on a mulligan, up to this many times.
+              </span>
+            </label>
+
+            <div className="flex flex-col gap-1 text-sm text-brand-text">
+              Double-pick weeks
+              <div className="flex flex-wrap gap-1">
+                {weeks.map((w) => (
+                  <button
+                    key={w.weekNumber}
+                    type="button"
+                    disabled={locked}
+                    onClick={() => toggleDoublePickWeek(w.weekNumber)}
+                    className={`rounded px-3 py-1 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50 ${
+                      rules.double_pick_weeks.includes(w.weekNumber)
+                        ? "bg-brand-accent text-white"
+                        : "bg-brand-surface-raised text-brand-muted hover:text-brand-text"
+                    }`}
+                  >
+                    {w.weekNumber}
+                  </button>
+                ))}
+              </div>
+              <span className="text-xs text-brand-muted">
+                Entries submit two picks in these weeks — eliminated if either loses.
+              </span>
+            </div>
+          </>
+        )}
+
+        {pool.type === "pick_em" && "tie_handling" in rules && (
+          <label className="flex flex-col gap-1 text-sm text-brand-text">
+            Tied game counts as
+            <select
+              value={rules.tie_handling}
+              onChange={(event) =>
+                setRules({ ...rules, tie_handling: event.target.value as PickEmRulesConfig["tie_handling"] })
+              }
+              disabled={locked}
+              className="rounded border border-brand-border bg-brand-bg px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none disabled:opacity-50"
+            >
+              {PICK_EM_TIE_HANDLING.map((value) => (
+                <option key={value} value={value}>
+                  {value.replace(/_/g, " ")}
+                </option>
+              ))}
+            </select>
+            <span className="text-xs text-brand-muted">
+              "void" means nobody gets a point for a tied game; "everyone correct" means both sides do.
+            </span>
+          </label>
+        )}
 
         <div className="flex items-center gap-2">
           <button
@@ -584,13 +624,19 @@ function WipeoutBanner({ poolId, onResolved }: { poolId: string; onResolved: () 
 }
 
 function EntriesTab({ poolId }: { poolId: string }) {
+  const [pool, setPool] = useState<Pool | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
 
   function refresh() {
     api<Entry[]>(`/pools/${poolId}/entries`).then(setEntries);
   }
 
+  useEffect(() => {
+    api<Pool>(`/pools/${poolId}`).then(setPool);
+  }, [poolId]);
   useEffect(refresh, [poolId]);
+
+  const isPickEm = pool?.type === "pick_em";
 
   return (
     <div className="space-y-6">
@@ -602,13 +648,19 @@ function EntriesTab({ poolId }: { poolId: string }) {
             <span>
               {e.displayName} <span className="text-brand-muted">({e.email})</span>
             </span>
-            <span
-              className={`rounded px-2 py-0.5 text-xs ${
-                e.status === "alive" ? "bg-emerald-950 text-emerald-400" : "bg-brand-surface-raised text-brand-muted"
-              }`}
-            >
-              {e.status}
-            </span>
+            {isPickEm ? (
+              <span className="rounded bg-brand-surface-raised px-2 py-0.5 text-xs text-brand-text">
+                {e.points ?? 0} pts
+              </span>
+            ) : (
+              <span
+                className={`rounded px-2 py-0.5 text-xs ${
+                  e.status === "alive" ? "bg-emerald-950 text-emerald-400" : "bg-brand-surface-raised text-brand-muted"
+                }`}
+              >
+                {e.status}
+              </span>
+            )}
           </li>
         ))}
         {entries.length === 0 && <li className="px-3 py-2 text-sm text-brand-muted">No entries yet</li>}
@@ -630,8 +682,10 @@ function pickRank(pick: PoolPick | undefined): number {
   return 3;
 }
 
-// Only survivor pools exist today, so this always renders the survivor
-// matrix. Once pool types exist, this is where that branch would go.
+// Survivor renders a week-by-week pick matrix (one pick per entry per
+// week). That doesn't hold for pick 'em — an entry can have several picks
+// in a single week, one per game — so pick 'em renders a simple points
+// standings list instead further down.
 function PicksTab({ poolId }: { poolId: string }) {
   const [pool, setPool] = useState<Pool | null>(null);
   const [weeks, setWeeks] = useState<Week[]>([]);
@@ -669,6 +723,21 @@ function PicksTab({ poolId }: { poolId: string }) {
   }, [entries, sortKey, pickLookup]);
 
   if (!pool) return null;
+
+  if (pool.type === "pick_em") {
+    const standings = [...entries].sort((a, b) => (b.points ?? 0) - (a.points ?? 0));
+    return (
+      <ul className="divide-y divide-brand-border rounded border border-brand-border bg-brand-surface">
+        {standings.map((entry) => (
+          <li key={entry.id} className="flex items-center justify-between px-3 py-2 text-sm text-brand-text">
+            <span>{entry.displayName}</span>
+            <span className="rounded bg-brand-surface-raised px-2 py-0.5 text-xs">{entry.points ?? 0} pts</span>
+          </li>
+        ))}
+        {standings.length === 0 && <li className="px-3 py-2 text-sm text-brand-muted">No entries yet</li>}
+      </ul>
+    );
+  }
 
   return (
     <div className="overflow-x-auto">
