@@ -39,7 +39,7 @@ export function resolveEntry(entry: EntryRow, points?: number) {
  * `picks.result` (written by scorePickEmPool in lib/scoring.ts) so that a
  * corrected game result is automatically reflected, not just accumulated
  * once and left stale. */
-async function computePickEmPoints(entryIds: string[], tieHandling: PickEmRulesConfig["tie_handling"]) {
+export async function computePickEmPoints(entryIds: string[], tieHandling: PickEmRulesConfig["tie_handling"]) {
   if (entryIds.length === 0) return new Map<string, number>();
   const rows = await db
     .select({

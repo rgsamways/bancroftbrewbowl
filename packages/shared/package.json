@@ -10,7 +10,8 @@
     "./enums": "./dist/enums.js"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "zod": "^3.24.1"
