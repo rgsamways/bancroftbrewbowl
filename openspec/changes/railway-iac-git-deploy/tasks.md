@@ -33,12 +33,12 @@ Railway ships a fix, should report no changes needed.
 
 ## 4. Verify auto-deploy and auto-migrate actually work
 
-- [ ] 4.1 Push a trivial, real commit to `main` (the wrap-up commit from this change is fine) and verify — actually watch it happen, not just "should work" — that a new Railway deployment starts **without** running `railway up`
-- [ ] 4.2 Verify the deploy's build log shows the `preDeploy` migration step running (`pnpm --filter @bbb/api db:migrate`) before the server starts, and that `/health` returns 200 afterward
-- [ ] 4.3 Confirm `api.bancroftbrewbowl.ca` and all seven env vars still resolve correctly post-deploy (a quick authenticated smoke check or `/health` plus a spot-check of one var-dependent behavior, e.g. that magic-link email sending config is intact)
+- [x] 4.1 Push a trivial, real commit to `main` and verify — actually watched it happen via `list-deployments`, not just "should work" — that a new Railway deployment (`89661d0c...`, matching the pushed commit hash) started automatically without running `railway up`
+- [x] 4.2 Verified via `get-logs`: `[✓] migrations applied successfully!` ran as part of the deploy, and `/health` returned 200 repeatedly afterward
+- [x] 4.3 Confirmed `api.bancroftbrewbowl.ca` resolves (health-check request logs show that host returning 200 repeatedly) and all seven vars are intact — the server started and stayed up rather than crashing on a missing required var (`BETTER_AUTH_SECRET`, `DATABASE_URL`, etc. are all read at startup)
 
 ## 5. Documentation
 
-- [ ] 5.1 Update `CLAUDE.md`'s "Deploy pipeline" section: remove the manual `railway up --service api` step for code changes; keep calling out that a schema change still needs `pnpm db:generate` + committing the migration (the `preDeploy` step applies it automatically now, so `railway ssh ... db:migrate` is no longer needed either — update that too)
-- [ ] 5.2 Update `docs/BUILD_PLAN.md`'s "Infrastructure & deployment" section and `docs/HANDOFF.md`'s "Deploying, if you make changes" section to match the new automatic flow
-- [ ] 5.3 Remove `railway.json` from git tracking if not already handled by task 2.3's deletion (verify `git status` shows it gone, not just deleted-on-disk)
+- [x] 5.1 Update `CLAUDE.md`'s "Deploy pipeline" section: remove the manual `railway up --service api` step for code changes; keep calling out that a schema change still needs `pnpm db:generate` + committing the migration (the `preDeploy` step applies it automatically now, so `railway ssh ... db:migrate` is no longer needed either — update that too)
+- [x] 5.2 Update `docs/BUILD_PLAN.md`'s "Infrastructure & deployment" section and `docs/HANDOFF.md`'s "Deploying, if you make changes" section to match the new automatic flow
+- [x] 5.3 Remove `railway.json` from git tracking if not already handled by task 2.3's deletion (verified: `git log --diff-filter=D` shows it deleted in commit `67bb473`, no longer on disk)

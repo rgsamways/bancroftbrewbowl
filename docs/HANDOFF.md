@@ -39,9 +39,8 @@ To promote an account to admin locally or in production: `pnpm --filter @bbb/api
 
 ## Deploying, if you make changes
 
-- **Dashboard (Vercel)**: just push to `main` — it's git-connected and auto-deploys. No manual step.
-- **API (Railway)**: **not** git-connected. After pushing, you must separately run `railway up --service api` to actually deploy the new code. Forgetting this step is the single easiest way to think you've deployed something that's still running old code.
-- **Schema changes**: `pnpm db:generate` → commit the generated migration file → deploy the API (above) → `railway ssh --service api -- pnpm --filter @bbb/api db:migrate` to apply it against production. Don't use `railway run` for this — it runs locally and can't reach Railway's internal Postgres hostname; `railway ssh` runs inside the real container and can.
+- **Both dashboard (Vercel) and API (Railway) are git-connected as of 2026-09-27** — just push to `main`, both auto-deploy. No manual `railway up` step anymore.
+- **Schema changes**: `pnpm db:generate` → commit the generated migration file → push. The API's `preDeploy` command applies it automatically before the new code starts serving traffic — no more manual `railway ssh ... db:migrate` step. Still worth calling out a schema-changing push explicitly before doing it, since the migration now runs unattended once pushed.
 - Full Railway/Vercel project IDs, service names, and the exact CLI incantations used throughout this build are in the conversation history if you need to re-derive them, but `railway status`/`vercel project ls` from within the repo should relink you to the right linked project quickly since both CLIs were already authenticated and linked here.
 
 ## Things that will bite you if you forget them

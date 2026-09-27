@@ -61,24 +61,33 @@ first for anything actually destructive (force-push, `railway`/`vercel`
 resource deletion, schema rollback) — the pre-authorization covers the
 routine finish-a-change sequence only, not those.
 
-- **Dashboard (Vercel)**: git-connected — auto-deploys on push to `main`, no
-  manual step. Confirmed via `vercel project ls` after pushing if you want to
-  double check a deploy actually fired.
-- **API (Railway)**: **not** git-connected — pushing to git does nothing to
-  it. Run `railway up --service api` right after pushing whenever a commit
-  touches `apps/api` or `packages/shared` (the API's build depends on
-  shared's compiled output). Skip it for dashboard-only or docs-only commits.
-- **Schema changes**: `pnpm db:generate` → commit the migration → push →
-  `railway up --service api` → `railway ssh --service api -- pnpm --filter
-  @bbb/api db:migrate`. The migrate step is **not** automatic — never run a
-  production migration without calling it out first, even though the rest of
-  the pipeline is pre-authorized.
-- Learned from `noisefloor` (same manual-Railway pattern): changing a
-  Railway env var alone triggers a redeploy that reuses the **existing**
-  build — it does not pull new code. If both code and an env var changed,
-  you need `railway up` too, not just the variable set.
-- State plainly whether a change is "done locally," "pushed," or "deployed"
-  once you've finished the sequence — don't let "done" be ambiguous.
+- **Both dashboard (Vercel) and API (Railway) are git-connected** — pushing
+  to `main` deploys both automatically. `railway up`/`railway ssh ...
+  db:migrate` are no longer part of the routine flow (migrated 2026-09-27;
+  see `openspec/changes/archive/2026-09-27-railway-iac-git-deploy`). Confirm
+  a deploy actually fired with `vercel project ls` (dashboard) or `railway
+  status` / the Railway MCP's `list-deployments` (API) if you want to
+  double-check.
+- **Schema changes**: `pnpm db:generate` → commit the migration → push. The
+  API's `preDeploy` step (`.railway/railway.ts`) now runs `pnpm --filter
+  @bbb/api db:migrate` automatically before each deploy starts serving
+  traffic — no separate manual migrate step. A failing migration blocks
+  that deploy rather than running new code against an unmigrated schema.
+  Still call out a schema-changing push explicitly before doing it, even
+  though the rest of the pipeline is pre-authorized — the migration itself
+  runs unattended once pushed, so there's no manual gate left to catch a bad
+  one before it hits production.
+- Railway's Infrastructure as Code (`.railway/railway.ts`, not the old
+  `railway.json`) manages the `api` service's build/start/healthcheck/
+  preDeploy/source settings and the `env` block (`preserve()`d values —
+  never inline a real secret there). It deliberately does **not** manage
+  the Postgres service — see that change's design.md for why. `railway
+  config plan`/`apply` are broken in this Windows dev environment (traced to
+  a real bug in `railway@3.11.0`'s version check, not a real version
+  mismatch) — use the Railway MCP's `connect-service-source` /
+  `update-service` (both support `staged: true`) plus `get-staged-changes`
+  and `accept-deploy` instead when this file needs to change again, until
+  that's fixed upstream.
 
 ## Pace
 
