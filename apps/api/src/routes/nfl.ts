@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { and, asc, desc, eq, min } from "drizzle-orm";
+import { and, asc, desc, eq, min, sql } from "drizzle-orm";
 import { enterGameResultSchema, updateGameScoreSchema } from "@bbb/shared";
 import { db } from "../db/client.js";
 import { games } from "../db/schema.js";
@@ -27,7 +27,11 @@ export async function nflRoutes(fastify: FastifyInstance) {
     }
 
     const rows = await db
-      .select({ weekNumber: games.weekNumber, pickDeadline: min(games.kickoffTime) })
+      .select({
+        weekNumber: games.weekNumber,
+        pickDeadline: min(games.kickoffTime),
+        pendingCount: sql<number>`count(*) filter (where ${games.result} = 'pending')`,
+      })
       .from(games)
       .where(eq(games.seasonYear, Number(year)))
       .groupBy(games.weekNumber)
@@ -41,6 +45,11 @@ export async function nflRoutes(fastify: FastifyInstance) {
           weekNumber: row.weekNumber,
           pickDeadline: row.pickDeadline,
           locked: now >= new Date(row.pickDeadline!),
+          // Distinct from `locked`: a week locks at its first kickoff but
+          // keeps playing games through Sunday/Monday, so "locked" alone
+          // makes the next week look "current" while this one is still
+          // being played out.
+          completed: Number(row.pendingCount) === 0,
         }))
     );
   });

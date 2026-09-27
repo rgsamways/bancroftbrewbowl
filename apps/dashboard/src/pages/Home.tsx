@@ -12,7 +12,7 @@ type MyEntry = {
   status: "alive" | "eliminated";
   pool: Pool;
 };
-type Week = { weekNumber: number; pickDeadline: string; locked: boolean };
+type Week = { weekNumber: number; pickDeadline: string; locked: boolean; completed: boolean };
 type Game = {
   id: string;
   weekNumber: number;
@@ -105,8 +105,12 @@ export function Home() {
 }
 
 // "Current week" = the most recent season with games imported, its first
-// week that hasn't locked yet, or the most recent past week if the season
-// is over — there's no stored "current season" setting (see NFL routes).
+// week that isn't fully decided yet, or the most recent past week if the
+// season is over — there's no stored "current season" setting (see NFL
+// routes). Deliberately not "first week that hasn't locked yet": a week
+// locks at its first kickoff but keeps playing through Sunday/Monday, so
+// that definition would show next week's games while this week's are
+// still being played.
 function CurrentWeekSection() {
   const [seasonYear, setSeasonYear] = useState<number | null>(null);
   const [currentWeek, setCurrentWeek] = useState<number | null>(null);
@@ -123,8 +127,8 @@ function CurrentWeekSection() {
     if (seasonYear === null) return;
     api<Week[]>(`/nfl/weeks?year=${seasonYear}`).then((weeks) => {
       if (weeks.length === 0) return;
-      const firstUnlocked = weeks.find((w) => !w.locked);
-      setCurrentWeek(firstUnlocked ? firstUnlocked.weekNumber : weeks[weeks.length - 1].weekNumber);
+      const firstIncomplete = weeks.find((w) => !w.completed);
+      setCurrentWeek(firstIncomplete ? firstIncomplete.weekNumber : weeks[weeks.length - 1].weekNumber);
     });
   }, [seasonYear]);
 
