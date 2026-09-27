@@ -49,14 +49,36 @@ touching anything non-trivial — don't rediscover the architecture from
 scratch. Persistent cross-session memory also exists at
 `C:\Users\rgsam\.claude\projects\c--dev-bancroftbrewbowl\memory\`.
 
-## Deploy pipeline
+## Deploy pipeline (automatic, not a per-change ask)
 
 There is no staging environment for this project — it's local → production
-directly. The dashboard (Vercel) auto-deploys on push to `main`; the API
-(Railway) does **not** auto-deploy — `railway up --service api` is a
-required manual step after pushing. State plainly whether a change is only
-"done locally," "pushed," or "deployed" — don't let "done" be ambiguous
-between those.
+directly. Once a change's tasks are implemented and verified (typecheck/
+build passes, and manually confirmed where practical), **archive it, commit,
+push, and deploy as the normal last step — don't stop to ask permission for
+commit/push/deploy on this repo specifically; that's pre-authorized here.**
+Still surface what you're about to do before doing it, and stop and ask
+first for anything actually destructive (force-push, `railway`/`vercel`
+resource deletion, schema rollback) — the pre-authorization covers the
+routine finish-a-change sequence only, not those.
+
+- **Dashboard (Vercel)**: git-connected — auto-deploys on push to `main`, no
+  manual step. Confirmed via `vercel project ls` after pushing if you want to
+  double check a deploy actually fired.
+- **API (Railway)**: **not** git-connected — pushing to git does nothing to
+  it. Run `railway up --service api` right after pushing whenever a commit
+  touches `apps/api` or `packages/shared` (the API's build depends on
+  shared's compiled output). Skip it for dashboard-only or docs-only commits.
+- **Schema changes**: `pnpm db:generate` → commit the migration → push →
+  `railway up --service api` → `railway ssh --service api -- pnpm --filter
+  @bbb/api db:migrate`. The migrate step is **not** automatic — never run a
+  production migration without calling it out first, even though the rest of
+  the pipeline is pre-authorized.
+- Learned from `noisefloor` (same manual-Railway pattern): changing a
+  Railway env var alone triggers a redeploy that reuses the **existing**
+  build — it does not pull new code. If both code and an env var changed,
+  you need `railway up` too, not just the variable set.
+- State plainly whether a change is "done locally," "pushed," or "deployed"
+  once you've finished the sequence — don't let "done" be ambiguous.
 
 ## Pace
 
