@@ -108,7 +108,7 @@ All tables live in `apps/api/src/db/schema.ts`. Migrations are managed with `dri
 - Against-the-spread and confidence-pool pick 'em variants: not built.
 - Referral-bonus promotion: not built (needs a new referral-tracking data model).
 - "Standings on the big screen" promotion idea: not built (it's a separate public-display feature, not really a toggleable promotion).
-- No automated tests exist yet (`vitest` is wired up in the root `package.json` but there's no test suite) — all verification so far has been manual HTTP/UI testing during development.
+- Automated test coverage is still thin: a first batch exists (`apps/api/src/lib/scoring.test.ts`, `apps/api/src/routes/entries.test.ts`), covering survivor elimination/mulligan/double-pick/wipeout scoring and pick 'em points derivation, run via `pnpm test` (real Postgres required — see `apps/api/src/test/setup.ts`) and enforced in CI (`.github/workflows/ci.yml`, lint + typecheck + test on push/PR). Most routes still have no tests.
 
 ## History worth knowing (recurring lessons from building this)
 

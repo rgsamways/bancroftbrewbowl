@@ -23,10 +23,10 @@
 
 - [x] 4.1 Add `.github/workflows/ci.yml`: trigger on push to `main` and on pull requests; steps: checkout, `pnpm/action-setup`, `actions/setup-node` (node 22, pnpm cache), `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm typecheck`
 - [x] 4.2 Add a `postgres:16-alpine` service to the same job (env `POSTGRES_USER=bbb`, `POSTGRES_PASSWORD=bbb`, `POSTGRES_DB=bbb`, port `5432:5432`), a job-level `DATABASE_URL` env pointing at it, a `pnpm --filter @bbb/api db:migrate` step before tests, then `pnpm test`
-- [ ] 4.3 Push a throwaway branch (or open a draft PR) and verify the workflow runs end to end and goes green — actually confirm in GitHub Actions, not just "should work"
-- [ ] 4.4 Delete the throwaway branch/PR from 4.3 once confirmed
+- [x] 4.3 Push a throwaway branch (or open a draft PR) and verify the workflow runs end to end and goes green — actually confirm in GitHub Actions, not just "should work" (verified: PR #1 on `ci-verify-throwaway`, run 36338613504, all steps including the Postgres-backed migrate + test steps green)
+- [x] 4.4 Delete the throwaway branch/PR from 4.3 once confirmed (PR closed, branch deleted; the commit was cherry-picked onto `main` as `907f619` rather than lost)
 
 ## 5. Wrap-up
 
-- [ ] 5.1 Run `pnpm lint && pnpm typecheck && pnpm test` locally one more time from a clean state and confirm all three pass
-- [ ] 5.2 Update `docs/BUILD_PLAN.md`'s "Known gaps" bullet about no automated tests existing, since it will no longer be true
+- [x] 5.1 Run `pnpm lint && pnpm typecheck && pnpm test` locally one more time from a clean state and confirm all three pass
+- [x] 5.2 Update `docs/BUILD_PLAN.md`'s "Known gaps" bullet about no automated tests existing, since it will no longer be true
