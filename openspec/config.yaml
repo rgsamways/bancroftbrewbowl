@@ -1,0 +1,54 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+# Add your tech stack, conventions, style guides, domain knowledge, etc.
+# Example:
+#   context: |
+#     Tech stack: TypeScript, React, Node.js
+#     We use conventional commits
+#     Domain: e-commerce platform
+context: |
+  Bancroft Brew Bowl (bancroftbrewbowl.ca) — NFL survivor-pool and pick 'em
+  web app for Bancroft Brewing Co. Built as a template to redeploy per client
+  (own hosting/db/domain per business), not shared multi-tenant SaaS.
+
+  Full architecture, data model, feature inventory, and known gaps:
+  docs/BUILD_PLAN.md. Current session/deploy state: docs/HANDOFF.md. Read
+  both before proposing a change — don't rediscover the architecture from
+  scratch.
+
+  Stack: pnpm workspaces — apps/api (Fastify, Drizzle ORM + pg, Zod,
+  better-auth), apps/dashboard (React, react-router, Vite, Tailwind v4),
+  packages/shared (Zod schemas/types, compiled via tsc — not consumed as raw
+  TS at runtime). Postgres via Railway; dashboard on Vercel (git-connected,
+  auto-deploy); API on Railway (NOT git-connected — needs `railway up`
+  after every push). No cron/scheduler by design — locking/scoring is
+  derived on demand, never a scheduled job.
+
+  Standing rules: `pools.type` (survivor | pick_em) is immutable after
+  creation. Never add a stored "current season" setting — derive it from
+  imported game data. `games` rows are season-scoped, shared across every
+  pool running that season, not pool-scoped.
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
