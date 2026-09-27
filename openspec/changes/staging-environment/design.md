@@ -18,11 +18,19 @@ deploy, or replicating kerfy's multi-tenant control-plane/sandbox topology
 
 ## Decisions
 
-**1. Duplicate, don't hand-build.** `--duplicate production` clones the
-`api` service and Postgres with fresh, isolated resources in one step,
-including copying current variable values (so the duplicated service can
-boot immediately without hunting down every secret again) — safer and
-faster than manually recreating each piece.
+**1. ~~Duplicate, don't hand-build~~ Revised: hand-build, not duplicate.**
+The original plan was `--duplicate production`, expecting it to clone the
+`api` service and Postgres with fresh, isolated resources in one step.
+Tried it first — it did not isolate anything; the resulting environment
+showed the exact same service and volume IDs as production (see tasks.md's
+"Earlier stopped attempt"). Deleted immediately, verified production
+unaffected, then built staging by hand instead: a genuinely empty
+environment (verified via `describe-environment` before adding anything),
+a fresh `Postgres` service (`railway add --database postgres`, verified
+different volume ID), and a new `api-staging` service created straight
+from the GitHub repo on the `staging` branch — more steps, but every one
+independently verified rather than trusted from a single command's success
+message.
 
 **2. Repoint the duplicated `api` service's source branch to `staging`
 immediately after duplication**, since it inherits `main` from production
