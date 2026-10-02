@@ -1,0 +1,98 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bancroft Brew Bowl - home mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d0d;--s1:#171717;--s2:#212121;--line:#2e2e2e;--amber:#e8a24d;--copper:#c17a45;--gold:#ffd27a;--text:#f5f5f0;--mute:#a1a1aa;--alive:#4ade80;--danger:#f87171}
+*{box-sizing:border-box;margin:0}
+body{background:radial-gradient(1200px 500px at 50% -120px,#2a1a0c 0,transparent 70%),var(--bg);color:var(--text);font-family:Poppins,system-ui,sans-serif;max-width:430px;margin:0 auto;padding-bottom:96px;min-height:100vh}
+.oswald{font-family:Oswald,Impact,'Arial Narrow',sans-serif;text-transform:uppercase;letter-spacing:.04em}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px}
+.brand{display:flex;align-items:center;gap:10px}
+.mug{width:34px;height:34px;border-radius:10px;background:linear-gradient(160deg,var(--gold),var(--copper));display:grid;place-items:center;color:#2a1608;font-weight:700;font-size:18px}
+.brand b{font-size:17px;line-height:1}.brand small{display:block;color:var(--mute);font-size:10px;letter-spacing:.14em;margin-top:2px}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--s2);border:2px solid var(--copper);display:grid;place-items:center;font-size:13px;font-weight:600}
+.hero{margin:6px 16px 0;border-radius:22px;padding:18px;background:linear-gradient(180deg,#26180c,#161008);border:1px solid #4a2f17;box-shadow:0 0 0 1px #000,0 18px 40px -18px rgba(232,162,77,.45);position:relative;overflow:hidden}
+.hero:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 22px,rgba(255,255,255,.015) 22px 23px);pointer-events:none}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:5px 10px;border-radius:99px;background:rgba(74,222,128,.12);color:var(--alive);border:1px solid rgba(74,222,128,.35)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--alive);box-shadow:0 0 8px var(--alive)}
+.hero h1{font-size:34px;line-height:1.05;margin:12px 0 4px;font-weight:700}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.sub{color:var(--mute);font-size:13px}
+.lives{display:flex;gap:8px;margin:14px 0 4px;align-items:center}
+.life{width:30px;height:34px;border-radius:7px 7px 10px 10px;background:linear-gradient(180deg,var(--gold),var(--amber));position:relative;box-shadow:0 0 14px rgba(232,162,77,.5)}
+.life:before{content:"";position:absolute;left:5px;right:5px;top:-5px;height:8px;border-radius:5px 5px 0 0;background:#fff;opacity:.9}
+.life.spent{background:var(--s2);box-shadow:none;opacity:.55}.life.spent:before{background:#555}
+.lives span{font-size:12px;color:var(--mute);margin-left:4px}
+.clock{display:flex;gap:8px;margin:14px 0}
+.cell{flex:1;background:#0b0907;border:1px solid #3a2714;border-radius:12px;text-align:center;padding:9px 0}
+.cell b{display:block;font-family:Oswald,Impact,sans-serif;font-size:30px;line-height:1;color:var(--gold);text-shadow:0 0 12px rgba(255,210,122,.45)}
+.cell small{font-size:9px;letter-spacing:.18em;color:var(--mute)}
+.cta{display:block;text-align:center;width:100%;padding:16px;border-radius:14px;background:linear-gradient(180deg,var(--gold),var(--amber));color:#2a1608;font-weight:700;font-size:20px;border:0;box-shadow:0 6px 0 #8a5522,0 12px 24px -8px rgba(232,162,77,.6)}
+h2{font-size:15px;color:var(--mute);margin:26px 18px 10px;display:flex;justify-content:space-between;align-items:baseline}
+h2 a{font-family:Poppins;text-transform:none;font-size:12px;color:var(--amber);letter-spacing:0}
+.games{display:grid;gap:10px;padding:0 16px}
+.game{background:var(--s1);border:1px solid var(--line);border-radius:16px;padding:10px;display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.team{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 4px;border-radius:12px;border:2px solid transparent;background:var(--s2)}
+.team .c{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-family:Oswald;font-weight:700;font-size:14px;color:#fff;border:2px solid rgba(255,255,255,.25)}
+.team b{font-family:Oswald;font-size:13px;letter-spacing:.06em}
+.team small{font-size:10px;color:var(--mute)}
+.team.pick{border-color:var(--gold);background:linear-gradient(180deg,#2d2110,#1d160c);box-shadow:0 0 18px -4px rgba(255,210,122,.6)}
+.team.pick small{color:var(--gold);font-weight:600}
+.team.used{opacity:.4}
+.vs{font-family:Oswald;color:var(--mute);font-size:12px;text-align:center}.vs small{display:block;font-family:Poppins;font-size:10px;margin-top:3px}
+.board{margin:0 16px;background:var(--s1);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.row{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--line);font-size:14px}
+.row:last-child{border:0}
+.rank{font-family:Oswald;font-size:18px;color:var(--mute)}.row.me{background:linear-gradient(90deg,rgba(232,162,77,.18),transparent)}.row.me .rank{color:var(--gold)}
+.row .tag{font-size:11px;color:var(--mute)}
+.up{color:var(--alive);font-size:12px;font-weight:600}.down{color:var(--danger);font-size:12px;font-weight:600}
+.promo{margin:0 16px;border-radius:18px;padding:16px;background:linear-gradient(135deg,#3a2210,#1b120a);border:1px dashed #7a4b22;display:flex;gap:14px;align-items:center}
+.promo .ico{font-size:30px}.promo b{font-family:Oswald;letter-spacing:.05em;font-size:17px;text-transform:uppercase;display:block}.promo span{font-size:12px;color:var(--mute)}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(13,13,13,.92);backdrop-filter:blur(8px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:8px 0 14px}
+nav div{text-align:center;font-size:10px;color:var(--mute);letter-spacing:.08em}nav div i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}nav .on{color:var(--gold)}
+.mock{position:fixed;top:8px;right:8px;background:#fff;color:#000;font:10px sans-serif;padding:3px 6px;border-radius:4px;z-index:9}
+</style></head><body>
+<div class="mock">MOCKUP</div>
+<header><div class="brand"><div class="mug">B</div><div class="oswald"><b>Brew Bowl</b><small>Bancroft Brewing Co.</small></div></div><div class="avatar">RS</div></header>
+
+<section class="hero">
+  <span class="pill"><i class="dot"></i> YOU ARE STILL ALIVE</span>
+  <h1 class="oswald">Week 5 &middot; <em>Make your pick</em></h1>
+  <p class="sub">Sunday Survivor &middot; 38 of 64 players left</p>
+  <div class="lives"><div class="life"></div><div class="life"></div><div class="life spent"></div><span>2 lives left</span></div>
+  <div class="clock"><div class="cell"><b>02</b><small>DAYS</small></div><div class="cell"><b>14</b><small>HOURS</small></div><div class="cell"><b>37</b><small>MINS</small></div></div>
+  <button class="cta oswald">Lock in my pick &rarr;</button>
+</section>
+
+<h2 class="oswald">This week: matchups <a>See all 14</a></h2>
+<div class="games">
+  <div class="game">
+    <div class="team pick"><div class="c" style="background:#c60c30">KC</div><b>CHIEFS</b><small>YOUR PICK</small></div>
+    <div class="vs">VS<small>Sun 1:00</small></div>
+    <div class="team"><div class="c" style="background:#00338d">BUF</div><b>BILLS</b><small>38% picked</small></div>
+  </div>
+  <div class="game">
+    <div class="team"><div class="c" style="background:#046a38">PHI</div><b>EAGLES</b><small>24% picked</small></div>
+    <div class="vs">VS<small>Sun 4:25</small></div>
+    <div class="team used"><div class="c" style="background:#0b2265">DAL</div><b>COWBOYS</b><small>used wk 2</small></div>
+  </div>
+  <div class="game">
+    <div class="team"><div class="c" style="background:#0b162a">DET</div><b>LIONS</b><small>22% picked</small></div>
+    <div class="vs">VS<small>Mon 8:15</small></div>
+    <div class="team"><div class="c" style="background:#003594">LAR</div><b>RAMS</b><small>9% picked</small></div>
+  </div>
+</div>
+
+<h2 class="oswald">Leaderboard <a>Full standings</a></h2>
+<div class="board">
+  <div class="row"><span class="rank">1</span><span>Dave M. <span class="tag">&middot; 4 wins in a row</span></span><span class="up">&#9650; 2</span></div>
+  <div class="row"><span class="rank">2</span><span>Sandra K. <span class="tag">&middot; 4 wins in a row</span></span><span class="tag">&ndash;</span></div>
+  <div class="row me"><span class="rank">3</span><span><b>You</b> <span class="tag">&middot; 1 life used</span></span><span class="up">&#9650; 1</span></div>
+  <div class="row"><span class="rank">4</span><span>Big Mike <span class="tag">&middot; 3 wins</span></span><span class="down">&#9660; 2</span></div>
+</div>
+
+<h2 class="oswald">Tonight at the brewery</h2>
+<div class="promo"><div class="ico">&#127866;</div><div><b>Survivor Sunday</b><span>$2 off pints for everyone still alive. Show your status at the bar.</span></div></div>
+
+<nav class="oswald"><div class="on"><i>&#127942;</i>HOME</div><div><i>&#127944;</i>PICK</div><div><i>&#128202;</i>STANDINGS</div><div><i>&#128100;</i>ME</div></nav>
+</body></html>

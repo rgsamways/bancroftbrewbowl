@@ -1,5 +1,7 @@
 # Session Handoff
 
+> **2026-10-02 update:** Robin has decided on a major v2 (easier, game-like, phone-first front end). Start with `docs/v2/V2_PLAN.md` and the approved mockup in `docs/v2/mockups/`. Nothing is built yet.
+
 _Written 2026-09-27. If you're reading this significantly later, treat the specifics below as a snapshot, not live truth — check git log and the live site first._
 
 ## Where things actually stand right now
