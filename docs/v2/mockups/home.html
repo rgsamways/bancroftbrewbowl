@@ -19,8 +19,9 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 .hero h1 em{font-style:normal;color:var(--gold)}
 .sub{color:var(--mute);font-size:13px}
 .lives{display:flex;gap:8px;margin:14px 0 4px;align-items:center}
-.life{width:30px;height:34px;border-radius:7px 7px 10px 10px;background:linear-gradient(180deg,var(--gold),var(--amber));position:relative;box-shadow:0 0 14px rgba(232,162,77,.5)}
-.life:before{content:"";position:absolute;left:5px;right:5px;top:-5px;height:8px;border-radius:5px 5px 0 0;background:#fff;opacity:.9}
+.life{width:40px;height:24px;border-radius:50%;background:linear-gradient(180deg,#d28a4a,#9b5a2a);position:relative;box-shadow:0 0 14px rgba(232,162,77,.5);transform:rotate(-18deg)}
+.life:before{content:"";position:absolute;left:9px;right:9px;top:50%;height:2px;margin-top:-1px;background:#fff;opacity:.85;border-radius:2px}
+.life:after{content:"";position:absolute;left:14px;right:14px;top:6px;bottom:6px;border-left:2px solid #fff;border-right:2px solid #fff;opacity:.0}
 .life.spent{background:var(--s2);box-shadow:none;opacity:.55}.life.spent:before{background:#555}
 .lives span{font-size:12px;color:var(--mute);margin-left:4px}
 .clock{display:flex;gap:8px;margin:14px 0}
@@ -91,8 +92,8 @@ nav div{text-align:center;font-size:10px;color:var(--mute);letter-spacing:.08em}
   <div class="row"><span class="rank">4</span><span>Big Mike <span class="tag">&middot; 3 wins</span></span><span class="down">&#9660; 2</span></div>
 </div>
 
-<h2 class="oswald">Tonight at the brewery</h2>
-<div class="promo"><div class="ico">&#127866;</div><div><b>Survivor Sunday</b><span>$2 off pints for everyone still alive. Show your status at the bar.</span></div></div>
+<h2 class="oswald">At the brewery</h2>
+<div class="promo"><div class="ico">&#128250;</div><div><b>Watch with us</b><span>Sunday games on the big screen. Make your pick before kickoff, then cheer them on together.</span></div></div>
 
 <nav class="oswald"><div class="on"><i>&#127942;</i>HOME</div><div><i>&#127944;</i>PICK</div><div><i>&#128202;</i>STANDINGS</div><div><i>&#128100;</i>ME</div></nav>
 </body></html>

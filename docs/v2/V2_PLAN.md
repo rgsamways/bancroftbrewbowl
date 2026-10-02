@@ -18,6 +18,35 @@ Robin tried the current site himself and is not happy with it. The back end (poo
 
 Robin's exact words, in case nuance matters: *"if i wanted to rewrite the bancroftbrewbowl website to much easier to use than it is right now, could we follow the ease and simplicity we used in this project and still make pools that are easy for people to use?"* and *"the goal i'm after is to make it bit more game-like in look'n'feel."* He has not yet said which specific screens frustrated him. **Ask him**, then confirm by running the app and screenshotting every screen at phone width before deciding what to cut.
 
+## Two constraints that shape everything (added 2026-10-02, from Robin)
+
+### 1. The purpose: get people to the brewery, playing on their phones
+
+The owner's wife asked Robin to work on this. The point is to **encourage people to come to the brewery to play, instead of playing at home**. So the experience is designed for a **phone in your hand, in the bar**, and the "Phone-first, plain-English UX" rules below are the most important section of this plan, not a nice-to-have.
+
+What that means in practice:
+- Every flow must be completable one-handed on a phone, in a loud bar, in under a minute: open the link, sign in, see your status, make your pick, done. Two taps from the home screen to the pick.
+- **Sign-in must be effortless in the room.** Magic link by email works but means leaving the page for the inbox; test it on a real phone and consider making it smoother (e.g. staying on the same browser tab, long-lived sessions so people sign in once per season, a QR code on tables/menus that opens straight to the site).
+- Things that make being **at the brewery** feel good, without being tied to buying anything (see legal guardrails): a **big-screen / TV standings mode** for the bar, a "watch the games with us" presence on the home screen, a lock-countdown that makes people look up and check the board, weekly recap cards that are fun to show a friend.
+- Fast on bad bar Wi-Fi/cell: small pages, no heavy images, works on a mid-range phone; installable to the home screen like Tobi's admin tip.
+- Large tap targets, readable in dim light (dark theme helps), no hover-only behaviour, no tiny tables.
+- Desktop is secondary. Admin screens may use a bigger screen, but the admin's weekly job (enter results, resolve wipeouts) must also work from a phone behind the bar.
+
+### 2. Legal limits around alcohol and gambling
+
+Robin says there are legal limitations about booze and gambling that were discussed earlier in this project, and that **every mockup and feature must respect them**. **The specifics are not written down in this repo, the project memory, or the saved session transcripts I could search** (the only related note found: the app handles no money at all, "if people are paying to play, that's happening in cash at the bar completely separate from the website"). So:
+
+- **First task in the new session: ask Robin to restate the exact rules** (province/jurisdiction, what the brewery's licence allows, what the owner has said) and record them here and in project memory. Do not guess the law.
+- Until then, use these **conservative defaults** (they avoid the usual problem areas; confirm with Robin and, for real certainty, the owner/AGCO or a lawyer. I am not giving legal advice):
+  - **No money anywhere in the product.** No entry fees, buy-ins, prizes, jackpots, payouts, odds, "win $" language, or payment/Stripe features. Do not mention paying to play. Don't use gambling words in the UI ("bet", "wager", "stake", "jackpot", "odds").
+  - **No alcohol tied to playing or winning.** No "free/discounted drinks for players/winners/survivors", no drink prizes, no "buy a drink to play", no promotions that reward drinking. Don't show alcohol imagery as a reward or game mechanic. Nothing that pressures anyone to drink more or that mixes game status with ordering.
+  - **No purchase necessary / no benefit gating**: playing must not require, or be rewarded by, buying anything.
+  - Keep any rewards **non-monetary, non-alcohol bragging rights** only (badges, streaks, leaderboard position, "Pool champion") unless Robin confirms something else is allowed.
+  - Age/responsible-play: consider an unobtrusive 19+ (or applicable age) note and a "drink responsibly" footer line if Robin/owner want it. Ask.
+  - Avoid collecting more personal data than a first name / initial and email.
+- **Existing features to review against the rules before the v2 launch** (do not change them silently; raise with Robin): the four **canned promotions** (Survivor Sunday, Elimination Consolation, Milestone Rewards, Hot-Team Special) and the free-text **Promotions** page. Their names and the idea of "eligible for something" may imply rewards. Today they only list eligible people; what staff then hand out is outside the app, but the wording and any prompts the app shows should not suggest alcohol or money rewards.
+- **Mockup compliance:** the first draft of the mockup had a "$2 off pints for everyone still alive" card and beer-mug lives. Both were removed on 2026-10-02: lives are now footballs and the card is "Watch with us" (no alcohol, no money, no purchase). Keep checking every new mockup against the list above.
+
 ## Product, in one paragraph
 
 NFL survivor and pick 'em pools for Bancroft Brewing Co. (a bar). Players get a magic-link sign-in, join a pool, pick weekly before the first kickoff of the week, and watch standings. An admin creates pools, invites people, enters results, resolves wipeouts, and posts promotions (free-text and four canned kinds). Template-per-client deployment (see `project_product_direction` memory): one deployment = one business. Dashboard on Vercel, API + Postgres on Railway.
@@ -39,7 +68,7 @@ This is the part Robin cares most about. It is a process and a set of habits, no
 - Prefer deriving over storing (this repo's pick 'em points and "current season" already do).
 
 **Phone-first, plain-English UX**
-- Design for a phone in a bar first; desktop second. Big tap targets (≥44px), one primary action per screen.
+- **This is the top priority (the goal is to get people into the brewery playing on their phones).** Design for a phone in a bar first; desktop second. Big tap targets (≥44px), one primary action per screen.
 - Friendly validation and honest errors in plain language, never raw codes; keep what the person typed when something fails.
 - Anything destructive needs a clear confirm (this repo already has type-the-name delete for pools).
 - Nothing mysterious: say what just happened ("Locked in!", "You are still alive") and what happens next.
@@ -62,10 +91,10 @@ Keep the existing brand: dark theme, copper/amber accent (`#c17a45` in the curre
 
 The mockup (phone homepage, see `mockups/home.png`) introduces:
 
-- **Hero "status" card**: "YOU ARE STILL ALIVE" badge, big "Week N · Make your pick", pool name and "38 of 64 players left", **lives shown as beer mugs** (full/spent), **countdown tiles** (days/hours/mins) to the pick lock, and one chunky primary button ("Lock in my pick →").
+- **Hero "status" card**: "YOU ARE STILL ALIVE" badge, big "Week N · Make your pick", pool name and "38 of 64 players left", **lives shown as footballs** (full/spent; was beer mugs, changed for the legal guardrails), **countdown tiles** (days/hours/mins) to the pick lock, and one chunky primary button ("Lock in my pick →").
 - **Matchups as tap cards**: two team badges per game, the player's pick glowing gold with "YOUR PICK", already-used teams dimmed ("used wk 2"), kickoff time between, **crowd percentage** ("38% picked").
 - **Leaderboard** with the viewer's row highlighted, win streaks, and rank movement arrows.
-- **Bar promotion card** (existing Promotions feature, restyled) — "Tonight at the brewery".
+- **"Watch with us" card** (restyled slot for the existing Promotions feature): neutral, about being at the brewery for the games. No alcohol, money, or purchase wording (see legal guardrails).
 - **Bottom tab bar**: Home · Pick · Standings · Me — replaces the current left sidebar + right help drawer on phones.
 - All names, teams and numbers in the mockup are fictional.
 
@@ -83,7 +112,7 @@ Likely next design ideas Robin liked in principle ("game-like"): moments of deli
 | "% picked" | aggregate `picks` per game/week | new read endpoint; consider whether to reveal before lock (it can influence picks; maybe show only after lock) |
 | Win streak | derive from `picks.result` | new derived value |
 | Rank movement ▲▼ | needs previous-week standings | derive from picks/results as of the previous decided week; don't store |
-| Promotions | existing | restyle only |
+| Promotions | existing | restyle only; **content must follow the legal guardrails** |
 
 Hard rules to respect (from BUILD_PLAN "History worth knowing"): never store "current season"; `pools.type` is immutable; games are season-scoped, not pool-scoped; pick 'em points are derived, never stored; `@bbb/shared` needs a real build; pin pnpm.
 
@@ -103,13 +132,15 @@ Release as a **major version** (v2.0.0): tag it, and give the changes a staging 
 
 ## Open questions for Robin
 
+0. **Legal constraints:** please restate exactly what the brewery can and can't do around gambling and alcohol (so they can be written into this plan and memory).
 1. Which exact screens/steps frustrated you most (sign-in, finding the pick screen, understanding standings, admin setup)?
 2. Player first or admin first? (Assumed: player first.)
 3. Does a "lives" concept make sense for pick 'em, or should its hero show points and rank instead?
 4. Should "% picked" be hidden until the week locks (to avoid herding)?
-5. Keep the beer-mug lives, or a different motif?
+5. Footballs for lives are the current motif (mugs were dropped because of the alcohol guardrail). Happy with footballs, or another motif?
 6. Is a big-screen/TV standings view wanted for the bar?
-7. Is this repo still a template for future bars (affects how much brand is hard-coded vs configurable)?
+7. Which in-brewery touches are welcome (QR code on tables, big-screen standings, a "watch with us" card)? Anything the owner doesn't want?
+8. Is this repo still a template for future bars (affects how much brand is hard-coded vs configurable)?
 
 ## Practical notes for the next session
 
