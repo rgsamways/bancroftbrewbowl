@@ -45,7 +45,9 @@ Questions for Robin and the owner: if someone doesn't check in, can they simply 
 
 The owner and his wife will likely want to hand duties to wait staff and other employees. The proposed rules, roles (bar staff, kitchen, game-night lead, events and marketing, menu manager, pool manager, general manager, owner or admin, read-only auditor), safeguards and questions for the owner are written up in `docs/ROLES_AND_RULES.md` under "Staff and employee roles". That is slice 14 (optional) in `docs/v2/V2_BUILD_PLAN.md`.
 
-## Small fix to do when asked
+## Small fix (done 2026-10-04)
+(Fixed: the header now uses the same width and padding as the page.)
+
 
 The top bar (`AppHeader.tsx`) is `max-w-3xl` with 16px side padding while the page content is `max-w-lg` with 24px, so on a phone the logo and avatar sit closer to the edges than the cards, and on a wide window the bar is wider than the content. One-line fix: match the content width and padding.
 
@@ -58,9 +60,9 @@ The setting already exists but does nothing: pool settings list a `per_game_kick
 - **The lock moves from the week to the game.** A pick for a team locks at that team's kickoff, not the week's first kickoff. Thursday, Sunday early and late, Sunday night, Monday night, and later-season Saturday games and holiday games all lock separately.
 - **Survivor:** you can still choose any team whose game hasn't started. Open question: can you change a pick after an earlier game has started? For example, picked a Sunday team, the Thursday game ended and you'd have liked it. Likely rule: a pick can change until the kickoff of the game it is for, but you can't switch to a team whose game has already started. Double-pick weeks need a rule per pick.
 - **Pick 'em** is simpler: one pick per game, each locking at its own kickoff.
-- **Privacy:** "picks stay hidden until the week locks" (`lib/pick-visibility.ts`, `lib/pick-counts.ts`) would become "a pick is visible once its game has started". The TV most-picked list and the recap's most picked and upset use the same gate and would follow it.
+- **Privacy:** Robin's view (2026-10-04): there is **no advantage to waiting for a late game while seeing what other players picked**, for either pool type, because you still have to be right. So the "picks stay hidden until the week locks" rule (`lib/pick-visibility.ts`, `lib/pick-counts.ts`) can stay as it is and doesn't need a per-game version; the TV most-picked list and the recap keep using the week's lock. (Revisit if the owner disagrees.)
 - **Home, Pick and the admin Next step** all use one definition of the current week and its lock time (`lib/entry-state.ts`). That would need a per-game version: countdown to the next lock, "locked" being partial, and "needs picks" meaning no unstarted game is picked.
 - **Flexed games.** The NFL moves kickoffs (flex scheduling, rescheduled games). Lock times must read the stored kickoff each time; the seed script (`pnpm seed-schedule`) refreshes them, but a late move after someone relied on it needs a rule.
-- **Fairness:** an admin who also plays must not be able to use the extra information; the existing "another admin confirms" rule and the recorded Activity stay.
-- **It changes the game.** Waiting for the late game is an advantage over people who locked early; consider whether the owner wants that, or a middle option (for example, the week locks at the first Sunday kickoff, with Thursday games as their own separate pick).
+- **Fairness:** the early-information worry is settled by the point above. The existing "another admin confirms" rule and Activity stay for admins who also play.
+- **It changes the game a little.** Waiting for a late game lets you use news (injuries, line moves) that early lockers don't have. Robin doesn't see that as a problem; the owner should still agree. A middle option: the week locks at the first Sunday kickoff, with Thursday games as their own separate pick.
 - Needs a plan-mode design pass (it touches picks, visibility, scoring-adjacent rules, and likely the setting's meaning), and its tests must cover every game-day pattern: Thursday, Sunday, Monday, a flexed game, a bye team.

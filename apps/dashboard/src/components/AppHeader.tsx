@@ -9,7 +9,7 @@ export function AppHeader() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-brand-border bg-brand-bg/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4">
+      <div className="mx-auto flex h-16 max-w-lg items-center justify-between px-6">
         <Link to="/" aria-label="Brew Bowl home" className="flex min-h-11 items-center gap-2.5">
           <span className="grid h-9 w-9 place-items-center rounded-[10px] bg-brand-accent text-[17px] font-bold text-brand-accent-ink">
             B
