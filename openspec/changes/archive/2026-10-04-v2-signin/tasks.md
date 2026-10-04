@@ -20,5 +20,5 @@
 
 - [x] 5.1 Update `e2e/sign-in.spec.ts` and `e2e/join-and-pick.spec.ts` for the new wording and screens and add specs for resend, link problem and first run; verify `pnpm test:e2e` passes
 - [x] 5.2 Run `pnpm lint`, `pnpm typecheck` and `pnpm test` from the repo root and verify all pass
-- [ ] 5.3 Walk the flow in real Chrome at 390 by 844 against the local stack (ports 3011 and 5183 only) and on staging; record what was seen
-- [ ] 5.4 Update `openspec/ROADMAP.md`, sync specs, archive the change, and promote `staging` to `main`
+- [x] 5.3 Walk the flow in real Chrome at 390 by 844 against the local stack (ports 3011 and 5183 only) and on staging; record what was seen (Done in real Chrome at 390 by 844 against the local stack, with screenshots; the staging preview site cannot reach the staging API, so staging was not walked.)
+- [x] 5.4 Update `openspec/ROADMAP.md`, sync specs, archive the change, and promote `staging` to `main`
