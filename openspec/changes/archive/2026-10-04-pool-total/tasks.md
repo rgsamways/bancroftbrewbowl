@@ -19,5 +19,5 @@
 ## 5. Verify and ship
 
 - [x] 5.1 Run `pnpm lint`, `pnpm typecheck`, `pnpm typecheck:e2e`, `pnpm test` and `pnpm test:e2e` and verify all pass
-- [ ] 5.2 Call out the schema change, push to `staging`, and verify on `api-staging` (its own database) that the migration applied and the total can be set through the API; record what was seen
-- [ ] 5.3 Update `openspec/ROADMAP.md` and `docs/HANDOFF.md`, sync specs, archive the change, and promote `staging` to `main`; confirm the production migration and deploy succeeded
+- [x] 5.2 Call out the schema change, push to `staging`, and verify on `api-staging` (its own database) that the migration applied and the total can be set through the API; record what was seen
+- [x] 5.3 Update `openspec/ROADMAP.md` and `docs/HANDOFF.md`, sync specs, archive the change, and promote `staging` to `main`; confirm the production migration and deploy succeeded
