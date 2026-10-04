@@ -28,7 +28,8 @@ The order puts what is risky or unseen first, what everything else depends on se
 | 6 | `v2-home-and-pick` | L | none | The heart of the player experience. |
 | 7 | `v2-standings` | M | none | Ties, find a player, pool total. |
 | 8 | `admin-activity-log` | M | 1 table | Must exist before admin actions are rebuilt, so they can write to it. |
-| 9 | `v2-admin-steps` | L | none | The step-by-step admin: next step, results, new pool, announcement, wipeout. |
+| 9a | `v2-admin-steps` | M | none | The admin frame (Next step, Results, Pools, More), results wizard and list with corrections, the wipeout decision. |
+| 9b | `v2-admin-pools` | M | none | Pools list, Players roster, Picks, Settings, delete, new-pool wizard. |
 | 10 | `admin-confirmations` | M | 1 table | The "another admin confirms" rule. Needs 8 and 9. |
 | 11 | `menu-and-music` | L | 2 to 3 tables | Public menu, music and the admin screens for them. |
 | 12 | `from-the-brewery` | M | extends 1 table | Features, specials, announcements. Needs 11. |
@@ -74,8 +75,10 @@ Survivor (alive and eliminated, find a player) and pick 'em (points leaderboard 
 ### 8. `admin-activity-log`
 A table `admin_activity` (who, what, which pool or item, when, and whether it affected the actor's own entry). Every existing admin route that changes standings or content writes a row, naming the signed-in admin explicitly (no database trigger, which is what left kerfy's log without a name). An Activity page for admins. Mockup: `admin-activity`.
 
-### 9. `v2-admin-steps`
-The admin tab bar (Next step, Results, Menu, Pools, More) and the admin home as one "next step" card. Guided flows: enter results one game at a time (with "Change" for corrections and the survivor warning), open a new pool, post an announcement. The roster, picks table (teams hidden until the lock), pool settings, delete a pool, wipeout. Mockups: the "Admin" groups.
+### 9. `v2-admin-steps` (9a) and `v2-admin-pools` (9b)
+_Split on 2026-10-04 with Robin: 9a is the frame, Next step, Results and Wipeout; 9b is Pools, Players, Picks, Settings and the new-pool wizard. The announcement wizard moved to slice 12 (nothing shows announcements to players before then), and the Menu tab joins the admin bar in slice 11._
+
+The admin tab bar (Next step, Results, Menu, Pools, More) and the admin home as one "next step" card. Guided flows: enter results one game at a time (with "Change" for corrections and the survivor warning), open a new pool. The roster, picks table (teams hidden until the lock), pool settings, delete a pool, wipeout. Mockups: the "Admin" groups.
 
 ### 10. `admin-confirmations`
 A table `admin_requests`. A wipeout or status change that affects an admin's own entry becomes a request; another admin confirms or declines with an optional reason; confirming applies it; both steps appear in Activity. With only one admin it is allowed and flagged. Mockups: `admin-wipeout-self`, `admin-approval*`, `admin-next-*`.

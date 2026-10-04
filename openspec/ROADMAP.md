@@ -22,10 +22,11 @@ Easier to use, phone-first front end with a polished, modern look, built with th
 | 6 | `v2-home-and-pick` | **Done and archived** (`archive/2026-10-04-v2-home-and-pick`). Home hero with pool chips, all states for survivor and pick 'em, the Pick screen (confirm bar, double-pick, tap-to-pick, locked, out), join pages, `GET /me/summary` and `GET /entries/:id/pick-sheet`. 155 tests, 46 real-browser checks. No schema change. |
 | 7 | `v2-standings` | **Done and archived** (`archive/2026-10-04-v2-standings`). One-request standings for survivor and pick 'em: summary cards, pool total, Find a player, Show all, shared ranks (T4), pool tabs, Final standings. 163 tests, 49 real-browser checks. No schema change. |
 | 8 | `admin-activity-log` | **Done and archived** (`archive/2026-10-04-admin-activity-log`). Table `admin_activity`; every admin write route records who, what, which pool, when and whether it touched the admin's own entry; admin-only Activity page with filters and paging; coverage test against silent gaps. 190 tests, 50 real-browser checks. |
-| 9 | `v2-admin-steps` | Not written |
+| 9a | `v2-admin-steps` | Planned and valid (2026-10-04), not started. Admin frame (Next step, Results, Pools, More), results wizard and list with corrections, wipeout decision. No schema change. Waiting for Robin's go. |
+| 9b | `v2-admin-pools` | Not written. Pools list, Players roster (add and edit status), Picks, Settings, delete, new-pool wizard. Closes the roster status-edit gap. |
 | 10 | `admin-confirmations` | Not written (one table) |
 | 11 | `menu-and-music` | Not written (needs a plan-mode design pass first; new tables) |
-| 12 | `from-the-brewery` | Not written (extends `promotions`) |
+| 12 | `from-the-brewery` | Not written (extends `promotions`). Also takes the announcement wizard moved out of slice 9 so nobody posts something players cannot see. |
 | 13 | `v2-help-and-extras` | Not written |
 | 14 | `roles-and-rules` | Optional; only if the owner wants to hand out parts of the work |
 | 15 | `v2-cleanup-and-release` | Not written; tags v2.0.0 |
