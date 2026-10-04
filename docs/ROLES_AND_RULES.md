@@ -163,3 +163,71 @@ A plain table written by the route code itself: who (the signed-in admin), what,
 1. **`secure-pick-access`** (done, live 2026-10-04): fixed the three real holes and covers rules 1 to 4 above.
 2. **Admin activity record and the player-who-is-admin safeguards:** the activity table, the "You" notices and the hidden-pick table in the admin screens.
 3. **Rules list and the Admins screen:** only when the owner wants to hand out part of the work. It adds the `rules` list, the role templates, the invitation, and last-admin protection.
+
+## Staff and employee roles (added 2026-10-04, after v2 shipped)
+
+_Robin's thought: the owner and his wife will want to hand duties to wait staff and other employees. This extends the rules above with staff in mind. Still a proposal; nothing here is built._
+
+### What staff actually do on a game day
+
+- **Behind the bar:** switch a tap or dish to sold out and back; add a walk-in player who asks at the bar; tell a customer whether they have picked yet; put the TV standings on.
+- **In the kitchen:** switch a dish to sold out; update the day's specials.
+- **Front of house or the game-night lead:** enter results when games end; chase players who haven't picked; keep the TV and the table cards up.
+- **Management:** menu and prices, music, specials and announcements, the pools, and who else has access.
+
+### Extra rules this suggests
+
+Split the existing broad rules so a role can be given only the slice it needs.
+
+| Rule | Meaning |
+| --- | --- |
+| `mark_sold_out_drinks` / `mark_sold_out_dishes` | Sold-out switch, scoped to drinks or to food (a kitchen cook doesn't need the taps, and the reverse). |
+| `edit_prices` | Change prices only. Separate from adding or removing items, because price changes are the sensitive part. |
+| `manage_drinks` / `manage_dishes` | Add, edit and remove drinks, or dishes. |
+| `manage_specials` | Add and remove specials and the day's featured item. |
+| `post_announcements` | Write announcements. Kept apart from specials because announcements are free text that goes to every phone. |
+| `add_walkin_player` | Add a player to a pool by name and email, without being able to edit anyone's status. |
+| `view_pick_status` | See who has picked (not what) before the lock, to chase people. Already in the list; useful for floor staff. |
+| `show_tv` | Open the TV page and print the table card. Could simply be open to every signed-in account. |
+| `view_player_emails` | Left off every staff role by default: staff can usually help someone without seeing the address. |
+| `enter_results` (only) | Without `correct_results`: staff enter a final score, only a manager changes one afterwards. |
+| `set_pool_total` | For whoever actually handles the cash at the bar. Always recorded. |
+| `manage_staff` | Give or remove staff roles, never above your own level. |
+
+### Roles (presets of rules)
+
+| Role | Who it's for | Rules |
+| --- | --- | --- |
+| Player | Everyone | The "Playing" group. |
+| Bar staff | Bartenders, servers | Player, plus `mark_sold_out_drinks`, `add_walkin_player`, `view_pick_status`, `show_tv`. |
+| Kitchen | Cooks | Player, plus `mark_sold_out_dishes`, `manage_specials` for food. |
+| Game-night lead | The person running a Sunday | Bar staff, plus `enter_results`. |
+| Events and marketing | Whoever books bands and posts | Player, plus `manage_music`, `manage_specials`, `post_announcements`. |
+| Menu manager | Head bartender or chef | Player, plus `manage_drinks`, `manage_dishes`, `edit_prices`, sold-out both ways. |
+| Pool manager | The weekly job | Player, plus all of "Running pools" and "Results and decisions" (including `correct_results` and `resolve_wipeout`). |
+| General manager | Runs the place day to day | Everything except `manage_admins` and the operator-only rules. |
+| Owner / admin | Owner, his wife, Robin | Everything, including `manage_admins` and `manage_staff`. |
+| Read-only auditor | Accountant or a silent partner | Player, plus `view_activity_log`. Can see, can't change. |
+
+### Safeguards that matter more with staff
+
+1. **A staff member who plays is held to the same fairness rules as an admin.** The confirmation rule ("a decision that changes your own standing needs another person to confirm") should apply to anyone holding a rule that could change their own entry, not only admins. Results entered by someone who is also in the pool are flagged, as for admins.
+2. **Nobody can grant a rule they don't hold,** and `manage_staff` can't create anyone above their own level.
+3. **Personal accounts, not a shared "bar" login.** Every change is recorded with a name, so a shared tablet account would make Activity useless. If a shared tablet is wanted, give it a narrow role (sold-out only) and accept that its records say "Bar tablet".
+4. **Access can end.** Seasonal staff roles can carry an end date so a summer hire's access lapses on its own. Removing someone is one tap and recorded.
+5. **Promotions and the law.** Free-text announcements and specials about alcohol are the part most likely to cause trouble with the liquor regulator. Option: staff roles may only draft them and a manager approves, using the same ask-another-person pattern as confirmations. Game-linked drink offers stay unbuilt.
+6. **Cash.** `set_pool_total` is display-only, but it is the number players trust. Keep it to a small group and keep it in Activity.
+7. **The last-admin and operator rules don't change.** Staff roles never include operator actions (schedule import, password reset).
+
+### Suggested launch shape
+
+Keep it small: Player, **Staff** (sold-out for drinks and dishes, add a walk-in player, see who has picked, enter results) , **Manager** (menu, prices, music, specials, announcements, pools) and **Admin**. Add the narrower presets above only when someone asks for them. Build order stays as in "Suggested order of work", step 3, with the rule list stored as text so adding a rule needs no migration.
+
+### Questions to settle with the owner
+
+- Who are the staff, and do they play in the pools?
+- Personal phones, or a shared tablet behind the bar?
+- Who handles the cash for the pool total?
+- Should staff post announcements and specials directly, or should a manager approve first?
+- Should access expire (seasonal staff), and who may add or remove staff?
+
