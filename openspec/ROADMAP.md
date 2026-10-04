@@ -21,7 +21,7 @@ Easier to use, phone-first front end with a polished, modern look, built with th
 | 5 | `pool-total` | **Done and archived** (`archive/2026-10-04-pool-total`). One nullable column `pools.pool_total_cents`; admin sets it in pool settings, players see it on Standings. 120 tests, 33 real-browser checks. |
 | 6 | `v2-home-and-pick` | **Done and archived** (`archive/2026-10-04-v2-home-and-pick`). Home hero with pool chips, all states for survivor and pick 'em, the Pick screen (confirm bar, double-pick, tap-to-pick, locked, out), join pages, `GET /me/summary` and `GET /entries/:id/pick-sheet`. 155 tests, 46 real-browser checks. No schema change. |
 | 7 | `v2-standings` | **Done and archived** (`archive/2026-10-04-v2-standings`). One-request standings for survivor and pick 'em: summary cards, pool total, Find a player, Show all, shared ranks (T4), pool tabs, Final standings. 163 tests, 49 real-browser checks. No schema change. |
-| 8 | `admin-activity-log` | Planned and valid (2026-10-04), not started: one new table `admin_activity`. Waiting for Robin's go; the schema change will be called out again before the push. |
+| 8 | `admin-activity-log` | **Done and archived** (`archive/2026-10-04-admin-activity-log`). Table `admin_activity`; every admin write route records who, what, which pool, when and whether it touched the admin's own entry; admin-only Activity page with filters and paging; coverage test against silent gaps. 190 tests, 50 real-browser checks. |
 | 9 | `v2-admin-steps` | Not written |
 | 10 | `admin-confirmations` | Not written (one table) |
 | 11 | `menu-and-music` | Not written (needs a plan-mode design pass first; new tables) |

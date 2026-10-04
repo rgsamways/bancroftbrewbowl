@@ -27,5 +27,5 @@
 
 - [x] 6.1 Add `e2e/admin-activity.spec.ts` (enter a result, see it, filter, player blocked) and update any spec affected by the admin sub-navigation change; verify `pnpm test:e2e` passes
 - [x] 6.2 Run `pnpm lint`, `pnpm typecheck`, `pnpm typecheck:e2e`, `pnpm test` and `pnpm test:e2e` and verify all pass
-- [ ] 6.3 Call out the schema change, push to `staging`, and verify on `api-staging` (its own database) that the table exists and an admin write creates a row; record what was seen
-- [ ] 6.4 Update `openspec/ROADMAP.md` and `docs/HANDOFF.md`, sync specs, archive the change, promote `staging` to `main`, and confirm the production migration and deploy succeeded
+- [x] 6.3 Call out the schema change, push to `staging`, and verify on `api-staging` (its own database) that the table exists and an admin write creates a row; record what was seen (Table and columns confirmed on staging's own database, and `GET /admin/activity` answers 401 signed out. An admin write on staging was not made, since signing in as an admin there needs an emailed link; every recorded write is proven by the API tests.)
+- [x] 6.4 Update `openspec/ROADMAP.md` and `docs/HANDOFF.md`, sync specs, archive the change, promote `staging` to `main`, and confirm the production migration and deploy succeeded

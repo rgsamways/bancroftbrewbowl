@@ -4,7 +4,7 @@ _Written 2026-10-04, end of the long mockup-and-planning session. If you're read
 
 ## Start here
 
-The state in one line: **v2 is fully designed and planned; slices 1 to 7 are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick, Standings); `password-sign-in` stays open only for a real-phone password-manager check.** The next job is slice 8, `admin-activity-log` (one new table, so a schema-change call-out before pushing), in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
+The state in one line: **v2 is fully designed and planned; slices 1 to 8 are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick, Standings, the admin activity record); `password-sign-in` stays open only for a real-phone password-manager check.** The next job is slice 9, `v2-admin-steps` (the biggest admin slice; plan it with Robin first), in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
 
 Read, in order:
 
@@ -71,3 +71,11 @@ Read, in order:
 - Standings loads from one request, `GET /pools/:poolId/standings`, which returns already-sorted lists, counts, shared pick 'em ranks and "after week N". It sends names, status, elimination weeks and points only: no emails, no picks (a test pins this). Search and "Show all" work on the full list on the phone.
 - `initials` now lives in `@bbb/shared` (`standings.ts`) and is shared by the header and the lists.
 - Only your own row links anywhere (to your pick screen). The Standings and Pick tabs both open the pool that needs attention first, the same choice as Home.
+
+## Slice 8 notes (admin-activity-log, 2026-10-04)
+
+- Table `admin_activity` (migration 0006). Every admin write route calls `recordActivity` with the signed-in admin passed in explicitly (`apps/api/src/lib/activity.ts`); the sentence is stored as written, so renames and deletes cannot rewrite history. Kinds, titles and categories live in `packages/shared/src/admin-activity.ts`: add menu, music and confirmation kinds there, no migration needed.
+- A coverage test (`lib/activity-coverage.test.ts`) fails if an admin write route has no `recordActivity`, and if any app code updates or deletes a record. There is no route to edit or delete one.
+- `GET /admin/activity` (admin only, 50 per page, cursor, filters). The Activity page is `/admin/activity`, linked from the interim admin sub-navigation until slice 9 moves it under "More".
+- Test cleanup removes the records its own admins made (`cleanupFixtures`, `TestDb.cleanup`). If local activity rows ever pile up, they came from a test that skipped cleanup.
+- Python on this Windows machine writes files in cp1252 unless told otherwise: always pass `encoding="utf-8"` when editing source with a script (a stray byte once corrupted an en dash in `nfl.ts`).
