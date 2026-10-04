@@ -37,6 +37,7 @@ Easier to use, phone-first front end with a polished, modern look, built with th
 
 - `reveal-picks-setting`: **Done and archived** (`archive/2026-10-04-reveal-picks-setting`). Per-pool rule for when other players' picks show (at the lock, or after the week's last game is final); no schema change.
 - `safe-display-names`: **Done and archived** (`archive/2026-10-04-safe-display-names`). Other players never see an email as a name (Standings, TV, player list); Home asks for a display name until one is set. No schema change. `v2.0.0` tagged 2026-10-04 on `d91744c`.
+- `espn-results-button`: **Planned, waiting for Robin's go** (`openspec/changes/espn-results-button`, valid). A Check for results button on the admin Results screen that previews and applies finished games from ESPN, scoring them like hand-entered results. No schema change.
 - Noted in `docs/IDEAS.md`, not started: staff QR page, weekly in-person check-in, per-game pick locking, an "Update results from ESPN" button, staff roles (see `docs/ROLES_AND_RULES.md`).
 
 ## Don't forget (Robin, 2026-10-04)
