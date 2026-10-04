@@ -11,3 +11,7 @@ pnpm-lock.yaml.bak
 coverage/
 
 .vercel
+
+# Generated mockup screenshots (regenerate from the HTML; the HTML is the source)
+docs/v2/mockups/*.png
+!docs/v2/mockups/home.png

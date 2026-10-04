@@ -1,43 +1,56 @@
 # Session Handoff
 
-_Written 2026-10-02, end of session. If you're reading this significantly later, treat the specifics below as a snapshot, not live truth — check git log and the live site first._
+_Written 2026-10-04, end of the long mockup-and-planning session. If you're reading this significantly later, treat the specifics below as a snapshot, not live truth: check `git log`, `openspec list` and the live site first._
 
 ## Start here
 
-This session is picking up **v2 work** (a major, "game-like," phone-first front-end rewrite). Read, in order:
+The state in one line: **v2 is fully designed and planned, and no app code has been written.** The next job is to start building, one slice at a time, in the order in `docs/v2/V2_BUILD_PLAN.md`, starting with `secure-pick-access`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
+
+Read, in order:
 
 1. This file.
-2. `docs/v2/V2_PLAN.md` — the full plan, written at the end of a prior session. It has the "why," the legal guardrails, the approved mockup description, the proposed 8-9 step sequence, and open questions for Robin.
-3. `docs/v2/mockups/home.png` (and `home.html`, the source) — the one approved mockup so far. Dark theme, copper/amber accent, footballs for "lives," bottom tab bar (Home/Pick/Standings/Me). Robin's reaction: "WOWOWOWOW, you nailed it." Nothing else has been mocked up yet.
-4. `docs/BUILD_PLAN.md` — architecture/data model/feature reference, still accurate.
-5. This project's memory at `C:\Users\rgsam\.claude\projects\c--dev-bancroftbrewbowl\memory\` — `project_v2_gamelike_frontend.md` has the legal guardrails and today's pot-feature decision (see below); don't re-derive either from scratch.
+2. `docs/v2/V2_BUILD_PLAN.md`: the order of work, what each slice contains, which ones change the database, and how releases work.
+3. `docs/v2/mockups/index.html` (open in a browser; `gallery.html` shows thumbnails). About 115 clickable pages for every player screen, the step-by-step admin, sign-in and password, the menu and music, and the fairness safeguards. The "Viewing as" switch (Player / Admin / All) filters the index and shows or hides the Admin tab. The pages are generated static HTML; edit the HTML directly.
+4. `docs/ROLES_AND_RULES.md`: who can do what, the rules the app must always keep, and the "another admin confirms" rule.
+5. `docs/v2/V2_PLAN.md`: the original why and the legal guardrails.
+6. `docs/BUILD_PLAN.md`: the architecture of the app that already exists (still accurate).
+7. The project memory at `C:\Users\rgsam\.claude\projects\c--dev-bancroftbrewbowl\memory\`, especially `project_v2_gamelike_frontend.md`, which records every design decision made so you don't ask again.
+8. `docs/IDEAS.md`: parked ideas (in-brewery games). Don't start them unprompted.
 
-## Where things actually stand right now
+## Where things stand
 
-- `main` is clean, pushed, nothing in flight. Last commits: `e5289e6` (v2 plan + legal guardrails) and `31af972` (v2 plan + approved mockup) — **no v2 code exists yet, planning only.**
-- Production (`bancroftbrewbowl.ca` / `api.bancroftbrewbowl.ca`) is live and healthy, verified this session.
-- There's also a `staging` branch/environment now (added the session before this one — see `openspec/changes/archive/2026-09-27-staging-environment` and `CLAUDE.md`'s Deploy pipeline section). Use it for any visual v2 work before Robin's seen it — v2 is exactly the kind of change that shouldn't go to production unseen.
-- The still-unresolved scoring backlog from two sessions ago (no game results entered in production for a while, so eliminations/points weren't running) — status not rechecked this session. Worth a quick look if it comes up, but Robin explicitly said not to worry about it ("no one is using this project").
+- `main` is at the docs-and-mockups commits made at the end of this session; production (`bancroftbrewbowl.ca`) is the old app and unchanged. A `staging` branch and environment exist (see `CLAUDE.md`).
+- **Two OpenSpec changes are written, valid and not started:** `secure-pick-access` (do first) and `password-sign-in` (part of slice 4). `openspec list` will show them as in progress with 0 tasks done; that is accurate.
+- **Robin's release rule:** each slice goes live as soon as it is verified. No private review gate; he decides. Staging is a quick self-check.
 
-## Decisions made this session (not yet built)
+## Things found this session that matter
 
-1. **v2 direction confirmed.** Robin wants the game-like phone-first rewrite from `V2_PLAN.md`. Scope estimate given: 8-9 checkpointed OpenSpec changes (explore → mockups for remaining screens → theme/shell → home → pick screen → standings → admin simplification → docs/guide → optional delight pass), realistically multiple sessions if the checkpoint discipline is kept — and it should be kept; skipping it is what made the *previous* session (Railway/staging infra) feel endless and confusing to Robin.
-2. **Legal stance reconfirmed, no change**: no money, no alcohol tied to play, bragging-rights-only rewards — this was already locked in last session and still stands.
-3. **New idea, decided against as proposed**: Robin asked about a $5/week buy-in pot with a real Stripe integration to collect/pay it out. Advised against building this — a business collecting entry money and paying out a prize pool through its own payment processor reads as operating an unlicensed betting scheme under the Criminal Code (Bancroft is AGCO-licensed in Ontario; this risks the liquor license too), and separately Stripe's own terms restrict gambling/betting as a category. **Do not build Stripe/real-money payment features for this without Robin confirming he's gotten real legal advice first.**
-4. **What Robin approved instead**: a **display-only pot feature**. Admin types in a cash figure (money collected informally at the bar, exactly as today — the app never touches payment), the app just displays the number somewhere exciting (home screen / standings, fits naturally into the v2 mockup direction). No Stripe, no payment rails, no payout logic — ever, for this. **Not yet built** — I'd gotten as far as checking `apps/api/src/db/schema.ts`'s `pools` table (no pot field exists yet) before this session ended. Smallest correct shape is probably a new nullable field on `pools` (e.g. `potAmountCents` or similar — decide the exact name/units), admin-editable via the existing pool settings modal, shown read-only to players. Scope this as its own small OpenSpec change — it's schema-touching, so it needs one per `CLAUDE.md`'s policy, but it's small enough to not need much ceremony.
+- **Three real holes in the existing API** (see `secure-pick-access`): any signed-in player can read everyone's picks before the lock, change or delete another player's pick, and read every player's email.
+- **better-auth is pinned at 1.1.9** and differs from Tobi's (^1.7). It has no switch to turn off password sign-up, so `password-sign-in` closes those endpoints with `disabledPaths` and proves it in a test first.
+- **The `per_game_kickoff` deadline rule exists in pool settings but no server code reads it.** Locking is the first kickoff of the week.
+- **The schedule import is a script** (`apps/api/scripts/seed-schedule.ts`), not a screen. `apps/api/scripts/make-admin.ts` makes an admin.
+- Adding a player by email and editing a player's status exist in the API but are not in today's admin screens.
 
-## Open question still waiting on Robin
+## Decisions already made (don't re-ask; details in memory)
 
-From `V2_PLAN.md`'s "Open questions" list — **this one blocks step 1 (mockups) of the v2 sequence**, though step 0 (explore) can start without it:
+- Look: polished, modern, flat dark surfaces, copper `#c17a45`, Inter, Lucide icons, no motion or sound for now.
+- Lives are hidden this season (the `mulligans_allowed` setting stays). No streaks or rank arrows in the first build. "% picked" shows only after the lock.
+- No money in the product. The pool total is a display-only number ("Cash handled at the bar, not in this app."). No Stripe. No game-linked drink offers until the owner and AGCO weigh in. "Please drink responsibly." and "You must be 19 or older to play." are in the copy.
+- Password sign-in for everyone, link stays the default, no forgot-password flow.
+- The owner's wife will control everything and also play. Three admins are expected (her, Robin, the owner). A decision that changes an admin's own standing needs another admin to confirm.
+- The menu is public (QR on tables). Drinks, kitchen and live music are first-class. Promotions become "From the brewery" (features, specials, music, announcements).
 
-> Which exact screens/steps frustrated you most (sign-in, finding the pick screen, understanding standings, admin setup)?
+## Still open
 
-Ask directly, or do `V2_PLAN.md`'s step 0 yourself first (run the app, screenshot every screen at phone width, form an independent view) and bring findings to him rather than asking blind.
+- Real beer styles and strengths, which beers are seasonal, and the wine and other-drinks list. These can be entered through the admin screens once they exist.
+- Whether to build the Admins screen (slice 14).
+- Legal check of the menu and promotion wording with the owner and AGCO.
+- The pick 'em versions of some admin screens (settings and picks) aren't mocked; only survivor is.
 
-## Practical reminders (unchanged from before, still true)
+## Practical reminders (unchanged)
 
-- `pnpm install && pnpm docker:up && cp .env.example apps/api/.env && pnpm db:migrate && pnpm dev:api && pnpm dev:dashboard` for local dev (API :3001, dashboard :5173, Postgres :5437).
-- Both Vercel and Railway are git-connected — push to `main` deploys both automatically, migrations run automatically via Railway's `preDeploy` step. No manual `railway up`/`railway ssh` needed anymore.
-- `packages/shared` must be built before `apps/api`/`apps/dashboard` resolve correctly — `pnpm typecheck`/`pnpm test` handle this automatically now via a `pretypecheck`/`pretest` hook; don't reintroduce the old "forgot to build shared" failure mode.
-- Don't store "current season." `pools.type` is immutable. `games` are season-scoped, not pool-scoped. All still true, all still load-bearing — see `BUILD_PLAN.md`'s History section for why.
-- OpenSpec is mandatory for non-trivial changes here (`CLAUDE.md`) — propose → design → tasks → apply → archive, with real verification per task, not just "written."
+- Local dev: `pnpm install && pnpm docker:up && cp .env.example apps/api/.env && pnpm db:migrate && pnpm dev:api && pnpm dev:dashboard` (API :3001, dashboard :5173, Postgres :5437).
+- Both Vercel and Railway are git-connected: push to `main` deploys both, and migrations run automatically in Railway's `preDeploy`. No manual `railway up`.
+- `packages/shared` must be built before the apps resolve it; `pnpm typecheck` and `pnpm test` do that for you.
+- Don't store "current season". `pools.type` is immutable. `games` are season-scoped. See `BUILD_PLAN.md`'s History section.
+- OpenSpec is mandatory for non-trivial changes: propose, design, tasks, apply, archive, with real verification per task.
