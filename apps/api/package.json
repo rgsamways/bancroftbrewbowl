@@ -16,7 +16,8 @@
     "reset-password": "tsx scripts/reset-password.ts",
     "seed-schedule": "tsx scripts/seed-schedule.ts",
     "seed-menu": "tsx scripts/seed-menu.ts",
-    "check-late-start": "tsx scripts/check-late-start.ts"
+    "check-late-start": "tsx scripts/check-late-start.ts",
+    "clear-early-picks": "tsx scripts/clear-early-picks.ts"
   },
   "dependencies": {
     "@bbb/shared": "workspace:*",
