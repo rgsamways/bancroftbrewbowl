@@ -4,7 +4,7 @@ _Written 2026-10-04, end of the long mockup-and-planning session. If you're read
 
 ## Start here
 
-The state in one line: **v2 is fully designed and planned; slices 1 to 6 are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick); `password-sign-in` stays open only for a real-phone password-manager check.** The next job is slice 7, `v2-standings`, in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
+The state in one line: **v2 is fully designed and planned; slices 1 to 7 are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick, Standings); `password-sign-in` stays open only for a real-phone password-manager check.** The next job is slice 8, `admin-activity-log` (one new table, so a schema-change call-out before pushing), in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
 
 Read, in order:
 
@@ -30,7 +30,7 @@ Read, in order:
 - **The `per_game_kickoff` deadline rule exists in pool settings but no server code reads it.** Locking is the first kickoff of the week.
 - **The schedule import is a script** (`apps/api/scripts/seed-schedule.ts`), not a screen. `apps/api/scripts/make-admin.ts` makes an admin.
 - Adding a player by email and editing a player's status exist in the API but are not in today's admin screens.
-- **Temporary pieces left on purpose:** the `/standings` landing page (`pages/TabLanding.tsx`, replaced in slice 7; the Pick tab now uses `GET /me/summary`), the Pools / Schedule / Promotions links row on admin pages (in `Shell.tsx`, replaced in slice 9), and the admin Pools page's tab row that now scrolls inside itself. Old pages still have white text on copper buttons (3.4 to 1 contrast); each is fixed with dark ink as its page is redone.
+- **Temporary pieces left on purpose:** (the Pick and Standings tabs now share `pages/TabLanding.tsx`, which uses `GET /me/summary`), the Pools / Schedule / Promotions links row on admin pages (in `Shell.tsx`, replaced in slice 9), and the admin Pools page's tab row that now scrolls inside itself. Old pages still have white text on copper buttons (3.4 to 1 contrast); each is fixed with dark ink as its page is redone.
 - **The staging preview site can't call the staging API** (`api-staging` has no `DASHBOARD_URL`), so screens are checked locally in real Chrome.
 - **Browser tests (slice 3):** `pnpm test:e2e` (Docker Postgres up) starts its own API on port 3011 and the dashboard on 5183, runs the specs in `e2e/` in Chrome at 390 by 844, and deletes the data it created. It refuses to run unless `DATABASE_URL` is a local database (`e2e/guard.ts`). Failures keep a screenshot and trace in `e2e-results/`. Specs: frame and tabs, pick privacy, sign-in, join and pick, standings, admin results. **A slice that changes a screen updates its spec in the same change.** `pnpm typecheck:e2e` checks the e2e code; CI runs both. Never touch ports 3001 or 5173 (other projects).
 
@@ -65,3 +65,9 @@ Read, in order:
 - The server now refuses a pick for a team with no game that week.
 - Left out on purpose (Robin's call): the "At the brewery" cards (slices 11 to 13), the full-screen "Tough break" moment and the "added by the brewery" notice (no stored flag), the Menu tab.
 - Browser tests: `home-states`, `pick-states`, `join-and-pick`, `frame`, `pick-privacy` cover every Home and Pick state.
+
+## Slice 7 notes (v2-standings, 2026-10-04)
+
+- Standings loads from one request, `GET /pools/:poolId/standings`, which returns already-sorted lists, counts, shared pick 'em ranks and "after week N". It sends names, status, elimination weeks and points only: no emails, no picks (a test pins this). Search and "Show all" work on the full list on the phone.
+- `initials` now lives in `@bbb/shared` (`standings.ts`) and is shared by the header and the lists.
+- Only your own row links anywhere (to your pick screen). The Standings and Pick tabs both open the pool that needs attention first, the same choice as Home.
