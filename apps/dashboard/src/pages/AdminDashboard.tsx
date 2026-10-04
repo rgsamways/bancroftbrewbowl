@@ -67,8 +67,9 @@ export function AdminDashboard() {
 
   return (
     <div className="w-full px-6 pb-6">
-      <div className="mb-6 flex items-center justify-between border-b border-brand-border">
-        <div className="flex gap-1">
+      <div className="mb-6 flex items-center justify-between gap-2 border-b border-brand-border">
+        {/* The tabs plus two icon buttons are wider than a phone, so this row scrolls inside itself rather than widening the page. */}
+        <div className="flex min-w-0 gap-1 overflow-x-auto">
           {TABS.map((t) => {
             const disabled = t !== "Pools" && !poolId;
             return (
@@ -76,7 +77,7 @@ export function AdminDashboard() {
                 key={t}
                 disabled={disabled}
                 onClick={() => setTab(t)}
-                className={`-mb-px border-b-2 px-4 py-2 font-display text-sm font-semibold uppercase tracking-wide transition-colors ${
+                className={`-mb-px shrink-0 border-b-2 px-3 py-2 font-display text-sm font-semibold uppercase tracking-wide transition-colors ${
                   tab === t
                     ? "border-brand-accent text-brand-accent"
                     : disabled
@@ -89,7 +90,7 @@ export function AdminDashboard() {
             );
           })}
         </div>
-        <div className="mb-1 flex gap-2">
+        <div className="mb-1 flex shrink-0 gap-2">
           <button
             onClick={() => setShowSettingsModal(true)}
             disabled={!poolId}

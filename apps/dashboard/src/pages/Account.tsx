@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { LogOut } from "lucide-react";
 import { authClient, useSession } from "../lib/auth-client";
 
 export function Account() {
@@ -99,6 +100,17 @@ export function Account() {
         </button>
         {emailStatus && <p className="text-sm text-brand-text">{emailStatus}</p>}
       </form>
+
+      <div className="border-t border-brand-border pt-8">
+        <button
+          type="button"
+          onClick={() => authClient.signOut()}
+          className="flex min-h-11 w-full items-center justify-center gap-2 rounded border border-brand-border px-3 py-2 font-display font-semibold text-brand-text hover:border-brand-accent"
+        >
+          <LogOut className="h-4 w-4" aria-hidden="true" />
+          Sign out
+        </button>
+      </div>
     </div>
   );
 }

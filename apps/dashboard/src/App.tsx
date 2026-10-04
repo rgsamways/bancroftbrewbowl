@@ -9,6 +9,7 @@ import { PickScreen } from "./pages/PickScreen";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import { SchedulePage } from "./pages/SchedulePage";
 import { PromotionsPage } from "./pages/PromotionsPage";
+import { PickLanding, StandingsLanding } from "./pages/TabLanding";
 
 export default function App() {
   const { data: session, isPending } = useSession();
@@ -21,6 +22,8 @@ export default function App() {
       <Route element={<Shell />}>
         <Route path="/" element={<Home />} />
         <Route path="/account" element={<Account />} />
+        <Route path="/pick" element={<PickLanding />} />
+        <Route path="/standings" element={<StandingsLanding />} />
         <Route path="/pool/:poolId" element={<PoolStandings />} />
         <Route path="/pool/:poolId/entry/:entryId/pick" element={<PickScreen />} />
         <Route path="/admin/schedule" element={<SchedulePage />} />
