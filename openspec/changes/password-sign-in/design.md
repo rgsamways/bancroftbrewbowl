@@ -30,7 +30,7 @@ Facts checked in the installed 1.1.9 package while planning this:
 ## Decisions
 
 ### 1. Turn on email and password, then close the doors we don't want
-Set `emailAndPassword: { enabled: true, minPasswordLength: 10 }` and list `disabledPaths` for the endpoints that would otherwise exist: `/sign-up/email`, `/forget-password`, `/reset-password` and its token callback. A test posts to each and asserts it is refused and creates no user. If `disabledPaths` turns out not to cover a path, a `hooks.before` handler that rejects those paths is the fallback.
+Set `emailAndPassword: { enabled: true, minPasswordLength: 10 }` and list `disabledPaths` for the endpoints that would otherwise exist: `/sign-up/email`, `/forget-password`, `/reset-password` and its token callback. A test posts to each and asserts it is refused and creates no user. **Proved wrong in task 1.1:** in 1.1.9 `disabledPaths` is only in the type definitions and is never read at runtime, so a direct `/sign-up/email` request created a user and a session. The fix that shipped is the `hooks.before` handler (`passwordHook` in `auth.ts`), which returns 404 for `/sign-up/email`, `/forget-password`, `/forget-password/callback` and `/reset-password` (and anything under them). Tests post to each.
 *Alternatives:* upgrade to a version that has `emailAndPassword.disableSignUp` (rejected: a major jump for an unrelated feature, with its own regressions to find); leave sign-up open (rejected: breaks "a password can never create an account").
 
 ### 2. First password goes through one small authenticated route
@@ -60,6 +60,14 @@ The dashboard calls the library's `changePassword` (current plus new). A `hooks.
 - **People forget a password** → the link always works, so the cost is one extra tap. Deliberately no reset email flow.
 - **`GET /me/password` reveals only whether the caller has a password** → it requires a session and returns nothing about anyone else.
 - **Password managers and iOS autofill** need correct field names and `autoComplete` values → checked by hand on a real phone.
+
+## Findings from task 1 (better-auth 1.1.9)
+
+- Sign-in failure of any kind (unknown email, no password, wrong password): `401 INVALID_EMAIL_OR_PASSWORD`, same body.
+- `change-password`: wrong current `400 INVALID_PASSWORD`; `400 PASSWORD_TOO_SHORT`; `400 PASSWORD_TOO_LONG`; a new password equal to the current one is **accepted** by the library, so our hook rejects it with `NEW_PASSWORD_MUST_BE_DIFFERENT`.
+- `forget-password` is already inert without a mail sender (`RESET_PASSWORD_ISNT_ENABLED`); the hook refuses it anyway.
+- `setPassword` is server-only and wants a session's headers, so `POST /me/password` writes the credential account through the library's own hasher and `internalAdapter.linkAccount` instead (this also makes it testable).
+- `change-password` does **not** sign out other sessions unless `revokeOtherSessions: true` is sent. The dashboard sends it, so a changed password ends every other session.
 
 ## Migration Plan
 

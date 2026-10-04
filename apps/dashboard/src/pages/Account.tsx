@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
+import { Link } from "react-router";
 import { authClient, useSession } from "../lib/auth-client";
+import { api } from "../lib/api";
 
 export function Account() {
   const { data: session } = useSession();
@@ -11,6 +13,13 @@ export function Account() {
   const [newEmail, setNewEmail] = useState("");
   const [emailStatus, setEmailStatus] = useState<string | null>(null);
   const [sendingEmailChange, setSendingEmailChange] = useState(false);
+
+  const [hasPassword, setHasPassword] = useState<boolean | null>(null);
+  useEffect(() => {
+    api<{ hasPassword: boolean }>("/me/password")
+      .then((r) => setHasPassword(r.hasPassword))
+      .catch(() => setHasPassword(null));
+  }, []);
 
   useEffect(() => {
     if (session?.user.name) setName(session.user.name);
@@ -100,6 +109,25 @@ export function Account() {
         </button>
         {emailStatus && <p className="text-sm text-brand-text">{emailStatus}</p>}
       </form>
+
+      <section className="flex flex-col gap-3 border-t border-brand-border pt-8">
+        <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-brand-muted">Password</h2>
+        <p className="text-sm text-brand-muted">
+          {hasPassword === null
+            ? "Sign in with a password instead of waiting for a link."
+            : hasPassword
+              ? "A password is set. You can sign in with it or with an email link."
+              : "Not set. You sign in with an email link. You can add a password if you'd like."}
+        </p>
+        {hasPassword !== null && (
+          <Link
+            to="/account/password"
+            className="flex min-h-11 w-full items-center justify-center rounded border border-brand-border px-3 py-2 font-display font-semibold text-brand-text hover:border-brand-accent"
+          >
+            {hasPassword ? "Change password" : "Set a password"}
+          </Link>
+        )}
+      </section>
 
       <div className="border-t border-brand-border pt-8">
         <button

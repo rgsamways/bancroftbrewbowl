@@ -13,6 +13,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "make-admin": "tsx scripts/make-admin.ts",
+    "reset-password": "tsx scripts/reset-password.ts",
     "seed-schedule": "tsx scripts/seed-schedule.ts"
   },
   "dependencies": {

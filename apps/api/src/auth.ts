@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { magicLink } from "better-auth/plugins";
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "./db/client.js";
@@ -19,6 +20,30 @@ async function claimInvitedEntries(user: { id: string; email: string }) {
     .where(and(eq(entries.invitedEmail, user.email), isNull(entries.userId)));
 }
 
+/**
+ * better-auth 1.1.9 has no switch to turn off password sign-up (its
+ * `disabledPaths` option is typed but never read at runtime; proved in
+ * password-sign-in task 1.1), so these paths are refused here instead. A password
+ * can sign in an existing account but can never create one, and there is no
+ * reset-by-email flow.
+ */
+const REFUSED_PATHS = ["/sign-up/email", "/forget-password", "/forget-password/callback", "/reset-password"];
+
+export const passwordHook = createAuthMiddleware(async (ctx) => {
+  if (REFUSED_PATHS.some((p) => ctx.path === p || ctx.path.startsWith(`${p}/`))) {
+    throw new APIError("NOT_FOUND", { message: "Not found", code: "NOT_FOUND" });
+  }
+  if (ctx.path === "/change-password") {
+    const body = ctx.body as { currentPassword?: unknown; newPassword?: unknown } | undefined;
+    if (typeof body?.newPassword === "string" && body.newPassword === body.currentPassword) {
+      throw new APIError("BAD_REQUEST", {
+        message: "New password must be different",
+        code: "NEW_PASSWORD_SAME_AS_CURRENT",
+      });
+    }
+  }
+});
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg", schema }),
   baseURL: process.env.BETTER_AUTH_URL,
@@ -31,6 +56,8 @@ export const auth = betterAuth({
   advanced: process.env.COOKIE_DOMAIN
     ? { crossSubDomainCookies: { enabled: true, domain: process.env.COOKIE_DOMAIN } }
     : undefined,
+  emailAndPassword: { enabled: true, minPasswordLength: 10 },
+  hooks: { before: passwordHook },
   user: {
     additionalFields: {
       isAdmin: { type: "boolean", defaultValue: false, input: false },

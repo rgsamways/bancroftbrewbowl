@@ -86,3 +86,17 @@ or old conversation history" into "follow a checklist" — it does not turn
 "one command creates a new client." That's the honest state of it; revisit
 if/when there's a third client and the manual steps above are still
 error-prone.
+
+## Helping someone who is locked out
+
+Players can sign in with an emailed link or, if they set one on the Me page, a
+password. There is no "forgot password" email: someone who forgot their password
+signs in with a link. If they cannot get email either, reset it for them:
+
+```
+NEW_PASSWORD='a new long password' railway ssh --service api -- pnpm --filter @bbb/api reset-password <their email>
+```
+
+The password must be 10 to 127 characters. The command also signs them out
+everywhere, and tells you if there is no account for that email. Give them the
+password privately and ask them to change it on the Me page.
