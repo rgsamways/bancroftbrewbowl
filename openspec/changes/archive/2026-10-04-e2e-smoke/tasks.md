@@ -26,6 +26,6 @@
 
 ## 6. CI and docs
 
-- [ ] 6.1 Add an e2e step to `.github/workflows/ci.yml` (after unit tests, throwaway `BETTER_AUTH_SECRET`, upload the Playwright report when it fails). Verify by opening a pull request from `staging` and seeing the step pass; if CI cannot be exercised before release, record that plainly in this task.
+- [x] 6.1 Add an e2e step to `.github/workflows/ci.yml` (after unit tests, throwaway `BETTER_AUTH_SECRET`, upload the Playwright report when it fails). Verify by opening a pull request from `staging` and seeing the step pass; if CI cannot be exercised before release, record that plainly in this task. _(proved: PR #2 ran the step in GitHub CI, 25 passed)_
 - [x] 6.2 Update `docs/HANDOFF.md` (how to run `pnpm test:e2e`, what the guard does, retire the old local walkthrough recipe), `docs/v2/V2_BUILD_PLAN.md` (each later slice updates its e2e test as part of "verified") and `openspec/ROADMAP.md` (slice 3 status). Verify the notes match what actually runs.
-- [ ] 6.3 Run the full suite from a clean checkout state (servers stopped, dev database up), confirm every spec passes and nothing is left in the database, then archive the change.
+- [x] 6.3 Run the full suite from a clean checkout state (servers stopped, dev database up), confirm every spec passes and nothing is left in the database, then archive the change.

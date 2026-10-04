@@ -4,7 +4,7 @@ _Written 2026-10-04, end of the long mockup-and-planning session. If you're read
 
 ## Start here
 
-The state in one line: **v2 is fully designed and planned; slices 1 and 2 are built, live and archived (the privacy fix, and the new app frame with the bottom tab bar); the individual v2 screens are not built yet.** The next job is slice 3, `e2e-smoke`, in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
+The state in one line: **v2 is fully designed and planned; slices 1 to 3 are built, live and archived (the privacy fix, the new app frame with the bottom tab bar, and the real-browser tests); the individual v2 screens are not built yet.** The next job is slice 4, `password-sign-in` + `v2-signin`, in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
 
 Read, in order:
 
