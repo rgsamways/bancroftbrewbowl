@@ -160,6 +160,6 @@ A plain table written by the route code itself: who (the signed-in admin), what,
 
 ## Suggested order of work
 
-1. **`secure-pick-access`** (planned, on hold): fixes the three real holes and covers rules 1 to 4 above.
+1. **`secure-pick-access`** (done, live 2026-10-04): fixed the three real holes and covers rules 1 to 4 above.
 2. **Admin activity record and the player-who-is-admin safeguards:** the activity table, the "You" notices and the hidden-pick table in the admin screens.
 3. **Rules list and the Admins screen:** only when the owner wants to hand out part of the work. It adds the `rules` list, the role templates, the invitation, and last-admin protection.

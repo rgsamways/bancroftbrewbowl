@@ -14,7 +14,7 @@ Easier to use, phone-first front end with a polished, modern look, built with th
 
 | # | Change | Status |
 | --- | --- | --- |
-| 1 | `secure-pick-access` | **Built and live on production** (2026-10-04, commit `6408182`). 54 tests pass; 21 real-session checks passed on staging. Not yet archived: the same two-account check on production is waiting for Robin's decision (see below). |
+| 1 | `secure-pick-access` | **Done and archived** (`archive/2026-10-04-secure-pick-access`). Live on production since 2026-10-04 (commit `6408182`). 54 tests; 21 real-session checks passed on staging. The extra two-account check on production was skipped at Robin's decision. |
 | 2 | `v2-shell` | Not written |
 | 3 | `e2e-smoke` | Not written |
 | 4 | `password-sign-in` + `v2-signin` | `password-sign-in` planned and valid; `v2-signin` not written |
@@ -32,7 +32,6 @@ Easier to use, phone-first front end with a polished, modern look, built with th
 
 ## In planning
 
-- `secure-pick-access`: see the table above. Closed three holes in the existing API found 2026-10-04: anyone signed in could read everyone's picks before the lock, change another player's pick, and read every player's email. Task 6.3 (repeat the two-account check on production, then sync specs, archive) is still open: the check needs temporary sign-in tokens written to the production database, which was blocked pending Robin's say-so. Options: Robin checks by hand with two accounts, or approves a throwaway-account check on production, or accepts the staging result.
 - `password-sign-in`: optional email and password sign-in for players and admins alongside the emailed link (the link stays the default and the only way to create an account; 10 character minimum; no forgot-password flow; operator reset script). Planning artifacts complete and valid (`openspec/changes/password-sign-in`); not started. No schema change. It is part of slice 4.
 
 ## Shipped

@@ -4,7 +4,7 @@ _Written 2026-10-04, end of the long mockup-and-planning session. If you're read
 
 ## Start here
 
-The state in one line: **v2 is fully designed and planned, and no app code has been written.** The next job is to start building, one slice at a time, in the order in `docs/v2/V2_BUILD_PLAN.md`, starting with `secure-pick-access`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
+The state in one line: **v2 is fully designed and planned; slice 1 (`secure-pick-access`, the privacy fix) is built, live and archived; the v2 screens themselves are not built yet.** The next job is slice 2, `v2-shell`, in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
 
 Read, in order:
 
@@ -20,7 +20,7 @@ Read, in order:
 ## Where things stand
 
 - `main` is at the docs-and-mockups commits made at the end of this session; production (`bancroftbrewbowl.ca`) is the old app and unchanged. A `staging` branch and environment exist (see `CLAUDE.md`).
-- **Two OpenSpec changes are written, valid and not started:** `secure-pick-access` (do first) and `password-sign-in` (part of slice 4). `openspec list` will show them as in progress with 0 tasks done; that is accurate.
+- **`secure-pick-access` is done:** live on production since 2026-10-04 and archived (it created the main spec `openspec/specs/pick-access`). **`password-sign-in` is written, valid and not started** (part of slice 4). `openspec list` will show them as in progress with 0 tasks done; that is accurate.
 - **Robin's release rule:** each slice goes live as soon as it is verified. No private review gate; he decides. Staging is a quick self-check.
 
 ## Things found this session that matter

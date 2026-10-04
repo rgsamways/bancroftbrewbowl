@@ -40,7 +40,7 @@ Size: S is a short session, M is about one session, L is two or more.
 
 ## The slices
 
-### 1. `secure-pick-access` (planned)
+### 1. `secure-pick-access` (done, live 2026-10-04)
 Owner-only writes, picks hidden until the lock (admins see "picked" without the team), emails private. Already written in `openspec/changes/secure-pick-access` with tests that fail first. Ships to production as soon as verified. **Why first:** it is the only item that fixes a hole that exists today.
 
 ### 2. `v2-shell`
