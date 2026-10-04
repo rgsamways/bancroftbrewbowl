@@ -24,6 +24,9 @@ import { AdminBrewery } from "./pages/admin-brewery/AdminBrewery";
 import { AnnouncementWizard, FeatureWizard, SpecialWizard } from "./pages/admin-brewery/wizards";
 import { PickLanding, StandingsLanding } from "./pages/TabLanding";
 import { MenuPage, PublicMenuPage } from "./pages/Menu";
+import { Help } from "./pages/Help";
+import { AdminGuide } from "./pages/AdminGuide";
+import { TableCard } from "./pages/TableCard";
 import { AdminMenu } from "./pages/admin-menu/AdminMenu";
 import { AddItemWizard } from "./pages/admin-menu/AddItemWizard";
 import { EditItem } from "./pages/admin-menu/EditItem";
@@ -57,6 +60,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/account" element={<Account />} />
         <Route path="/account/password" element={<PasswordPage />} />
+        <Route path="/help" element={<Help />} />
         <Route path="/pick" element={<PickLanding />} />
         <Route path="/join/:poolId" element={<JoinPage />} />
         <Route path="/standings" element={<StandingsLanding />} />
@@ -73,6 +77,7 @@ export default function App() {
           <Route path="/admin/more" element={<AdminMore />} />
           <Route path="/admin/activity" element={<ActivityPage />} />
           <Route path="/admin/brewery" element={<AdminBrewery />} />
+          <Route path="/admin/guide" element={<AdminGuide />} />
           <Route path="/admin/menu" element={<AdminMenu />} />
           <Route path="/admin/menu/:id" element={<EditItem />} />
           <Route path="/admin/music/:id" element={<EditMusic />} />
@@ -83,6 +88,7 @@ export default function App() {
           <Route path="/admin/results/steps" element={<ResultsWizard />} />
           <Route path="/admin/pools/new" element={<NewPoolWizard />} />
           <Route path="/admin/menu/new" element={<AddItemWizard />} />
+          <Route path="/admin/table-card" element={<TableCard />} />
           <Route path="/admin/brewery/feature" element={<FeatureWizard />} />
           <Route path="/admin/brewery/special" element={<SpecialWizard />} />
           <Route path="/admin/brewery/announcement" element={<AnnouncementWizard />} />

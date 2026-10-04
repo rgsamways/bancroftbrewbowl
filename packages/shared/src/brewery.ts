@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { formatEventDayLong, formatEventTime, isRealDate, weekdayOf } from "./music.js";
+import { formatEventDayLong, formatEventTime, isRealDate, weekdayOf, type MusicEvent } from "./music.js";
 import type { MenuKind } from "./menu.js";
 
 // "From the brewery": what is happening at the brewery, posted by admins and shown to players on
@@ -114,6 +114,8 @@ export type BreweryFeatured = {
 export type BrewerySpecial = { id: string; title: string; details: string | null; tag: SpecialTag | null; when: string };
 export type BreweryAnnouncement = { title: string; message: string };
 export type BreweryHome = {
+  /** The first music event this weekend, or null. */
+  live: MusicEvent | null;
   featured: BreweryFeatured | null;
   specials: BrewerySpecial[];
   /** Null means Home shows the standard message. */

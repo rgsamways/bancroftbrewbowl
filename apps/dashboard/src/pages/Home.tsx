@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router";
 import {
+  formatEventDay,
+  formatEventTime,
   formatMenuPrice,
   formatRank,
   SPECIAL_TAG_TEXT,
@@ -17,6 +19,7 @@ import { useServerNow } from "../lib/useServerClock";
 import { attentionOrder, pickPathFor } from "../lib/attention";
 import { Countdown } from "../components/Countdown";
 import { PoolChips } from "../components/PoolChips";
+import { InstallCard } from "../components/InstallCard";
 
 const SELECTED_KEY = "bbb:home-pool";
 
@@ -46,6 +49,18 @@ function AtTheBrewery({ brewery }: { brewery: BreweryHome }) {
     <section aria-label="At the brewery">
       <h2 className="mb-2 text-sm font-semibold text-brand-muted">At the brewery</h2>
       <ul className="space-y-3">
+        {brewery.live && (
+          <li className={card}>
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-accent">Live this weekend</p>
+            <p className="mt-1 font-semibold text-brand-text">{brewery.live.title}</p>
+            <p className="text-sm text-brand-muted">
+              {formatEventDay(brewery.live.date)}, {formatEventTime(brewery.live.startTime, brewery.live.endTime)}
+            </p>
+            <Link to="/menu/music" className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-brand-accent">
+              See the music
+            </Link>
+          </li>
+        )}
         {featured && (
           <li className={card}>
             <p className="text-xs font-semibold uppercase tracking-wide text-brand-accent">Featured</p>
@@ -295,6 +310,7 @@ export function Home() {
         onSelect={setChosenId}
       />
       <Hero entry={selected} nowMs={nowMs} onLocked={onLocked} />
+      <InstallCard />
 
       {offerPickEm.length > 0 && (
         <section>

@@ -129,6 +129,16 @@ export function Account() {
         )}
       </section>
 
+      <section className="flex flex-col gap-3 border-t border-brand-border pt-8">
+        <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-brand-muted">Help</h2>
+        <Link
+          to="/help"
+          className="flex min-h-11 w-full items-center justify-center rounded border border-brand-border px-3 py-2 font-display font-semibold text-brand-text hover:border-brand-accent"
+        >
+          How to play
+        </Link>
+      </section>
+
       <div className="border-t border-brand-border pt-8">
         <button
           type="button"

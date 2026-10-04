@@ -1,5 +1,6 @@
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { asc, desc, eq, gte, sql } from "drizzle-orm";
 import {
+  bucketOf,
   easternToday,
   scheduleText,
   specialIsOver,
@@ -11,7 +12,7 @@ import {
   type SpecialTag,
 } from "@bbb/shared";
 import { db } from "../db/client.js";
-import { games, menuItems, promotions } from "../db/schema.js";
+import { games, menuItems, musicEvents, promotions } from "../db/schema.js";
 import { currentWeek, loadSeasonWeeks } from "./entry-state.js";
 
 // What is showing at the brewery right now. "Now" is the current week of the latest season that
@@ -63,7 +64,19 @@ export async function loadBreweryHome(date = new Date()): Promise<BreweryHome> {
   const announcementRow = rows.find(
     (r) => r.kind === "announcement" && now !== null && r.seasonYear === now.seasonYear && r.weekNumber === now.weekNumber
   );
+  // The first music event this weekend, by the same rule the Music tab uses.
+  const upcoming = await db.query.musicEvents.findMany({
+    where: gte(musicEvents.eventDate, today),
+    orderBy: [asc(musicEvents.eventDate), asc(musicEvents.startTime), asc(musicEvents.title)],
+    limit: 20,
+  });
+  const liveRow = upcoming.find((e) => bucketOf(e.eventDate, today) === "thisWeekend");
+  const live = liveRow
+    ? { id: liveRow.id, title: liveRow.title, date: liveRow.eventDate, startTime: hm(liveRow.startTime), endTime: hm(liveRow.endTime) }
+    : null;
+
   return {
+    live,
     featured,
     specials,
     announcement: announcementRow ? { title: announcementRow.title, message: announcementRow.description } : null,

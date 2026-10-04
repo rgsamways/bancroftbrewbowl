@@ -114,6 +114,7 @@ test("several pools: Pick goes to the pool that needs a pick; Standings lists th
   // Standings opens the same pool, with a tab for each pool the player is in.
   await go(p, "/standings");
   await p.waitForURL(`**/pool/${poolA}`);
+  await p.waitForSelector('nav[aria-label="Your pools"] a'); // the standings load after the page changes
   const tabs = await p.$$eval('nav[aria-label="Your pools"] a', (as) => as.map((a) => ({ text: a.textContent!.trim(), href: a.getAttribute("href")! })));
   expect(tabs.map((t) => t.href).sort()).toEqual([`/pool/${poolA}`, `/pool/${poolB}`].sort());
   await p.click(`nav[aria-label="Your pools"] a[href="/pool/${poolB}"]`);

@@ -1,10 +1,10 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { eq, inArray } from "drizzle-orm";
-import { addDays, easternToday, weekdayOf, type BreweryItem, type MeSummary, type MenuItem } from "@bbb/shared";
+import { addDays, easternToday, weekdayOf, weekendWindow, type BreweryItem, type MeSummary, type MenuItem } from "@bbb/shared";
 import { defaultSurvivorRulesConfig } from "@bbb/shared";
 import { db } from "../db/client.js";
-import { adminActivity, games, menuItems, promotions } from "../db/schema.js";
+import { adminActivity, games, menuItems, musicEvents, promotions } from "../db/schema.js";
 import { cleanupFixtures, createEntry, createGame, createPool, createUser } from "../test/fixtures.js";
 import { actAs, buildTestApp, type TestActor } from "../test/route-harness.js";
 
@@ -26,6 +26,7 @@ describe("From the brewery", () => {
   const gameIds: string[] = [];
   const itemIds: string[] = [];
   const promoIds: string[] = [];
+  const eventIds: string[] = [];
 
   beforeAll(async () => {
     app = await buildTestApp();
@@ -35,6 +36,7 @@ describe("From the brewery", () => {
   });
   afterEach(async () => {
     if (promoIds.length > 0) await db.delete(promotions).where(inArray(promotions.id, promoIds.splice(0)));
+    if (eventIds.length > 0) await db.delete(musicEvents).where(inArray(musicEvents.id, eventIds.splice(0)));
     if (itemIds.length > 0) await db.delete(menuItems).where(inArray(menuItems.id, itemIds.splice(0)));
     await cleanupFixtures(poolIds.splice(0), gameIds.splice(0), userIds.splice(0));
   });
@@ -204,5 +206,34 @@ describe("From the brewery", () => {
     const summary = await summaryFor(player);
     expect(summary.brewery.announcement).toEqual({ title: "Zz Old Style", message: "From before" });
     expect(summary.entries.length).toBeGreaterThan(0);
+  });
+
+  describe("Live this weekend", () => {
+    const event = async (title: string, date: string, startTime: string | null = null) => {
+      const [row] = await db.insert(musicEvents).values({ title, eventDate: date, startTime }).returning();
+      eventIds.push(row!.id);
+    };
+
+    it("is the first event this weekend, and nothing for past or far-off events", async () => {
+      const admin = await person("Brew Admin", true);
+      await scene();
+      await event("Zz Past Band", addDays(today, -3), "19:00");
+      await event("Zz Far Band", addDays(today, 40), "19:00");
+      expect((await summaryFor(admin)).brewery.live).toBeNull();
+
+      const sunday = weekendWindow(today).end;
+      await event("Zz Sunday Band", sunday, "16:00");
+      await event("Zz Early Sunday Band", sunday, "13:00");
+      expect((await summaryFor(admin)).brewery.live).toMatchObject({ title: "Zz Early Sunday Band", date: sunday, startTime: "13:00" });
+    });
+
+    it("goes when the event is removed", async () => {
+      const admin = await person("Brew Admin", true);
+      await scene();
+      await event("Zz Gone Band", weekendWindow(today).end);
+      expect((await summaryFor(admin)).brewery.live).not.toBeNull();
+      await db.delete(musicEvents).where(eq(musicEvents.title, "Zz Gone Band"));
+      expect((await summaryFor(admin)).brewery.live).toBeNull();
+    });
   });
 });

@@ -10,6 +10,8 @@ const TOOLS: Item[] = [
   { to: "/admin/activity", title: "Activity", detail: "Who changed what" },
   { to: "/admin/brewery", title: "From the brewery", detail: "Features, specials, music, announcements" },
   { to: "/admin/results", title: "Season schedule", detail: "Check the schedule is loaded" },
+  { to: "/admin/guide", title: "Admin guide", detail: "How to run a week" },
+  { to: "/admin/table-card", title: "Table card", detail: "Print the QR code for the tables" },
 ];
 
 const YOU: Item[] = [
