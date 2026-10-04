@@ -22,7 +22,7 @@ import {
   GAME_RESULTS,
   PROMOTION_KINDS,
 } from "@bbb/shared/enums";
-import type { SurvivorRulesConfig, PickEmRulesConfig, CannedPromotionConfig } from "@bbb/shared";
+import type { SurvivorRulesConfig, PickEmRulesConfig } from "@bbb/shared";
 
 // better-auth's own tables, generated via `@better-auth/cli generate`.
 // Kept inline here (not a separate file) because drizzle-kit's loader
@@ -195,15 +195,13 @@ export const promotions = pgTable("promotions", {
 
 export const promotionKindEnum = pgEnum("promotion_kind", PROMOTION_KINDS);
 
-// One row per kind, bar-wide (not per-pool) — matches the template-per-
-// client deployment model where one deployment is one bar. Eligibility for
-// each kind is computed live off existing entries/games/picks data (see
-// GET /canned-promotions/:kind/eligible) rather than stored here.
+// Retired: the four automatic offers were removed from the app in v2 (nothing reads or
+// writes this table now). It is kept, empty of purpose, so no destructive migration is needed.
 export const cannedPromotions = pgTable("canned_promotions", {
   id: uuid("id").primaryKey().defaultRandom(),
   kind: promotionKindEnum("kind").notNull().unique(),
   enabled: boolean("enabled").notNull().default(false),
-  config: jsonb("config").$type<CannedPromotionConfig>().notNull().default({ milestone_weeks: [] }),
+  config: jsonb("config").$type<{ milestone_weeks: number[] }>().notNull().default({ milestone_weeks: [] }),
   updatedAt: timestamp("updated_at")
     .defaultNow()
     .$onUpdate(() => new Date())

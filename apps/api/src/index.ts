@@ -18,7 +18,6 @@ import { tvRoutes } from "./routes/tv.js";
 import { recapRoutes } from "./routes/recap.js";
 import { homeRoutes } from "./routes/home.js";
 import { passwordRoutes } from "./routes/password.js";
-import { cannedPromotionRoutes } from "./routes/canned-promotions.js";
 
 const fastify = Fastify({ logger: true });
 
@@ -35,7 +34,6 @@ await fastify.register(nflRoutes);
 await fastify.register(pickRoutes);
 await fastify.register(wipeoutRoutes);
 await fastify.register(breweryRoutes);
-await fastify.register(cannedPromotionRoutes);
 await fastify.register(passwordRoutes);
 await fastify.register(homeRoutes);
 await fastify.register(standingsRoutes);

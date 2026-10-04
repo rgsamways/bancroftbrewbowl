@@ -1,6 +1,5 @@
 import { MAX_POOL_TOTAL_CENTS } from "./pool-total.js";
 import { z } from "zod";
-import { cannedPromotionConfigSchema } from "./canned-promotions.js";
 import { NFL_TEAM_CODES } from "./teams.js";
 import { ENTRY_STATUSES, POOL_STATUSES, POOL_TYPES } from "./enums.js";
 
@@ -93,8 +92,3 @@ export type CreatePromotionInput = z.infer<typeof createPromotionSchema>;
 export const updatePromotionSchema = createPromotionSchema.partial();
 export type UpdatePromotionInput = z.infer<typeof updatePromotionSchema>;
 
-export const updateCannedPromotionSchema = z.object({
-  enabled: z.boolean().optional(),
-  config: cannedPromotionConfigSchema.partial().optional(),
-});
-export type UpdateCannedPromotionInput = z.infer<typeof updateCannedPromotionSchema>;

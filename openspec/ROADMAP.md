@@ -6,7 +6,7 @@ Living tracker across changes. Keep current when a change's status changes.
 
 Easier to use, phone-first front end with a polished, modern look, built with the same simple process as the Tobi's Grab & Go site. Why and principles: `docs/v2/V2_PLAN.md`. **Order of work and what each slice contains: `docs/v2/V2_BUILD_PLAN.md`.** Who can do what: `docs/ROLES_AND_RULES.md`. Ideas that aren't planned yet (for example in-brewery games): `docs/IDEAS.md`.
 
-**Status (2026-10-04): design done, build not started.** About 115 clickable mockup pages in `docs/v2/mockups/` (start at `index.html`, or `gallery.html` for thumbnails) cover the player screens, the step-by-step admin, sign-in and password, the menu and music, and the fairness safeguards for an admin who also plays. Decisions are in the project memory. No app code has changed.
+**Status (2026-10-04): slices 1 to 13b and 15 are built and live; 14 (roles) is optional and not started; the `v2.0.0` tag waits for Robin's go.** About 115 clickable mockup pages in `docs/v2/mockups/` (start at `index.html`) were the design; decisions are in the project memory.
 
 **Release rule (Robin):** each slice goes live as soon as I have verified it myself. There is no private review gate; Robin decides. Staging is a quick self-check, not a waiting room.
 
@@ -31,7 +31,7 @@ Easier to use, phone-first front end with a polished, modern look, built with th
 | 13a | `help-and-info` | **Done and archived** (`archive/2026-10-04-help-and-info`). How to play (`/help`), Admin guide, install card on Home, automatic "Live this weekend" card, printable table card with a real QR to `/menu`. No schema change. 286 tests, 78 real-browser checks. |
 | 13b | `tv-and-recap` | **Done and archived** (`archive/2026-10-04-tv-and-recap`). TV standings at `/pool/:id/tv` (signed in, 16:9, refreshes every 30 s, QR) and the weekly recap at `/pool/:id/recap` with Share, a Home recap card and a Show on TV link; survivor and pick 'em; upset = the winner the fewest players picked; pick counts only after the lock. No schema change. 306 tests, 83 real-browser checks. |
 | 14 | `roles-and-rules` | Optional; only if the owner wants to hand out parts of the work |
-| 15 | `v2-cleanup-and-release` | Not written; tags v2.0.0 |
+| 15 | `v2-cleanup-and-release` | **Done and archived** (`archive/2026-10-04-v2-cleanup-and-release`). Removed the dead automatic-offers code (the empty `canned_promotions` table stays on purpose), fixed button contrast on Me, refreshed BUILD_PLAN, HANDOFF, NEW_CLIENT_SETUP and README. No schema change. **`v2.0.0` is not tagged yet: waiting for Robin's go (he wants the late-start plan settled first).** |
 
 ## Don't forget (Robin, 2026-10-04)
 

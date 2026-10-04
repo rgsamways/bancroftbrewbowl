@@ -1,12 +1,12 @@
 # Bancroft Brew Bowl — Build Plan
 
-_Last updated: 2026-09-27, reflecting the state of `main` at commit `dacd1e7`._
+_Last updated: 2026-10-04, after the v2 build (slices 1 to 15). For what each v2 slice added and why, see `docs/v2/V2_BUILD_PLAN.md` and `docs/HANDOFF.md`; for a snapshot of the code at any time, trust `git log` over this file's commit references._
 
 ## What this is
 
 Bancroft Brew Bowl is an NFL survivor-pool (and now pick 'em) web app built for Bancroft Brewing Co., a bar/brewery. It's designed and built as **a template to redeploy per client**, not a shared multi-tenant SaaS platform: each business that wants its own pool-keeping site gets its own separate deployment (own Railway project, own Postgres database, own Vercel project, own domain) running the same codebase. There is no host-header tenant resolution and no shared database — that model was explicitly considered and rejected early on (see "Product direction" below).
 
-The live instance is deployed at **bancroftbrewbowl.ca** (dashboard on Vercel, API on Railway, Postgres on Railway, DNS on Cloudflare, transactional email via Resend). As of this writing both the API and dashboard are live and responding.
+The live instance is deployed at **bancroftbrewbowl.ca** (dashboard on Vercel, API on Railway, Postgres on Railway, DNS on Cloudflare, transactional email via Resend). The v2 phone-first front end is what runs there now.
 
 ## Product direction
 
@@ -37,8 +37,13 @@ All tables live in `apps/api/src/db/schema.ts`. Migrations are managed with `dri
 | `games` | One real-world NFL game | **Season-scoped, not pool-scoped.** Keyed by `(seasonYear, weekNumber, homeTeam, awayTeam)` and shared by every pool running that season — a game's result is entered once and every matching pool scores off the same row. `result` and `homeScore`/`awayScore` are independent (a score can be recorded without a decided winner and vice versa). |
 | `picks` | One entry's pick for one team in one week | Unique on `(entryId, weekNumber, teamCode)` — **not** `(entryId, weekNumber)`, which is what makes double-pick weeks (survivor) and one-pick-per-game (pick 'em) both possible without a schema fork. |
 | `wipeoutEvents` | A held-back survivor elimination decision | Created when a game result would eliminate every remaining alive entry in a pool. A partial unique index (`WHERE resolved_at IS NULL`) plus `onConflictDoUpdate` prevents duplicate pending rows if the same game gets re-scored before resolution. |
-| `promotions` | Free-text, admin-authored weekly promotions | Season/week-scoped like `games`, not pool-scoped — a bar's "Survivor Sunday" special for week 3 isn't specific to one pool. |
-| `cannedPromotions` | Toggleable, automatically-computed promotions | One row per `kind` (`survivor_sunday`, `elimination_consolation`, `milestone_reward`, `hot_team_special`), bar-wide (not per-pool). Eligibility is computed live from `entries`/`games`/`picks` at read time — nothing about *who's* eligible is stored. |
+| `pools` (additions) | | `pool_total_cents` (nullable): a display-only number shown on Standings; the app never handles money. |
+| `promotions` | "From the brewery": featured item, specials and announcements | Extended in v2 with `kind` (`announcement`, `feature`, `special`), optional `menu_item_id`, `days`, `start_time`, `end_time`, `on_date`, `tag`; week columns are nullable. Rules in `apps/api/src/lib/brewery.ts` and `packages/shared/src/brewery.ts`. |
+| `menu_items` | Drinks and dishes | `kind` (beer, wine, drink, dish), section, name, style, abv, description, optional price, add-on `options` (jsonb), `labels`, `available`, `sort_order`. Public read at `GET /public/menu`. |
+| `music_events` | Live music | Title, `event_date`, optional start and end time (Eastern wall-clock as typed). Public read at `GET /public/music`; the weekend rule is in `packages/shared/src/music.ts`. |
+| `admin_activity` | Append-only record of admin changes | Who, what, which pool, when, and whether it touched the admin's own entry. Written by every admin write route through `recordActivity`; a test fails if a route skips it or if app code updates or deletes a record. |
+| `admin_requests` | "Another admin confirms" | A change to an admin's own standing waits here until another admin confirms or declines; a sole admin is applied at once. |
+| `cannedPromotions` | **Retired.** The four automatic offers were removed from the app in v2 | The table and its migration are kept (no destructive migration); nothing reads or writes it. |
 
 ## Feature inventory (what's built)
 
@@ -53,7 +58,7 @@ All tables live in `apps/api/src/db/schema.ts`. Migrations are managed with `dri
 - Full CRUD: create (with pool-type selection), edit (name, season year, rules), lock/unlock (reuses `pools.status`: `draft` = unlocked, `active` = locked), and delete.
 - Delete requires a git-style "type the pool's exact name to confirm" flow, enforced **both** client-side (button stays disabled) and server-side (the API independently checks the typed name matches before deleting) — not just a UI gate.
 - Deleting a pool cascades cleanly to its entries, picks, and wipeout events via FK `onDelete: cascade` — verified, not just assumed.
-- All pool management lives behind a cog-button modal and a "+"-button modal in the admin Pools page tab row (not a dedicated settings tab — that was tried and deliberately reverted; see "History" below).
+- Pool management is on the admin Pools screens (v2): the list, the pool screen with Players, Picks and Settings tabs, and a four-step new-pool wizard. A locked pool refuses name, season and rule changes (the pool total and the lock itself always work).
 
 ### Survivor pool type
 - Elimination scoring: a losing (or tied, per `tie_counts_as`) pick eliminates an entry, triggered synchronously when an admin enters a game result — not a scheduled job.
@@ -75,22 +80,24 @@ All tables live in `apps/api/src/db/schema.ts`. Migrations are managed with `dri
 - Pick deadlines and "locked" week status are derived (`MIN(kickoffTime)` per `seasonYear`+`weekNumber`), not stored.
 - Admin enters/corrects game results and scores from the Schedule page — one entry per game, applied to every pool running that season at once.
 
-### Promotions
-- **Free-text** (`promotions` table): admin writes a title/description for a specific season+week. Shown on Home to every signed-in user.
-- **Canned/automated** (`cannedPromotions` table): four pre-built, toggleable promotion kinds, each computed live:
-  - *Survivor Sunday* — every currently-alive entry.
-  - *Elimination Consolation* — entries eliminated in the most recently decided week (derived as `MAX(weekNumber)` among games with a non-pending result — not the same concept as the "upcoming" current week used for picks).
-  - *Milestone Rewards* — alive entries, only while the most-recently-decided week matches one of the admin-configured milestone weeks.
-  - *Hot-Team Special* — whichever team has the most picks for the upcoming week, aggregated bar-wide across every pool.
-- Referral-bonus and "standings on the big screen" promotion ideas were discussed and explicitly deferred — the former needs a referral-tracking data model that doesn't exist; the latter is really a separate public-display feature, not a toggleable promotion.
+### From the brewery (promotions)
+- Admins feature one menu item at a time, add specials (days and times) and post announcements from **More > From the brewery** (`/admin/brewery`). Home shows them under "At the brewery": featured, today's specials, then the announcement (or the standard "Watch with us" text), with an automatic "Live this weekend" card from the music list.
+- No offer is linked to standings or winning (waits on the owner and AGCO). The four automatic offers of v1 are gone from the app.
 
-### Dashboard UI
-- **Shell layout**: left nav (`Sidebar.tsx`), center content, and a right drawer (`RightPanel.tsx`) that shows contextual help text for whatever page is open (driven by `getPageHelp(pathname)` in `lib/nav.ts`) — opened via a "?" button on mobile, always visible as a column on desktop.
-- **Home page**: the signed-in user's pools/entries, a "join a pool" list for pools they haven't joined, the current week's games, and any active promotions (free-text + eligible canned ones).
-- **Admin dashboard** (`/admin`, `/admin/:poolId`): tabs for Pools (list/select), Games (read-only per-week results, admin enters results from the Schedule page instead), Entries (roster + wipeout resolution banner), and Picks (survivor: a week-by-week pick matrix; pick 'em: a sorted points standings list, since one entry can hold several picks in a single pick-'em week — the matrix assumption doesn't hold there).
-- **PickScreen**: branches by pool type — survivor shows a flat grid of all NFL teams; pick 'em shows one row per matchup for the current week.
-- **PoolStandings** (public, per-pool): survivor shows alive/eliminated sections; pick 'em shows a sorted points leaderboard.
-- Branding matches the real Bancroft Brewing Co. site (dark theme, custom fonts/colors via Tailwind's `@theme`).
+### Menu and music
+- Public menu at `/menu`, `/menu/kitchen` and `/menu/music` with no sign-in (the table QR code opens it); players see it under the Menu tab. Admins manage items (in or out switch, add wizard, edit, remove) and music events from the admin Menu.
+
+### TV and recap
+- TV standings at `/pool/:id/tv` (signed in, 16:9, refreshes every 30 s, QR to the site) and the weekly recap at `/pool/:id/recap` with a Share button. Pick counts (most picked, biggest upset) are computed on request and only after a week locks (`lib/pick-counts.ts`).
+
+### Dashboard UI (v2)
+- **Look:** dark flat surfaces, copper `#c17a45`, Inter, Lucide icons (tokens in `apps/dashboard/src/index.css`). Phone first, tested at 390 by 844.
+- **Player shell** (`components/Shell.tsx`): `AppHeader` (logo, avatar to Me) and `BottomTabs` (Home, Pick, Standings, Menu, plus Admin for admins). Public pages (sign-in, menu) have no bar. The TV page sits outside the shell (`TvLayout`).
+- **Home** (`GET /me/summary`, one request): a hero for the entry that needs attention, a pool switcher, every state for survivor and pick 'em, a recap card, the install card and "At the brewery".
+- **Pick** (`GET /entries/:id/pick-sheet`): team cards with a confirm bar for survivor, tap-to-pick for pick 'em. **Standings** (`GET /pools/:id/standings`): summary, pool total, Find a player, shared ranks.
+- **Admin** (`AdminLayout`, bar-less `FocusLayout` for task screens): Next step (`GET /admin/summary`), Results (one game at a time, with corrections), Menu, Pools (players, picks, settings, new-pool wizard) and More (From the brewery, Activity, Admin guide, Table card). Changes to an admin's own standing go through "another admin confirms".
+- **Weeks and states** have one definition, `apps/api/src/lib/entry-state.ts`: the current week is the first week with an undecided game; a week locks at its first kickoff. Kickoffs are stored as UTC and shown in Eastern time.
+- **Sign-in:** emailed link, or a password set on the Me page (no forgot-password flow; operator script `reset-password`).
 
 ## Infrastructure & deployment
 
@@ -108,8 +115,9 @@ All tables live in `apps/api/src/db/schema.ts`. Migrations are managed with `dri
 - A known, accepted race: two near-simultaneous pick submissions for the same entry/week in a double-pick (or pick-'em) week could both pass the "under limit" check before either commits, landing at one extra pick before the DB's team-uniqueness constraint blocks a literal duplicate. Not closed with an advisory lock — judged not worth the complexity for this scale of usage.
 - Against-the-spread and confidence-pool pick 'em variants: not built.
 - Referral-bonus promotion: not built (needs a new referral-tracking data model).
-- "Standings on the big screen" promotion idea: not built (it's a separate public-display feature, not really a toggleable promotion).
-- Automated test coverage is still thin: a first batch exists (`apps/api/src/lib/scoring.test.ts`, `apps/api/src/routes/entries.test.ts`), covering survivor elimination/mulligan/double-pick/wipeout scoring and pick 'em points derivation, run via `pnpm test` (real Postgres required — see `apps/api/src/test/setup.ts`) and enforced in CI (`.github/workflows/ci.yml`, lint + typecheck + test on push/PR). Most routes still have no tests.
+- Roles and rules beyond the single `isAdmin` flag (v2 slice 14): not built; see `docs/ROLES_AND_RULES.md`.
+- The location map with directions and hours, and in-brewery games (`docs/IDEAS.md`): not built.
+- **Tests:** `pnpm test` (API and shared tests against the real Docker Postgres, one file at a time) and `pnpm test:e2e` (real Chrome at 390 by 844 against a local stack on ports 3011 and 5183; refuses a non-local database). Both run in CI (`.github/workflows/ci.yml`). Every slice that changes a screen updates the matching spec in `e2e/`.
 
 ## History worth knowing (recurring lessons from building this)
 
@@ -119,5 +127,5 @@ A few real production incidents shaped decisions above and are worth not re-liti
 - **`packages/shared` shipping raw TypeScript broke production** the first time the API was deployed — `node` has no TS support, only `tsx`/Vite do. Fixed by giving it a real `tsc` build and pointing `railway.json`'s build command at `pnpm --filter @bbb/api... build` (the `...` builds workspace dependencies first).
 - **A too-recent `pnpm` version (bleeding-edge "latest") crashed Railway's build** because its bundled corepack couldn't fetch/execute it. Pinned to a mature `9.15.0` release in the root `package.json` instead.
 - **Vercel's git-triggered deploys build from the true repo root**, not whatever "Root Directory" was inferred from a local CLI deploy — `vercel.json` had to move from `apps/dashboard/` to the repo root, and `Project Settings`' cached install/build commands (which silently override `vercel.json` once set) had to be explicitly reset via `vercel project update`.
-- **The Pools UI structure went through several iterations** (a right-column persistent form → a dedicated Settings tab → a modal triggered by a cog button) based on direct user feedback each time. The modal-based approach is current; don't assume the right-column version if referencing an old screenshot or memory of this project.
+- **The Pools UI has been redone twice** (a modal-based version in v1, then the v2 admin screens). The v2 screens are current; ignore old screenshots or memories of the cog-button modal.
 - **`railway config plan`/`apply` are broken on this Windows dev machine** (2026-09-27): `railway@3.11.0`'s own version-compatibility check misreads its executable path when the Railway CLI spawns its IaC evaluator, throwing a misleading "upgrade your CLI" error regardless of actual CLI version — reproduced identically in Git Bash and native PowerShell, so it's not a shell quirk. Worked around by using the Railway MCP's `connect-service-source`/`update-service` (staged) + `get-staged-changes`/`accept-deploy` instead, which hit Railway's API directly and bypass the broken CLI evaluator entirely. Revisit `railway config plan` once Railway ships a fix — it should report no changes needed against the current `.railway/railway.ts`.

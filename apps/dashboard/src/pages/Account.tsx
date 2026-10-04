@@ -77,7 +77,7 @@ export function Account() {
         <button
           type="submit"
           disabled={savingName}
-          className="self-start rounded bg-brand-accent px-3 py-2 font-display font-semibold text-white hover:bg-brand-accent-hover disabled:opacity-40"
+          className="self-start rounded bg-brand-accent px-3 py-2 font-display font-semibold text-brand-accent-ink hover:bg-brand-accent-hover disabled:opacity-40"
         >
           Save
         </button>
@@ -103,7 +103,7 @@ export function Account() {
         <button
           type="submit"
           disabled={sendingEmailChange}
-          className="self-start rounded bg-brand-accent px-3 py-2 font-display font-semibold text-white hover:bg-brand-accent-hover disabled:opacity-40"
+          className="self-start rounded bg-brand-accent px-3 py-2 font-display font-semibold text-brand-accent-ink hover:bg-brand-accent-hover disabled:opacity-40"
         >
           Send confirmation link
         </button>

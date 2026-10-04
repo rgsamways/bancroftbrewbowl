@@ -61,8 +61,18 @@ certificate — see `docs/BUILD_PLAN.md`'s History for why this matters.
    admin.
 3. `railway ssh --service api -- pnpm --filter @bbb/api seed-schedule
    <season year>` — import the season's NFL schedule from ESPN.
-4. Sign in, create the client's first pool, confirm the full pick flow
-   works end to end before handing it off.
+4. Sign in (an emailed link, or set a password on the Me page), create the
+   client's first pool from **Pools > New pool**, and confirm the full pick
+   flow works end to end before handing it off.
+5. Fill in the content through the admin screens (nothing is seeded): the
+   drink and food menu (**Menu**), live music (**Menu > Music**), and the
+   From the brewery posts (**More > From the brewery**). Optionally set the
+   pool total in the pool's Settings. Print the table card (**More > Table
+   card**) for the tables.
+6. Check the wording with the client: "You must be 19 or older to play." and
+   "Please drink responsibly." are in the app, and the menu and promotion
+   copy should be checked with the client (and the local liquor regulator)
+   before it goes live. No offer is linked to winning.
 
 ## 6. Branding
 

@@ -1,10 +1,17 @@
 # Session Handoff
 
-_Rewritten 2026-10-04 at the end of the long build session (slices 1 to 9). If you're reading this significantly later, treat the specifics below as a snapshot, not live truth: check `git log`, `openspec list` and the live site first._
+_Rewritten 2026-10-04 after slice 15. Treat the specifics below as a snapshot, not live truth: check `git log`, `openspec list` and the live site first._
 
 ## Start here
 
-The state in one line: **v2 is fully designed and planned; slices 1 to 13b (9a, 9b, 10, 11a, 11b, 12, 13a and 13b) are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick, Standings, the admin activity record, the admin steps, the pool screens); `password-sign-in` is archived (Robin confirmed it on his phone).** The next jobs are 14 (optional roles) and 15 (cleanup and the v2.0.0 tag), in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
+The state in one line: **v2 is built, live and archived through slice 15 (cleanup), apart from the optional slice 14 (roles); the `v2.0.0` tag waits for Robin's go.** Every slice (privacy fix, app frame, browser tests, sign-in and passwords, pool total, Home and Pick, Standings, admin activity, admin steps and pools, confirmations, menu, music, From the brewery, help and info, TV and recap) is on production. `CLAUDE.md`'s pace rule applies: don't start anything below unprompted.
+
+What is open, in order:
+
+1. **Tag `v2.0.0`** on `main` (git tag only; package versions stay 0.0.0). Waits for Robin, who first wants the late-start plan settled.
+2. **Late start and results cleanup** (Robin's plan, not run): fill the NFL results up to the current week with `pnpm seed-schedule 2026` from `apps/api` (it writes results without scoring, so the missed weeks are a bye for everyone), after checking production has no picks in past weeks; then post a From the brewery announcement that the pool started mid-season. Look at the result on a local database first. Never bulk-write to production without Robin's say-so.
+3. **Slice 14, roles** (`docs/ROLES_AND_RULES.md`): only if the owner wants to hand out parts of the work.
+4. **Location map** (OpenStreetMap, directions, hours; copy from Tobi's project at `C:/dev/tobisgrabandgo`; needs the real address and hours), then the fun ideas in `docs/IDEAS.md`.
 
 Read, in order:
 
@@ -19,10 +26,9 @@ Read, in order:
 
 ## Where things stand
 
-- **Production (`bancroftbrewbowl.ca`) runs the v2 app through slice 9.** `main` is the source of truth and deploys both the dashboard (Vercel) and the API (Railway) on push; `staging` mirrors it. Archived changes are under `openspec/changes/archive/`, main specs under `openspec/specs/` (`openspec list` shows only what is still open).
-- **Built and live:** secure pick access, the v2 shell, browser tests, password sign-in and the sign-in screens, pool total, Home and Pick (with join pages), Standings, the admin activity record, the admin steps (Next step, Results, wipeout) and the pool screens (list, players, picks, settings, new-pool wizard).
-- **No open changes.** `password-sign-in` was archived 2026-10-04 after Robin's phone check.
-- **Next slice: 13b, `tv-and-recap`** (TV standings as a signed-in page, survivor first, and the weekly recap card; both need new server numbers: most picked per team after the lock, players out this week, biggest upset; no schema change expected). Plan it with `openspec-propose` and wait for Robin's go. Before the v2.0.0 tag Robin also wants a plan for the late start and the results cleanup (see "Still open"). After that: 14 optional roles (only if the owner wants it), 15 cleanup and the v2.0.0 tag. Order and sizes: `docs/v2/V2_BUILD_PLAN.md`; status per slice: `openspec/ROADMAP.md`.
+- **Production (`bancroftbrewbowl.ca`) runs the whole v2 app.** `main` is the source of truth and deploys both the dashboard (Vercel) and the API (Railway) on push; `staging` mirrors it. Archived changes are under `openspec/changes/archive/`, main specs under `openspec/specs/` (`openspec list` shows only what is still open).
+- **No open changes** once `v2-cleanup-and-release` is archived.
+- **Order and sizes:** `docs/v2/V2_BUILD_PLAN.md`; status per slice: `openspec/ROADMAP.md`.
 - **Robin's rules:** every slice goes live as soon as it is verified; no review gate; he decides. Wait for his go before starting each slice (plan first with `openspec-propose`, build only after he says go). Never write test data to production. Update the matching spec in `e2e/` whenever a slice changes a screen. Keep explanations short and simple. Ports 3001 and 5173 belong to other projects: never touch them.
 
 ## Things that matter (learned while building)
@@ -36,7 +42,7 @@ Read, in order:
 - **Testing:** `pnpm lint`, `pnpm typecheck`, `pnpm typecheck:e2e`, `pnpm test` (API tests use the real Docker Postgres) and `pnpm test:e2e` (real Chrome at 390 by 844, own API on 3011 and dashboard on 5183, refuses a non-local database). Test cleanup removes the data and the activity records its own admins made; if rows pile up locally, a test skipped cleanup. Seasons used by tests: 3500 and up for anything that calls the admin summary (it looks at the latest season with games), 2000 to 2100 for anything that edits a pool's season (schema limit), around 2970 to 2999 for the rest.
 - **The staging preview site can't call the staging API** (`api-staging` has no `DASHBOARD_URL`), so screens are checked locally in real Chrome and staging is checked by calling its API.
 - **Editing files with Python on this Windows machine:** always pass `encoding="utf-8"`; the default (cp1252) once wrote a bad byte into a source file. In the Bash tool, heredocs containing apostrophes can fail to parse: write such files with the Write tool, or write a script file and run it.
-- **Temporary pieces still in place:** the Promotions page (reachable from admin More) and its automatic offers, until slice 12 replaces them; the Activity link lives under More until menu items arrive. Old pages may still have white text on copper buttons (3.4 to 1 contrast); fix with dark ink when each is redone.
+- **Temporary pieces:** none left from the build. The Activity link lives under More. The retired automatic-offers code is gone; its empty `canned_promotions` table stays on purpose (no destructive migration), and the `canned_promotion_changed` activity kind stays so old records show a title.
 - **The schedule import is a script** (`apps/api/scripts/seed-schedule.ts`), not a screen; `apps/api/scripts/make-admin.ts` makes an admin; `apps/api/scripts/reset-password.ts` resets a password (see `docs/NEW_CLIENT_SETUP.md`).
 
 ## Decisions already made (don't re-ask; details in memory)
@@ -53,6 +59,7 @@ Read, in order:
 - **Robin's reminders (2026-10-04):** a plan for the late start (NFL week 4) and cleaning up the weekly results, and the location map with directions and hours, last before the fun ideas. Details in `openspec/ROADMAP.md` under "Don't forget".
 - Real beer styles and strengths, which beers are seasonal, and the wine and other-drinks list. These can be entered through the admin screens once they exist.
 - Whether to build the Admins screen (slice 14).
+- Whether the `v2.0.0` tag goes out before or after the late-start results cleanup.
 - Legal check of the menu and promotion wording with the owner and AGCO.
 - The pick 'em versions of some admin screens (settings and picks) aren't mocked; only survivor is.
 

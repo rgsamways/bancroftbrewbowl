@@ -1,9 +1,9 @@
 import { defaultPickEmRulesConfig, defaultSurvivorRulesConfig, type ActivityPage } from "@bbb/shared";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { FastifyInstance } from "fastify";
-import { desc, eq, inArray } from "drizzle-orm";
+import { desc, eq, inArray, like } from "drizzle-orm";
 import { db } from "../db/client.js";
-import { adminActivity, entries, pools, user as userTable, wipeoutEvents } from "../db/schema.js";
+import { adminActivity, entries, pools, promotions, user as userTable, wipeoutEvents } from "../db/schema.js";
 import { cleanupFixtures, createEntry, createGame, createPick, createPool, createUser } from "../test/fixtures.js";
 import { actAs, buildTestApp, type TestActor } from "../test/route-harness.js";
 
@@ -37,6 +37,7 @@ describe("admin activity record", () => {
   afterEach(async () => {
     // Test records are removed by test code only; the app has no way to delete them.
     if (userIds.length > 0) await db.delete(adminActivity).where(inArray(adminActivity.actorId, userIds));
+    await db.delete(promotions).where(like(promotions.title, "Zz Activity%"));
     await cleanupFixtures(poolIds.splice(0), gameIds.splice(0), userIds.splice(0));
   });
 
@@ -276,15 +277,13 @@ describe("admin activity record", () => {
       await db.delete(adminActivity).where(eq(adminActivity.id, row!.id));
     });
 
-    it("changes to the automatic offers are recorded", async () => {
+    it("posting a special is recorded", async () => {
       const alex = await admin();
       actAs(as(alex));
-      await send("PATCH", "/canned-promotions/survivor_sunday", { enabled: true });
-      await send("PATCH", "/canned-promotions/survivor_sunday", { enabled: false });
+      expect((await send("POST", "/brewery/specials", { title: "Zz Activity Special", days: [0] })).statusCode).toBe(201);
       const [r] = await records(alex);
-      expect(r).toMatchObject({ kind: "canned_promotion_changed" });
-      expect(r!.summary).toContain("turned the automatic offer");
-      expect(r!.summary).toContain("off");
+      expect(r).toMatchObject({ kind: "brewery_special_added" });
+      expect(r!.summary).toContain("Zz Activity Special");
     });
 
     it("refused requests write nothing: a player, an invalid body, an unknown pool", async () => {

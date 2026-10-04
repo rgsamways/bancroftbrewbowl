@@ -9,8 +9,8 @@ import { games } from "../db/schema.js";
 // deadline rule, but no server code reads it, so this is the only rule in force.
 // If it is ever implemented, change it here and both reads and writes follow.)
 //
-// Note: `routes/nfl.ts` and `routes/canned-promotions.ts` still work out their own
-// copy for display. They are not about permissions and are left alone.
+// Note: `routes/nfl.ts` still works out its own
+// copy for display. It is not about permissions and is left alone.
 
 /** The moment a week locks, or null if no games are scheduled for it. */
 export async function getWeekLockTime(seasonYear: number, weekNumber: number): Promise<Date | null> {
