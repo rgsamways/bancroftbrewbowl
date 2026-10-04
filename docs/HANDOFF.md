@@ -4,7 +4,7 @@ _Rewritten 2026-10-04 at the end of the long build session (slices 1 to 9). If y
 
 ## Start here
 
-The state in one line: **v2 is fully designed and planned; slices 1 to 11a (9a, 9b, 10 and 11a) are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick, Standings, the admin activity record, the admin steps, the pool screens); `password-sign-in` is archived (Robin confirmed it on his phone).** The next job is slice 11b, `music-events` (table `music_events`, designed in the approved plan: `event_date`, optional start and end times, Music sub-tab, admin Music screens), then 12, in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
+The state in one line: **v2 is fully designed and planned; slices 1 to 11 (9a, 9b, 10, 11a and 11b) are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick, Standings, the admin activity record, the admin steps, the pool screens); `password-sign-in` is archived (Robin confirmed it on his phone).** The next job is slice 12, `from-the-brewery`, in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
 
 Read, in order:
 
@@ -22,7 +22,7 @@ Read, in order:
 - **Production (`bancroftbrewbowl.ca`) runs the v2 app through slice 9.** `main` is the source of truth and deploys both the dashboard (Vercel) and the API (Railway) on push; `staging` mirrors it. Archived changes are under `openspec/changes/archive/`, main specs under `openspec/specs/` (`openspec list` shows only what is still open).
 - **Built and live:** secure pick access, the v2 shell, browser tests, password sign-in and the sign-in screens, pool total, Home and Pick (with join pages), Standings, the admin activity record, the admin steps (Next step, Results, wipeout) and the pool screens (list, players, picks, settings, new-pool wizard).
 - **No open changes.** `password-sign-in` was archived 2026-10-04 after Robin's phone check.
-- **Next slice: 11b, `music-events`** (one new table `music_events`: title, date, optional start and end times in Eastern wall-clock; Music sub-tab on the Menu tab and a Music list and 3-step wizard in admin; the "Live this weekend" Home card and its "show on Home" flag are slice 13). Plan it with `openspec-propose`, call out the schema change before pushing, and run the migration on staging's own database first. After that: 12 `from-the-brewery` (also takes the announcement wizard moved out of slice 9), 13 help and extras, 14 optional roles, 15 cleanup and the v2.0.0 tag. Order and sizes: `docs/v2/V2_BUILD_PLAN.md`; status per slice: `openspec/ROADMAP.md`.
+- **Next slice: 12, `from-the-brewery`** (extends the `promotions` table with a kind, an optional menu item and a schedule; features, specials, announcements on Home; also takes the announcement wizard moved out of slice 9; retires the four automatic offers from the screens; no offers linked to standings or winning). Plan it with `openspec-propose`, call out any schema change before pushing, and run the migration on staging's own database first. After that: `from-the-brewery` (also takes the announcement wizard moved out of slice 9), 13 help and extras, 14 optional roles, 15 cleanup and the v2.0.0 tag. Order and sizes: `docs/v2/V2_BUILD_PLAN.md`; status per slice: `openspec/ROADMAP.md`.
 - **Robin's rules:** every slice goes live as soon as it is verified; no review gate; he decides. Wait for his go before starting each slice (plan first with `openspec-propose`, build only after he says go). Never write test data to production. Update the matching spec in `e2e/` whenever a slice changes a screen. Keep explanations short and simple. Ports 3001 and 5173 belong to other projects: never touch them.
 
 ## Things that matter (learned while building)
@@ -119,3 +119,11 @@ Read, in order:
 - Admin screens are in `pages/admin-menu/` (`draft.ts` holds the form-to-payload logic and has unit tests). Add-ons are typed one per line, price after a comma.
 - No seed data. The brewery enters the real list through the screens; production has an empty menu until then. The legal check of the menu wording with the owner and AGCO is still open.
 - Tests: `menu.test.ts` (API), `e2e/menu.spec.ts`, `e2e/admin-menu.spec.ts`. E2E items are named "E2E ..." and removed by each test.
+
+## Slice 11b notes (music-events, 2026-10-04)
+
+- Table `music_events` (migration 0009): title, `event_date` (a date), optional `start_time` and `end_time` (Eastern wall-clock as typed, so nothing is converted between time zones). Past events are kept but never shown publicly; admins see them under Past (latest 50).
+- `GET /public/music` needs no session (always revalidated) and returns `{ thisWeekend, comingUp }`. The weekend rule lives in `packages/shared/src/music.ts` (`weekendWindow`, `bucketOf`, `easternToday`): Friday to Sunday, the coming one Monday to Thursday, the current one Friday to Sunday with days already gone dropped. Admin routes: `GET /music/events`, `POST`, `PATCH`, `DELETE`, all recorded in Activity (`music_event_*`, category menu).
+- The Music tab sits beside Drinks and Kitchen at `/menu/music` (public and signed in). Admin Music is the third sub-tab of the admin Menu (`/admin/menu?tab=music`), with a three-step wizard at `/admin/music/new` and editing at `/admin/music/:id`.
+- Left for slice 13 on purpose: the "Live this weekend" Home card and its "show on Home this week" flag (a nullable column to add then).
+- Tests: `music.test.ts` (API), `packages/shared/src/music.test.ts` (weekend rule on every weekday, near-midnight Eastern date), `e2e/music.spec.ts`, `e2e/admin-music.spec.ts`. E2E events are named "E2E ..." and removed by each test.
