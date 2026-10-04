@@ -1,311 +1,152 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router";
-import { CANNED_PROMOTION_LABELS, type PromotionKind } from "@bbb/shared";
+import { formatRank, type JoinablePool, type MeSummary, type SummaryEntry } from "@bbb/shared";
 import { useSession } from "../lib/auth-client";
-import { api } from "../lib/api";
+import { useApi } from "../lib/useApi";
+import { useServerNow } from "../lib/useServerClock";
+import { attentionOrder, pickPathFor } from "../lib/attention";
+import { Countdown } from "../components/Countdown";
+import { PoolChips } from "../components/PoolChips";
 
-type Pool = { id: string; name: string; seasonYear: number; status: string; type?: string };
-type MyEntry = {
-  id: string;
-  poolId: string;
-  displayName: string;
-  status: "alive" | "eliminated";
-  pool: Pool;
-};
-type Week = { weekNumber: number; pickDeadline: string; locked: boolean; completed: boolean };
-type Game = {
-  id: string;
-  weekNumber: number;
-  homeTeam: string;
-  awayTeam: string;
-  result: "pending" | "home_win" | "away_win" | "tie";
-};
-type Promotion = { id: string; seasonYear: number; weekNumber: number; title: string; description: string };
-type CannedPromotion = { id: string; kind: PromotionKind; enabled: boolean };
-type EligibleEntry = { id: string; displayName: string; poolName: string };
-type EligibleResponse = {
-  kind: PromotionKind;
-  weekNumber?: number | null;
-  eligibleEntries?: EligibleEntry[];
-  teamCode?: string | null;
-  pickCount?: number;
-};
+const SELECTED_KEY = "bbb:home-pool";
 
-export function Home() {
-  const { data: session } = useSession();
-  // null until the request has returned, so a returning player never sees the first-run
-  // welcome flash while their pools load.
-  const [loadedEntries, setMyEntries] = useState<MyEntry[] | null>(null);
-  const [loadedPools, setPools] = useState<Pool[] | null>(null);
-  const myEntries = loadedEntries ?? [];
-  const pools = loadedPools ?? [];
+const primaryLink =
+  "mt-5 flex min-h-12 w-full items-center justify-center rounded-[12px] bg-brand-accent px-4 font-semibold text-brand-accent-ink hover:bg-brand-accent-hover";
+const secondaryLink =
+  "mt-5 flex min-h-12 w-full items-center justify-center rounded-[12px] border border-brand-border px-4 font-semibold text-brand-text hover:border-brand-accent";
 
-  function refresh() {
-    api<MyEntry[]>("/me/entries").then(setMyEntries);
-    api<Pool[]>("/pools").then(setPools);
-  }
-
-  useEffect(refresh, []);
-
-  const joinedPoolIds = new Set(myEntries.map((e) => e.poolId));
-  const availablePools = pools.filter((p) => !joinedPoolIds.has(p.id));
-
-  if (loadedEntries === null || loadedPools === null) return null;
-  if (loadedEntries.length === 0) {
-    return <FirstRunWelcome name={session?.user.name} pools={availablePools} onJoined={refresh} />;
-  }
-
-  return (
-    <div className="mx-auto max-w-lg px-6 pb-6">
-      <p className="mb-8 text-brand-muted">
-        Welcome{session?.user.name ? `, ${session.user.name}` : ""}
-      </p>
-
-      <section className="mb-8">
-        <h2 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-brand-muted">
-          Your pools
-        </h2>
-        <ul className="divide-y divide-brand-border rounded border border-brand-border bg-brand-surface">
-          {myEntries.map((entry) => (
-            <li key={entry.id}>
-              <Link
-                to={
-                  entry.status === "alive"
-                    ? `/pool/${entry.poolId}/entry/${entry.id}/pick`
-                    : `/pool/${entry.poolId}`
-                }
-                className="flex items-center justify-between px-3 py-2 text-sm hover:bg-brand-surface-raised"
-              >
-                <span className="text-brand-text">{entry.pool.name}</span>
-                <span
-                  className={`rounded px-2 py-0.5 text-xs ${
-                    entry.status === "alive"
-                      ? "bg-emerald-950 text-emerald-400"
-                      : "bg-brand-surface-raised text-brand-muted"
-                  }`}
-                >
-                  {entry.status}
-                </span>
-              </Link>
-            </li>
-          ))}
-          {myEntries.length === 0 && (
-            <li className="px-3 py-2 text-sm text-brand-muted">You haven't joined a pool yet</li>
-          )}
-        </ul>
-      </section>
-
-      {availablePools.length > 0 && (
-        <section className="mb-8">
-          <h2 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-brand-muted">
-            Join a pool
-          </h2>
-          <ul className="divide-y divide-brand-border rounded border border-brand-border bg-brand-surface">
-            {availablePools.map((pool) => (
-              <JoinPoolRow key={pool.id} pool={pool} onJoined={refresh} />
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <CurrentWeekSection />
-    </div>
-  );
+function poolBlurb(type: JoinablePool["type"]) {
+  return type === "pick_em"
+    ? "Pick the winner of every game each week. Every correct pick scores a point, and the most points wins."
+    : "Pick one team to win each week, and you can only use each team once. If your team loses, you're out. Last one standing wins.";
 }
 
-// "Current week" = the most recent season with games imported, its first
-// week that isn't fully decided yet, or the most recent past week if the
-// season is over — there's no stored "current season" setting (see NFL
-// routes). Deliberately not "first week that hasn't locked yet": a week
-// locks at its first kickoff but keeps playing through Sunday/Monday, so
-// that definition would show next week's games while this week's are
-// still being played.
-function CurrentWeekSection() {
-  const [seasonYear, setSeasonYear] = useState<number | null>(null);
-  const [currentWeek, setCurrentWeek] = useState<number | null>(null);
-  const [games, setGames] = useState<Game[]>([]);
-  const [promotions, setPromotions] = useState<Promotion[]>([]);
-
-  useEffect(() => {
-    api<number[]>("/nfl/seasons").then((fetched) => {
-      if (fetched.length > 0) setSeasonYear(Math.max(...fetched));
-    });
-  }, []);
-
-  useEffect(() => {
-    if (seasonYear === null) return;
-    api<Week[]>(`/nfl/weeks?year=${seasonYear}`).then((weeks) => {
-      if (weeks.length === 0) return;
-      const firstIncomplete = weeks.find((w) => !w.completed);
-      setCurrentWeek(firstIncomplete ? firstIncomplete.weekNumber : weeks[weeks.length - 1].weekNumber);
-    });
-  }, [seasonYear]);
-
-  useEffect(() => {
-    if (seasonYear === null || currentWeek === null) return;
-    api<Game[]>(`/nfl/games?year=${seasonYear}&week=${currentWeek}`).then(setGames);
-    api<Promotion[]>(`/promotions?year=${seasonYear}&week=${currentWeek}`).then(setPromotions);
-  }, [seasonYear, currentWeek]);
-
-  if (seasonYear === null || currentWeek === null) return null;
-
-  return (
-    <>
-      <section className="mb-8">
-        <h2 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-brand-muted">
-          Week {currentWeek} games
-        </h2>
-        <ul className="divide-y divide-brand-border rounded border border-brand-border bg-brand-surface">
-          {games.map((g) => (
-            <li key={g.id} className="flex items-center justify-between px-3 py-2 text-sm text-brand-text">
-              <span>
-                {g.awayTeam} @ {g.homeTeam}
-              </span>
-              <span className="rounded bg-brand-surface-raised px-2 py-0.5 text-xs text-brand-muted">
-                {g.result === "pending" ? "pending" : g.result}
-              </span>
-            </li>
-          ))}
-          {games.length === 0 && <li className="px-3 py-2 text-sm text-brand-muted">No games this week</li>}
-        </ul>
-      </section>
-
-      {promotions.length > 0 && (
-        <section className="mb-8">
-          <h2 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-brand-muted">
-            This week's promotions
-          </h2>
-          <ul className="divide-y divide-brand-border rounded border border-brand-border bg-brand-surface">
-            {promotions.map((p) => (
-              <li key={p.id} className="px-3 py-2 text-sm">
-                <p className="font-semibold text-brand-text">{p.title}</p>
-                <p className="text-brand-muted">{p.description}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <CannedPromotionsSection seasonYear={seasonYear} />
-    </>
-  );
+function Footer() {
+  return <p className="mt-8 text-xs text-brand-faint">Please drink responsibly.</p>;
 }
 
-function CannedPromotionsSection({ seasonYear }: { seasonYear: number }) {
-  const [enabledKinds, setEnabledKinds] = useState<PromotionKind[]>([]);
-  const [eligible, setEligible] = useState<Record<string, EligibleResponse>>({});
+type Described = {
+  title: string;
+  sub: string;
+  lines: string[];
+  countdown: boolean;
+  button: { label: string; to: string; primary: boolean };
+};
 
-  useEffect(() => {
-    api<CannedPromotion[]>("/canned-promotions").then((fetched) => {
-      setEnabledKinds(fetched.filter((p) => p.enabled).map((p) => p.kind));
-    });
-  }, []);
+/** The headline, sub-line, stat lines and button for one entry's current state. */
+function describe(e: SummaryEntry): Described {
+  const week = e.weekNumber;
+  const standingsTo = `/pool/${e.poolId}`;
+  const pickTo = pickPathFor(e);
+  const standings = (label: string) => ({ label, to: standingsTo, primary: false });
 
-  useEffect(() => {
-    enabledKinds.forEach((kind) => {
-      api<EligibleResponse>(`/canned-promotions/${kind}/eligible?year=${seasonYear}`).then((result) => {
-        setEligible((current) => ({ ...current, [kind]: result }));
-      });
-    });
-  }, [enabledKinds, seasonYear]);
+  if (e.poolType === "survivor") {
+    const line =
+      e.playersLeft !== null && e.playersLeft < e.playersTotal
+        ? `${e.poolName} · ${e.playersLeft} of ${e.playersTotal} players left`
+        : `${e.poolName} · ${e.playersTotal} player${e.playersTotal === 1 ? "" : "s"}`;
+    switch (e.state) {
+      case "needs_picks":
+        return { title: "You're still alive", sub: `Week ${week}: make your pick`, lines: [line], countdown: true, button: { label: "Make my pick", to: pickTo, primary: true } };
+      case "picked":
+        return { title: "Locked in", sub: `Week ${week}: you're all set`, lines: [line], countdown: true, button: { label: "Change my pick", to: pickTo, primary: false } };
+      case "locked":
+        return { title: "Picks are locked", sub: "Games are underway", lines: [line], countdown: false, button: standings("See standings") };
+      case "eliminated":
+        return { title: "You're out", sub: "Thanks for playing", lines: [`${e.poolName} · you went out in week ${e.eliminatedWeek ?? "?"}`], countdown: false, button: standings("See standings") };
+      case "season_over":
+        return {
+          title: `${e.seasonYear} season complete`,
+          sub: "That's a wrap",
+          lines: ["Thanks for playing. See you next season.", ...(e.champion ? [`${e.poolName} champion: ${e.champion}`] : [])],
+          countdown: false,
+          button: standings("See final standings"),
+        };
+      default:
+        return { title: "No games yet", sub: "Check back soon", lines: [line, "The schedule hasn't been added yet."], countdown: false, button: standings("See standings") };
+    }
+  }
 
-  const blurbs = enabledKinds
-    .map((kind) => ({ kind, result: eligible[kind] }))
-    .filter(({ result }) => result)
-    .map(({ kind, result }) => describeCannedPromotion(kind, result!))
-    .filter((blurb): blurb is string => blurb !== null);
+  // Pick 'em
+  const rank = e.rank !== null ? { rank: e.rank, tied: e.tied } : null;
+  const rankPhrase = rank ? `${formatRank(rank, "ordinal")} of ${e.playersTotal}` : `${e.playersTotal} players`;
+  const pointsLine = `${e.points ?? 0} points${rank ? ` · ${rank.tied ? "tied " : ""}${formatRank({ ...rank, tied: false }, "ordinal")} of ${e.playersTotal}` : ""}`;
+  const progress = `${e.picksMade} of ${e.gamesTotal ?? e.picksNeeded} picked`;
+  switch (e.state) {
+    case "needs_picks":
+      return {
+        title: rankPhrase,
+        sub: `Week ${week}: make your picks`,
+        lines: [e.poolName, `Your points ${e.points ?? 0}`, rank ? `Rank ${formatRank(rank)} of ${e.playersTotal}` : "", progress].filter(Boolean),
+        countdown: true,
+        button: { label: e.picksMade > 0 ? "Finish my picks" : "Make my picks", to: pickTo, primary: true },
+      };
+    case "picked":
+      return { title: "All picks in", sub: `Week ${week}: you're all set`, lines: [e.poolName, pointsLine, progress], countdown: true, button: { label: "Review or change my picks", to: pickTo, primary: false } };
+    case "locked":
+      return {
+        title: "Picks are locked",
+        sub: "Games are underway",
+        lines: [e.poolName, `Your points ${e.points ?? 0}`, `This week: ${e.correctThisWeek ?? 0} correct so far`],
+        countdown: false,
+        button: { label: "See my picks", to: pickTo, primary: false },
+      };
+    case "season_over":
+      return {
+        title: `${e.seasonYear} season complete`,
+        sub: "That's a wrap",
+        lines: ["Thanks for playing. See you next season.", ...(e.champion ? [`${e.poolName} winner: ${e.champion}`] : [])],
+        countdown: false,
+        button: standings("See final standings"),
+      };
+    default:
+      return { title: "No games yet", sub: "Check back soon", lines: [e.poolName, "The schedule hasn't been added yet."], countdown: false, button: standings("See standings") };
+  }
+}
 
-  if (blurbs.length === 0) return null;
-
+function Hero({ entry, nowMs, onLocked }: { entry: SummaryEntry; nowMs: number; onLocked: () => void }) {
+  const d = describe(entry);
   return (
-    <section className="mb-8">
-      <h2 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-brand-muted">
-        Active promotions
-      </h2>
-      <ul className="divide-y divide-brand-border rounded border border-brand-border bg-brand-surface">
-        {enabledKinds.map((kind) => {
-          const result = eligible[kind];
-          if (!result) return null;
-          const blurb = describeCannedPromotion(kind, result);
-          if (!blurb) return null;
-          return (
-            <li key={kind} className="px-3 py-2 text-sm">
-              <p className="font-semibold text-brand-text">{CANNED_PROMOTION_LABELS[kind]}</p>
-              <p className="text-brand-muted">{blurb}</p>
-              {result.eligibleEntries && result.eligibleEntries.length > 0 && (
-                <p className="mt-1 text-xs text-brand-muted">
-                  {result.eligibleEntries.map((e) => `${e.displayName} (${e.poolName})`).join(", ")}
-                </p>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+    <section className="rounded-[20px] border border-brand-border bg-brand-surface p-5">
+      <h1 className="text-3xl font-semibold leading-tight text-brand-text">{d.title}</h1>
+      <p className="mt-1 text-lg text-brand-text">{d.sub}</p>
+      <div className="mt-3 space-y-1 text-sm text-brand-muted">
+        {d.lines.map((line) => (
+          <p key={line}>{line}</p>
+        ))}
+      </div>
+      {d.countdown && entry.lockTime && (
+        <Countdown lockTime={entry.lockTime} nowMs={nowMs} onLocked={onLocked} className="mt-3 text-sm font-semibold text-brand-accent" />
+      )}
+      <Link to={d.button.to} className={d.button.primary ? primaryLink : secondaryLink}>
+        {d.button.label}
+      </Link>
     </section>
   );
 }
 
-function describeCannedPromotion(kind: PromotionKind, result: EligibleResponse): string | null {
-  if (kind === "survivor_sunday") {
-    if (!result.eligibleEntries || result.eligibleEntries.length === 0) return null;
-    return `${result.eligibleEntries.length} entries still alive are eligible — check in at the bar.`;
-  }
-  if (kind === "elimination_consolation") {
-    if (!result.eligibleEntries || result.eligibleEntries.length === 0) return null;
-    return `Eliminated in week ${result.weekNumber} — show this to redeem a consolation offer.`;
-  }
-  if (kind === "milestone_reward") {
-    if (!result.eligibleEntries || result.eligibleEntries.length === 0) return null;
-    return `Survived to week ${result.weekNumber} — you've unlocked a reward!`;
-  }
-  if (kind === "hot_team_special") {
-    if (!result.teamCode) return null;
-    return `${result.teamCode} is this week's hot pick (${result.pickCount} entries) — themed special is on.`;
-  }
-  return null;
-}
-
-function JoinPoolRow({ pool, onJoined }: { pool: Pool; onJoined: () => void }) {
-  const [error, setError] = useState<string | null>(null);
-  const [joining, setJoining] = useState(false);
-
-  async function join() {
-    setError(null);
-    setJoining(true);
-    try {
-      await api(`/pools/${pool.id}/join`, { method: "POST" });
-      onJoined();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to join");
-      setJoining(false);
-    }
-  }
-
+function JoinCards({ pools, heading }: { pools: JoinablePool[]; heading: string }) {
+  if (pools.length === 0) return null;
   return (
-    <li className="flex items-center justify-between px-3 py-2">
-      <span className="text-sm text-brand-text">
-        {pool.name} <span className="text-brand-muted">({pool.seasonYear})</span>
-      </span>
-      <span className="flex items-center gap-2">
-        {error && <span className="text-xs text-red-400">{error}</span>}
-        <button
-          onClick={join}
-          disabled={joining}
-          className="rounded bg-brand-accent px-3 py-1 text-sm font-semibold text-white hover:bg-brand-accent-hover disabled:opacity-40"
-        >
-          Join
-        </button>
-      </span>
-    </li>
+    <section className="mt-6">
+      <h2 className="mb-2 text-sm font-semibold text-brand-muted">{heading}</h2>
+      <ul className="space-y-3">
+        {pools.map((pool) => (
+          <li key={pool.id} className="rounded-[14px] border border-brand-border bg-brand-surface p-4">
+            <p className="font-semibold text-brand-text">{pool.name}</p>
+            <p className="text-xs text-brand-muted">
+              {pool.type === "pick_em" ? "Pick 'em" : "Survivor"} &middot; {pool.seasonYear} season
+            </p>
+            <p className="mt-2 text-sm text-brand-muted">{poolBlurb(pool.type)}</p>
+            <Link to={`/join/${pool.id}`} className={`${secondaryLink} !mt-3`}>
+              Join {pool.name}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
-
-const POOL_BLURBS: Record<string, string> = {
-  survivor:
-    "Pick one team to win each week, and you can only use each team once. If your team loses, you're out. Last one standing wins.",
-  pick_em:
-    "Pick the winner of every game each week. Every correct pick scores a point, and the most points wins.",
-};
 
 const FIRST_RUN_STEPS = [
   ["Join a pool", "Pick the kind of game you want to play."],
@@ -314,13 +155,24 @@ const FIRST_RUN_STEPS = [
 ] as const;
 
 /** What a signed-in person who is in no pool yet sees on Home. */
-function FirstRunWelcome({ name, pools, onJoined }: { name?: string; pools: Pool[]; onJoined: () => void }) {
+function FirstRunWelcome({ name, pools }: { name?: string; pools: JoinablePool[] }) {
+  if (pools.length === 0) {
+    return (
+      <div className="mx-auto max-w-lg px-6 pb-6 pt-6">
+        <section className="rounded-[20px] border border-brand-border bg-brand-surface p-5">
+          <h1 className="text-3xl font-semibold leading-tight text-brand-text">No pools open yet</h1>
+          <p className="mt-2 text-sm text-brand-muted">
+            Nothing to join right now. Check back soon, new pools show up here as soon as the brewery opens them.
+          </p>
+        </section>
+        <Footer />
+      </div>
+    );
+  }
   return (
-    <div className="mx-auto max-w-lg space-y-6 px-6 pb-6">
+    <div className="mx-auto max-w-lg space-y-6 px-6 pb-6 pt-6">
       <section className="rounded-[20px] border border-brand-border bg-brand-surface p-5">
-        <h1 className="text-3xl font-semibold leading-tight text-brand-text">
-          Welcome{name ? `, ${name}` : ""}
-        </h1>
+        <h1 className="text-3xl font-semibold leading-tight text-brand-text">Welcome{name ? `, ${name}` : ""}</h1>
         <p className="mt-2 text-sm text-brand-muted">
           You're signed in. Join a pool below to start playing. It takes one tap.
         </p>
@@ -346,62 +198,72 @@ function FirstRunWelcome({ name, pools, onJoined }: { name?: string; pools: Pool
         </ol>
       </section>
 
-      <section>
-        <h2 className="mb-2 text-sm font-semibold text-brand-muted">Pools you can join</h2>
-        {pools.length === 0 ? (
-          <p className="rounded border border-brand-border bg-brand-surface p-4 text-sm text-brand-muted">
-            No pools are open yet. Check back soon.
-          </p>
-        ) : (
-          <ul className="space-y-3">
-            {pools.map((pool) => (
-              <FirstRunPoolCard key={pool.id} pool={pool} onJoined={onJoined} />
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <p className="text-xs text-brand-faint">Please drink responsibly.</p>
+      <JoinCards pools={pools} heading="Pools you can join" />
+      <Footer />
     </div>
   );
 }
 
-function FirstRunPoolCard({ pool, onJoined }: { pool: Pool; onJoined: () => void }) {
-  const [error, setError] = useState<string | null>(null);
-  const [joining, setJoining] = useState(false);
+export function Home() {
+  const { data, error, reload } = useApi<MeSummary>("/me/summary");
+  const { data: session } = useSession();
+  const nowMs = useServerNow(data?.serverNow);
+  const [chosenId, setChosenId] = useState<string | null>(() => sessionStorage.getItem(SELECTED_KEY));
 
-  async function join() {
-    setError(null);
-    setJoining(true);
-    try {
-      await api(`/pools/${pool.id}/join`, { method: "POST" });
-      onJoined();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to join");
-      setJoining(false);
-    }
+  // The week locked while Home was open: ask the server what the screen should show now.
+  const onLocked = useCallback(() => void reload(), [reload]);
+
+  useEffect(() => {
+    if (chosenId) sessionStorage.setItem(SELECTED_KEY, chosenId);
+  }, [chosenId]);
+
+  if (error && !data) {
+    return (
+      <p className="px-6 pt-6 text-sm text-brand-muted">
+        We couldn't load your pools. Check your connection and try again.
+      </p>
+    );
   }
+  // Nothing is shown until the server has answered, so a returning player never sees the
+  // first-run welcome flash.
+  if (!data) return null;
+
+  if (data.entries.length === 0) return <FirstRunWelcome name={session?.user.name} pools={data.joinablePools} />;
+
+  const ordered = attentionOrder(data.entries);
+  const selected = data.entries.find((e) => e.entryId === chosenId) ?? ordered[0]!;
+  const openPickEm = data.joinablePools.filter((p) => p.type === "pick_em");
+  const offerPickEm = selected.poolType === "survivor" && selected.state === "eliminated" ? openPickEm : [];
+  const others = data.joinablePools.filter((p) => !offerPickEm.includes(p));
 
   return (
-    <li className="rounded-[14px] border border-brand-border bg-brand-surface p-4">
-      <p className="font-semibold text-brand-text">{pool.name}</p>
-      <p className="text-xs text-brand-muted">
-        {pool.type === "pick_em" ? "Pick 'em" : "Survivor"} &middot; {pool.seasonYear} season
-      </p>
-      <p className="mt-2 text-sm text-brand-muted">{POOL_BLURBS[pool.type ?? "survivor"] ?? POOL_BLURBS.survivor}</p>
-      {error && (
-        <p role="alert" className="mt-2 text-sm text-brand-danger">
-          {error}
-        </p>
+    <div className="mx-auto max-w-lg space-y-4 px-6 pb-6 pt-4">
+      <PoolChips
+        pools={data.entries.map((e) => ({ id: e.entryId, name: e.poolName }))}
+        selectedId={selected.entryId}
+        onSelect={setChosenId}
+      />
+      <Hero entry={selected} nowMs={nowMs} onLocked={onLocked} />
+
+      {offerPickEm.length > 0 && (
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-brand-muted">Still want in on the action?</h2>
+          <ul className="space-y-3">
+            {offerPickEm.map((pool) => (
+              <li key={pool.id} className="rounded-[14px] border border-brand-border bg-brand-surface p-4">
+                <p className="font-semibold text-brand-text">{pool.name}</p>
+                <p className="mt-1 text-sm text-brand-muted">Pick every game, every week.</p>
+                <Link to={`/join/${pool.id}`} className={`${secondaryLink} !mt-3`}>
+                  Join {pool.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
-      <button
-        type="button"
-        onClick={join}
-        disabled={joining}
-        className="mt-3 min-h-11 w-full rounded bg-brand-accent px-3 py-2 font-semibold text-brand-accent-ink hover:bg-brand-accent-hover disabled:opacity-40"
-      >
-        Join {pool.name}
-      </button>
-    </li>
+
+      <JoinCards pools={others} heading="Pools you can join" />
+      <Footer />
+    </div>
   );
 }

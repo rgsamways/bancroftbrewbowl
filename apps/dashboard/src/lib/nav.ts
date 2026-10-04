@@ -1,7 +1,6 @@
-export type NavKey = "home" | "schedule" | "pools" | "promotions" | "account";
+export type NavKey = "schedule" | "pools" | "promotions" | "account";
 
 export const NAV_LABELS: Record<NavKey, string> = {
-  home: "Home",
   schedule: "Schedule",
   pools: "Pools",
   promotions: "Promotions",
@@ -11,7 +10,6 @@ export const NAV_LABELS: Record<NavKey, string> = {
 // Used by the shared page header (for the title) and the interim admin links (for
 // the current one). The bottom tabs use lib/tabs.ts instead.
 export function matchNav(pathname: string): NavKey | null {
-  if (pathname === "/") return "home";
   if (pathname === "/account") return "account";
   if (pathname === "/admin/schedule") return "schedule";
   if (pathname === "/admin/promotions") return "promotions";

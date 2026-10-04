@@ -47,8 +47,13 @@ export class TestDb {
     return (await this.client.query(`select id from "user" where email = $1`, [email])).rows[0].id as string;
   }
 
-  async createPool(name: string, seasonYear: number, type: "survivor" | "pick_em" = "survivor") {
-    const rules = type === "survivor" ? SURVIVOR_RULES : { tie_handling: "void" };
+  async createPool(
+    name: string,
+    seasonYear: number,
+    type: "survivor" | "pick_em" = "survivor",
+    rulesOverride: Record<string, unknown> = {}
+  ) {
+    const rules = { ...(type === "survivor" ? SURVIVOR_RULES : { tie_handling: "void" }), ...rulesOverride };
     const id = (
       await this.client.query(
         `insert into pools (name, season_year, type, rules, status) values ($1, $2, $3, $4::jsonb, 'active') returning id`,
@@ -72,6 +77,24 @@ export class TestDb {
 
   async createEntry(poolId: string, userId: string, status: "alive" | "eliminated" = "alive") {
     return (await this.client.query(`insert into entries (pool_id, user_id, status) values ($1, $2, $3) returning id`, [poolId, userId, status])).rows[0].id as string;
+  }
+
+  /** Decide a game (home_win, away_win, tie) so it no longer counts as pending. */
+  async decideGame(gameId: string, result: "home_win" | "away_win" | "tie") {
+    await this.client.query(`update games set result = $2 where id = $1`, [gameId, result]);
+  }
+
+  /** Move a game's kickoff: negative seconds put it in the past (the week has locked). */
+  async setKickoffIn(gameId: string, seconds: number) {
+    await this.client.query(`update games set kickoff_time = now() + ($2 || ' seconds')::interval where id = $1`, [gameId, String(seconds)]);
+  }
+
+  async setPickResult(entryId: string, week: number, team: string, result: "win" | "loss" | "tie") {
+    await this.client.query(`update picks set result = $4 where entry_id = $1 and week_number = $2 and team_code = $3`, [entryId, week, team, result]);
+  }
+
+  async eliminate(entryId: string, week: number) {
+    await this.client.query(`update entries set status = 'eliminated', eliminated_week = $2 where id = $1`, [entryId, week]);
   }
 
   async addPick(entryId: string, week: number, teamCode: string) {

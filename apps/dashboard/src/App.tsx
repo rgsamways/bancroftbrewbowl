@@ -6,6 +6,7 @@ import { Shell } from "./components/Shell";
 import { Home } from "./pages/Home";
 import { Account } from "./pages/Account";
 import { PasswordPage } from "./pages/PasswordPage";
+import { JoinPage } from "./pages/JoinPage";
 import { PoolStandings } from "./pages/PoolStandings";
 import { PickScreen } from "./pages/PickScreen";
 import { AdminDashboard } from "./pages/AdminDashboard";
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/account" element={<Account />} />
         <Route path="/account/password" element={<PasswordPage />} />
         <Route path="/pick" element={<PickLanding />} />
+        <Route path="/join/:poolId" element={<JoinPage />} />
         <Route path="/standings" element={<StandingsLanding />} />
         <Route path="/pool/:poolId" element={<PoolStandings />} />
         <Route path="/pool/:poolId/entry/:entryId/pick" element={<PickScreen />} />

@@ -54,14 +54,14 @@ test("standings: only your own name links to a pick screen", async () => {
 test("someone else's pick screen says it isn't your entry and offers no teams", async () => {
   await player.goto(`/pool/${poolId}/entry/${entry.other}/pick`);
   await expect(player.getByText("That isn't your entry")).toBeVisible();
-  const teamButtons = await player.$$eval("button", (bs) => bs.filter((b) => /^[A-Z]{2,3}$/.test(b.textContent!.trim())).length);
-  expect(teamButtons).toBe(0);
+  await expect(player.getByRole("button", { name: /^(KC|BUF|PHI|DAL)/ })).toHaveCount(0);
 });
 
 test("your own pick screen lets you pick, and the pick is saved on the server", async () => {
   await player.goto(`/pool/${poolId}/entry/${entry.player}/pick`);
-  await player.locator('button:text-is("KC")').click();
-  await expect(player.getByText("Current pick")).toBeVisible();
+  await player.getByRole("button", { name: /^KC/ }).click();
+  await player.getByRole("button", { name: "Lock in Chiefs" }).click();
+  await expect(player.getByRole("heading", { name: "Locked in" })).toBeVisible();
   const mine = await apiCall<PickRow[]>(player, "GET", `/entries/${entry.player}/picks`);
   expect(mine.status).toBe(200);
   expect(mine.json!.some((p) => p.weekNumber === 1 && p.teamCode === "KC")).toBe(true);

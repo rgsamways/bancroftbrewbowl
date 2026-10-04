@@ -45,7 +45,6 @@ export type Destination =
   | { kind: "redirect"; to: string }
   | { kind: "list"; items: ListItem[] };
 
-const pickPath = (e: EntryForTabs) => `/pool/${e.poolId}/entry/${e.id}/pick`;
 const standingsPath = (e: EntryForTabs) => `/pool/${e.poolId}`;
 
 const item = (e: EntryForTabs, to: string): ListItem => ({
@@ -55,16 +54,6 @@ const item = (e: EntryForTabs, to: string): ListItem => ({
   to,
   out: e.status === "eliminated",
 });
-
-/** Where the Pick tab goes. One alive entry goes straight to its pick screen.
- * Otherwise a list: alive entries lead to the pick screen, eliminated ones to
- * that pool's standings (and are marked as out). */
-export function pickDestination(entries: readonly EntryForTabs[]): Destination {
-  if (entries.length === 0) return { kind: "none" };
-  const only = entries[0];
-  if (entries.length === 1 && only && only.status === "alive") return { kind: "redirect", to: pickPath(only) };
-  return { kind: "list", items: entries.map((e) => item(e, e.status === "alive" ? pickPath(e) : standingsPath(e))) };
-}
 
 /** Where the Standings tab goes. One pool goes straight to its standings;
  * several show a list. */

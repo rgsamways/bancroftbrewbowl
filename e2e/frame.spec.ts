@@ -106,17 +106,11 @@ test("one alive pool: Pick goes straight to the pick screen, Standings to the po
   expect(await currentTab(p)).toBe("Standings");
 });
 
-test("several pools: Pick and Standings list them, with Out shown for the eliminated one", async () => {
+test("several pools: Pick goes to the pool that needs a pick; Standings lists them", async () => {
   const p = pages.several;
   await go(p, "/pick");
-  await expect(p.getByText("Alpha Survivor")).toBeVisible();
-  const items = await listItems(p);
-  expect(items).toHaveLength(2);
-  const alive = items.find((i) => i.text.startsWith("Alpha"));
-  const out = items.find((i) => i.text.startsWith("Bravo"));
-  expect(alive?.href).toBe(`/pool/${poolA}/entry/${entry.severalA}/pick`);
-  expect(out?.href).toBe(`/pool/${poolB}`);
-  expect(out?.text).toContain("Out");
+  await p.waitForURL(`**/pool/${poolA}/entry/${entry.severalA}/pick`); // the alive pool, not the one they are out of
+  await expect(p.getByText("Week 1 pick")).toBeVisible();
 
   await go(p, "/standings");
   await expect(p.getByText("Alpha Survivor")).toBeVisible();
@@ -125,14 +119,12 @@ test("several pools: Pick and Standings list them, with Out shown for the elimin
   for (const i of standings) expect(i.href).toMatch(/^\/pool\/[^/]+$/);
 });
 
-test("only entry eliminated: Pick shows the pool as Out, leading to standings", async () => {
+test("only entry eliminated: Pick shows their season, with the way to standings", async () => {
   const p = pages.outonly;
   await go(p, "/pick");
-  await expect(p.getByText("Alpha Survivor")).toBeVisible();
-  const items = await listItems(p);
-  expect(items).toHaveLength(1);
-  expect(items[0].text).toContain("Out");
-  expect(items[0].href).toBe(`/pool/${poolA}`);
+  await p.waitForURL(`**/pool/${poolA}/entry/${entry.outonly}/pick`);
+  await expect(p.getByRole("heading", { name: "Your season" })).toBeVisible();
+  await expect(p.getByRole("link", { name: "See standings" })).toHaveAttribute("href", `/pool/${poolA}`);
 });
 
 test("an admin gets an Admin tab and the admin pages stay reachable inside the frame", async () => {

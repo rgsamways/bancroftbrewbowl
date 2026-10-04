@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { activeTab, pickDestination, standingsDestination, tabsFor, type EntryForTabs } from "./tabs.js";
+import { activeTab, standingsDestination, tabsFor, type EntryForTabs } from "./tabs.js";
 
 const entry = (id: string, poolId: string, status: "alive" | "eliminated" = "alive", name = `Pool ${poolId}`): EntryForTabs => ({
   id,
@@ -53,39 +53,6 @@ describe("activeTab", () => {
     expect(activeTab("/somewhere/else")).toBeNull();
     expect(activeTab("/pool")).toBeNull();
     expect(activeTab("/administrator")).toBeNull(); // not under /admin
-  });
-});
-
-describe("pickDestination", () => {
-  it("says so when the person has joined no pool", () => {
-    expect(pickDestination([])).toEqual({ kind: "none" });
-  });
-
-  it("goes straight to the pick screen for one alive entry", () => {
-    expect(pickDestination([entry("e1", "p1")])).toEqual({ kind: "redirect", to: "/pool/p1/entry/e1/pick" });
-  });
-
-  it("lists the pool, marked out and leading to standings, for one eliminated entry", () => {
-    expect(pickDestination([entry("e1", "p1", "eliminated", "Sunday Survivor")])).toEqual({
-      kind: "list",
-      items: [{ entryId: "e1", poolId: "p1", poolName: "Sunday Survivor", to: "/pool/p1", out: true }],
-    });
-  });
-
-  it("lists every pool when there are several, alive ones leading to the pick screen", () => {
-    const result = pickDestination([entry("e1", "p1", "alive", "Survivor"), entry("e2", "p2", "eliminated", "Pick 'Em")]);
-    expect(result).toEqual({
-      kind: "list",
-      items: [
-        { entryId: "e1", poolId: "p1", poolName: "Survivor", to: "/pool/p1/entry/e1/pick", out: false },
-        { entryId: "e2", poolId: "p2", poolName: "Pick 'Em", to: "/pool/p2", out: true },
-      ],
-    });
-  });
-
-  it("lists two alive entries rather than guessing", () => {
-    const result = pickDestination([entry("e1", "p1"), entry("e2", "p2")]);
-    expect(result.kind).toBe("list");
   });
 });
 

@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router";
 import { ChevronRight } from "lucide-react";
 import { api } from "../lib/api";
-import { pickDestination, standingsDestination, type Destination, type EntryForTabs } from "../lib/tabs";
+import type { MeSummary } from "@bbb/shared";
+import { attentionOrder, pickPathFor } from "../lib/attention";
+import { standingsDestination, type Destination, type EntryForTabs } from "../lib/tabs";
 
 // Interim pages behind the Pick and Standings tabs. Pick and standings are per pool,
 // so a tab needs a little help to know where to go: straight there with one pool,
@@ -65,8 +67,36 @@ function TabLanding({ heading, decide }: { heading: string; decide: (entries: En
   );
 }
 
+/** The Pick tab goes to the pick screen of the entry that needs attention, the same one Home
+ * opens on. A player in no pool is pointed at Home. */
 export function PickLanding() {
-  return <TabLanding heading="Pick" decide={pickDestination} />;
+  const [summary, setSummary] = useState<MeSummary | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    api<MeSummary>("/me/summary")
+      .then(setSummary)
+      .catch(() => setFailed(true));
+  }, []);
+
+  if (failed) return <p className="px-6 pt-6 text-sm text-brand-muted">We couldn't load your pools. Check your connection and try again.</p>;
+  if (summary === null) return null;
+
+  const first = attentionOrder(summary.entries)[0];
+  if (first) return <Navigate to={pickPathFor(first)} replace />;
+
+  return (
+    <div className="mx-auto max-w-lg px-6 pb-6 pt-6">
+      <h1 className="text-2xl font-semibold text-brand-text">Pick</h1>
+      <p className="mt-4 text-sm text-brand-muted">You haven't joined a pool yet. Join one first, then it will show up here.</p>
+      <Link
+        to="/"
+        className="mt-4 inline-flex min-h-11 items-center rounded bg-brand-accent px-4 font-display font-semibold text-brand-accent-ink hover:bg-brand-accent-hover"
+      >
+        Go to Home
+      </Link>
+    </div>
+  );
 }
 
 export function StandingsLanding() {
