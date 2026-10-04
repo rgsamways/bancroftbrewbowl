@@ -11,6 +11,7 @@ import { promotionRoutes } from "./routes/promotions.js";
 import { adminSummaryRoutes } from "./routes/admin-summary.js";
 import { adminRequestRoutes } from "./routes/admin-requests.js";
 import { menuRoutes } from "./routes/menu.js";
+import { musicRoutes } from "./routes/music.js";
 import { activityRoutes } from "./routes/activity.js";
 import { standingsRoutes } from "./routes/standings.js";
 import { homeRoutes } from "./routes/home.js";
@@ -40,6 +41,7 @@ await fastify.register(activityRoutes);
 await fastify.register(adminSummaryRoutes);
 await fastify.register(adminRequestRoutes);
 await fastify.register(menuRoutes);
+await fastify.register(musicRoutes);
 
 fastify.get("/health", async () => ({ ok: true }));
 

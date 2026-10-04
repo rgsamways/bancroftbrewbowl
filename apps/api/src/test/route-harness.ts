@@ -5,6 +5,7 @@ import { entryRoutes } from "../routes/entries.js";
 import { adminSummaryRoutes } from "../routes/admin-summary.js";
 import { adminRequestRoutes } from "../routes/admin-requests.js";
 import { menuRoutes } from "../routes/menu.js";
+import { musicRoutes } from "../routes/music.js";
 import { activityRoutes } from "../routes/activity.js";
 import { cannedPromotionRoutes } from "../routes/canned-promotions.js";
 import { nflRoutes } from "../routes/nfl.js";
@@ -40,6 +41,7 @@ export async function buildTestApp(): Promise<FastifyInstance> {
   await app.register(adminSummaryRoutes);
   await app.register(adminRequestRoutes);
   await app.register(menuRoutes);
+  await app.register(musicRoutes);
   await app.register(nflRoutes);
   await app.register(wipeoutRoutes);
   await app.register(promotionRoutes);

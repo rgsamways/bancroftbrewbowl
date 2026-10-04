@@ -18,8 +18,8 @@ describe("activity kinds", () => {
     expect(kinds).not.toContain("promotion_created");
   });
 
-  it("the Menu filter shows the four menu kinds", () => {
-    expect(kindsForFilter("menu").sort()).toEqual(["menu_item_added", "menu_item_availability_changed", "menu_item_changed", "menu_item_removed"]);
+  it("the Menu filter shows the menu and music kinds", () => {
+    expect(kindsForFilter("menu").sort()).toEqual(["menu_item_added", "menu_item_availability_changed", "menu_item_changed", "menu_item_removed", "music_event_added", "music_event_changed", "music_event_removed"]);
   });
 });
 

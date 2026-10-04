@@ -10,6 +10,8 @@ import {
   index,
   unique,
   uniqueIndex,
+  date,
+  time,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 import {
@@ -358,6 +360,26 @@ export const menuItems = pgTable(
       .notNull(),
   },
   (table) => [index("menu_items_kind_section_idx").on(table.kind, table.section, table.sortOrder)]
+);
+
+// Live music and events. A calendar date plus optional start and end times, all as the brewery
+// says them (Eastern wall-clock), so nothing is converted between time zones. Public to read,
+// admins write. Events before today are kept (admins see them under Past) but never shown publicly.
+export const musicEvents = pgTable(
+  "music_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    title: text("title").notNull(),
+    eventDate: date("event_date", { mode: "string" }).notNull(),
+    startTime: time("start_time"),
+    endTime: time("end_time"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [index("music_events_date_idx").on(table.eventDate, table.startTime)]
 );
 
 export const poolsRelations = relations(pools, ({ many }) => ({

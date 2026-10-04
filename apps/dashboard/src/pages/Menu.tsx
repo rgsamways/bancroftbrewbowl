@@ -1,5 +1,15 @@
 import { Link, NavLink } from "react-router";
-import { formatMenuPrice, styleLine, type MenuItem, type MenuSection, type PublicMenu } from "@bbb/shared";
+import {
+  formatEventDay,
+  formatEventTime,
+  formatMenuPrice,
+  styleLine,
+  type MenuItem,
+  type MusicEvent,
+  type MenuSection,
+  type PublicMenu,
+  type PublicMusic,
+} from "@bbb/shared";
 import { useApi } from "../lib/useApi";
 
 // The menu: what is pouring and what the kitchen has. Anyone can read it (the table QR code
@@ -79,6 +89,9 @@ function SubTabs() {
       <NavLink to="/menu/kitchen" className={cls}>
         Kitchen
       </NavLink>
+      <NavLink to="/menu/music" className={cls}>
+        Music
+      </NavLink>
     </nav>
   );
 }
@@ -107,30 +120,83 @@ function MenuBody({ kitchen }: { kitchen: boolean }) {
   );
 }
 
-function MenuContent({ kitchen }: { kitchen: boolean }) {
+export type MenuTab = "drinks" | "kitchen" | "music";
+
+const SUBTITLE: Record<MenuTab, string> = {
+  drinks: "What's pouring at the brewery.",
+  kitchen: "Straight out of the smokehouse.",
+  music: "Live music at the brewery.",
+};
+
+function EventRow({ event }: { event: MusicEvent }) {
+  return (
+    <li className="flex items-center gap-4 border-b border-brand-border px-4 py-3 last:border-b-0">
+      <span className="w-14 flex-none font-semibold text-brand-accent">{formatEventDay(event.date)}</span>
+      <span className="min-w-0">
+        <span className="block text-brand-text">{event.title}</span>
+        <span className="block text-sm text-brand-muted">{formatEventTime(event.startTime, event.endTime)}</span>
+      </span>
+    </li>
+  );
+}
+
+function MusicBody() {
+  const { data: music, error } = useApi<PublicMusic>("/public/music");
+  if (error && !music) return <p className="mt-6 text-sm text-brand-muted">We couldn't load the music schedule. Check your connection and try again.</p>;
+  if (!music) return null;
+  const empty = music.thisWeekend.length === 0 && music.comingUp.length === 0;
+  return (
+    <div className="mt-5 space-y-5">
+      {empty && (
+        <p className="rounded-[14px] border border-brand-border bg-brand-surface p-4 text-sm text-brand-muted">
+          Nothing is scheduled yet. Check back soon.
+        </p>
+      )}
+      {[
+        ["This weekend", music.thisWeekend],
+        ["Coming up", music.comingUp],
+      ].map(
+        ([title, events]) =>
+          (events as MusicEvent[]).length > 0 && (
+            <section key={title as string}>
+              <h2 className="mb-2 text-sm font-semibold text-brand-muted">{title as string}</h2>
+              <ul className="overflow-hidden rounded-[14px] border border-brand-border bg-brand-surface">
+                {(events as MusicEvent[]).map((e) => (
+                  <EventRow key={e.id} event={e} />
+                ))}
+              </ul>
+            </section>
+          )
+      )}
+      <p className="pt-2 text-xs text-brand-faint">Please drink responsibly.</p>
+    </div>
+  );
+}
+
+function MenuContent({ tab }: { tab: MenuTab }) {
   return (
     <>
       <h1 className="text-3xl font-semibold leading-tight text-brand-text">Menu</h1>
-      <p className="mt-1 text-sm text-brand-muted">{kitchen ? "Straight out of the smokehouse." : "What's pouring at the brewery."}</p>
+      <p className="mt-1 text-sm text-brand-muted">{SUBTITLE[tab]}</p>
       <div className="mt-4">
         <SubTabs />
       </div>
-      <MenuBody kitchen={kitchen} />
+      {tab === "music" ? <MusicBody /> : <MenuBody kitchen={tab === "kitchen"} />}
     </>
   );
 }
 
 /** Signed in: the menu inside the app frame (header and tab bar come from the Shell). */
-export function MenuPage({ kitchen = false }: { kitchen?: boolean }) {
+export function MenuPage({ tab = "drinks" }: { tab?: MenuTab }) {
   return (
     <div className="mx-auto w-full max-w-lg px-6 pt-6">
-      <MenuContent kitchen={kitchen} />
+      <MenuContent tab={tab} />
     </div>
   );
 }
 
 /** Signed out (for example from the table QR code): no tab bar, and a way into the game. */
-export function PublicMenuPage({ kitchen = false }: { kitchen?: boolean }) {
+export function PublicMenuPage({ tab = "drinks" }: { tab?: MenuTab }) {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-lg flex-col px-6 pb-10">
       <div className="flex items-center gap-2.5 pt-6">
@@ -153,7 +219,7 @@ export function PublicMenuPage({ kitchen = false }: { kitchen?: boolean }) {
         <span className="flex min-h-11 flex-none items-center rounded-[12px] bg-brand-accent px-4 font-semibold text-brand-accent-ink">Sign in</span>
       </Link>
       <main className="mt-6 flex-1">
-        <MenuContent kitchen={kitchen} />
+        <MenuContent tab={tab} />
       </main>
       <p className="mt-8 text-xs text-brand-faint">You must be 19 or older to play.</p>
     </div>

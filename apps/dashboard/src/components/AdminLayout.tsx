@@ -31,7 +31,7 @@ export function activeAdminTab(pathname: string): AdminTabKey | null {
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
   if (path === "/admin") return "next";
   if (path === "/admin/results" || path.startsWith("/admin/results/")) return "results";
-  if (path === "/admin/menu" || path.startsWith("/admin/menu/")) return "menu";
+  if (path === "/admin/menu" || path.startsWith("/admin/menu/") || path.startsWith("/admin/music/")) return "menu";
   if (path === "/admin/pools" || path.startsWith("/admin/pools/")) return "pools";
   if (path === "/admin/more" || path === "/admin/activity" || path === "/admin/promotions") return "more";
   return null;

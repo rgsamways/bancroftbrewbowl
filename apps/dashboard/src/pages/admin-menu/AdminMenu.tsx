@@ -5,6 +5,7 @@ import { formatMenuPrice, styleLine, type MenuItem, type PublicMenu } from "@bbb
 import { api, ApiError } from "../../lib/api";
 import { useApi } from "../../lib/useApi";
 import { buttonClass } from "../admin-pool/shared";
+import { AdminMusicList } from "./AdminMusic";
 
 // What players see in the Menu tab, with a switch on each item to mark it in or out.
 
@@ -29,6 +30,7 @@ function Switch({ on, label, busy, onChange }: { on: boolean; label: string; bus
 export function AdminMenu() {
   const { data: menu, error, reload } = useApi<PublicMenu>("/menu/items");
   const [params, setParams] = useSearchParams();
+  const music = params.get("tab") === "music";
   const kitchen = params.get("tab") === "kitchen";
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -48,7 +50,7 @@ export function AdminMenu() {
   if (error && !menu) return <p className="px-6 pt-6 text-sm text-brand-muted">We couldn't load the menu. Check your connection and try again.</p>;
   if (!menu) return null;
 
-  const sections = kitchen ? menu.kitchen : menu.drinks;
+  const sections = music ? [] : kitchen ? menu.kitchen : menu.drinks;
   const tab = (active: boolean) =>
     `flex min-h-11 flex-1 items-center justify-center rounded-[10px] text-sm font-semibold ${active ? "bg-brand-accent-soft text-brand-text" : "text-brand-muted"}`;
 
@@ -65,11 +67,18 @@ export function AdminMenu() {
         <button type="button" onClick={() => setParams({ tab: "kitchen" })} className={tab(kitchen)}>
           Kitchen
         </button>
+        <button type="button" onClick={() => setParams({ tab: "music" })} className={tab(music)}>
+          Music
+        </button>
       </nav>
-      <Link to={`/admin/menu/new?kind=${kitchen ? "dish" : "beer"}`} className={buttonClass}>
-        <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-        {kitchen ? "Add a dish" : "Add a drink"}
-      </Link>
+      {music ? (
+        <AdminMusicList />
+      ) : (
+        <Link to={`/admin/menu/new?kind=${kitchen ? "dish" : "beer"}`} className={buttonClass}>
+          <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+          {kitchen ? "Add a dish" : "Add a drink"}
+        </Link>
+      )}
       {message && (
         <p role="alert" className="text-sm text-brand-danger">
           {message}
@@ -115,7 +124,7 @@ export function AdminMenu() {
           )}
         </section>
       ))}
-      {kitchen && sections.length === 0 && (
+      {kitchen && !music && sections.length === 0 && (
         <p className="rounded-[14px] border border-brand-border bg-brand-surface p-4 text-sm text-brand-muted">No dishes yet. Add the first one above.</p>
       )}
     </div>
