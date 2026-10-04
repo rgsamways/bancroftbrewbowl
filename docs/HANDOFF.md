@@ -50,6 +50,7 @@ Read, in order:
 
 ## Still open
 
+- **Robin's reminders (2026-10-04):** a plan for the late start (NFL week 4) and cleaning up the weekly results, and the location map with directions and hours, last before the fun ideas. Details in `openspec/ROADMAP.md` under "Don't forget".
 - Real beer styles and strengths, which beers are seasonal, and the wine and other-drinks list. These can be entered through the admin screens once they exist.
 - Whether to build the Admins screen (slice 14).
 - Legal check of the menu and promotion wording with the owner and AGCO.

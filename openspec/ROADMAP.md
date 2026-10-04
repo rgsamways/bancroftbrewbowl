@@ -32,6 +32,11 @@ Easier to use, phone-first front end with a polished, modern look, built with th
 | 14 | `roles-and-rules` | Optional; only if the owner wants to hand out parts of the work |
 | 15 | `v2-cleanup-and-release` | Not written; tags v2.0.0 |
 
+## Don't forget (Robin, 2026-10-04)
+
+- **Late start and results cleanup.** The NFL is in week 4 and the site is starting several weeks in. We need a plan to clean up the NFL weekly results (production still has none entered for the early weeks) and to tell players the site started late so they understand. Raise it with Robin; don't bulk-score production without his say-so. Wording can use the From the brewery announcement tool or slice 13.
+- **Location map, last.** An OpenStreetMap with the brewery's location and directions, business hours and similar details. Do it after the v2 slices and before the fun ideas (`docs/IDEAS.md`). Reference Tobi's project at `C:\dev	obisgrabandgo` (it uses `leaflet`; see `public/map.js` and `src/server/app.ts`) and add Brew Bowl's own flavour. Needs the real address and hours from the owner.
+
 ## In planning
 
 - `password-sign-in`: optional email and password sign-in for players and admins alongside the emailed link (the link stays the default and the only way to create an account; 10 character minimum; no forgot-password flow; operator reset script). Planning artifacts complete and valid (`openspec/changes/password-sign-in`); not started. No schema change. It is part of slice 4.
