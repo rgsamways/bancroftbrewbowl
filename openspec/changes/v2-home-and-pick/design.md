@@ -45,3 +45,8 @@ No data change. Push to `staging`, walk each state in real Chrome (locally, sinc
 ## Open Questions
 
 - Whether to show Eastern time with the zone ("ET") on kickoffs. Default: no suffix, as in the mockups; trivial to add later.
+
+## Findings from task 1
+
+- Kickoffs are stored as UTC: the schedule seed writes ISO dates and drizzle's timestamp mode reads and writes them as UTC. The shared Eastern-time tests pin that a known UTC kickoff shows the right Eastern day and time, in daylight and standard time, and that a late Monday game stays on Monday.
+- A mulligan keeps an entry `status = alive` (scoring only marks it eliminated when no mulligan saves it), so "out" means `eliminated` only. Pinned by an API test with a pool that allows mulligans, and a test that the summary never contains the word.

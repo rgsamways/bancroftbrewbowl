@@ -4,6 +4,7 @@ import { submitPickSchema, type SurvivorRulesConfig } from "@bbb/shared";
 import { db } from "../db/client.js";
 import { entries, games, picks, pools } from "../db/schema.js";
 import { requireEntryOwner, requireSession } from "../lib/guards.js";
+import { teamsPlayingInWeek } from "../lib/entry-state.js";
 import { getLockedWeeks, getWeekLockTime } from "../lib/pick-lock.js";
 import { visiblePicks } from "../lib/pick-visibility.js";
 import { parseBody } from "../lib/validate.js";
@@ -36,6 +37,12 @@ export async function pickRoutes(fastify: FastifyInstance) {
     }
     if (new Date() >= lockTime) {
       reply.status(409).send({ error: "Pick deadline has passed" });
+      return;
+    }
+
+    // A team on a bye, or not scheduled that week, cannot be picked.
+    if (!(await teamsPlayingInWeek(pool.seasonYear, body.week_number)).has(body.team_code)) {
+      reply.status(400).send({ error: `${body.team_code} doesn't play in week ${body.week_number}` });
       return;
     }
 

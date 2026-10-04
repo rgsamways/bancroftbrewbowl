@@ -1,18 +1,18 @@
 ## 1. Prove the assumptions
 
-- [ ] 1.1 Confirm how kickoff times are stored and serialised (UTC or not) with a scratch check against the real database and the existing `/nfl/games` route, and record the finding in design.md; verify that a known UTC kickoff renders as the right Eastern time with `Intl` in a small unit test
-- [ ] 1.2 Confirm in a scratch test that a mulligan-pool entry that loses and survives is still `alive` in the data (so "out" can safely mean `eliminated` only) and note it in design.md
+- [x] 1.1 Confirm how kickoff times are stored and serialised (UTC or not) with a scratch check against the real database and the existing `/nfl/games` route, and record the finding in design.md; verify that a known UTC kickoff renders as the right Eastern time with `Intl` in a small unit test
+- [x] 1.2 Confirm in a scratch test that a mulligan-pool entry that loses and survives is still `alive` in the data (so "out" can safely mean `eliminated` only) and note it in design.md
 
 ## 2. Shared helpers
 
-- [ ] 2.1 Add `rankWithTies` (competition ranking with a tie flag), `formatCountdown` ("2d 14h 37m", "3h 5m", "12m", "less than a minute"), `formatKickoff`/`dayHeading` in Eastern time, and the summary and pick-sheet types to `@bbb/shared`; verify with unit tests for ties (1,2,2,4), all-zero (everyone T1), each countdown format and a kickoff at an Eastern day boundary
+- [x] 2.1 Add `rankWithTies` (competition ranking with a tie flag), `formatCountdown` ("2d 14h 37m", "3h 5m", "12m", "less than a minute"), `formatKickoff`/`dayHeading` in Eastern time, and the summary and pick-sheet types to `@bbb/shared`; verify with unit tests for ties (1,2,2,4), all-zero (everyone T1), each countdown format and a kickoff at an Eastern day boundary
 
 ## 3. API
 
-- [ ] 3.1 Add `apps/api/src/lib/entry-state.ts` (current week, lock time, state per the design) and verify with tests covering needs picks, partly picked in a double-pick week, picked, locked, eliminated, season over, no games, a week decided before the next opens, and a mulligan pool
-- [ ] 3.2 Add `GET /me/summary` (session required, own entries only, server time, counts, rank for pick 'em) and verify with route tests for every state in the home spec, shared ranks, signed out refused, and that no other player's picks or email appear
-- [ ] 3.3 Add `GET /entries/:entryId/pick-sheet` (owner only) and verify with tests: owner gets games, picks, used teams and limit; another player and an admin get 403 with no picks; unknown entry 404; signed out 401
-- [ ] 3.4 Refuse a pick for a team with no game that week in `POST /entries/:entryId/picks`; verify with tests that a bye-week team is refused with the picks unchanged and a playing team is accepted, and that the existing `pick-access` tests still pass
+- [x] 3.1 Add `apps/api/src/lib/entry-state.ts` (current week, lock time, state per the design) and verify with tests covering needs picks, partly picked in a double-pick week, picked, locked, eliminated, season over, no games, a week decided before the next opens, and a mulligan pool
+- [x] 3.2 Add `GET /me/summary` (session required, own entries only, server time, counts, rank for pick 'em) and verify with route tests for every state in the home spec, shared ranks, signed out refused, and that no other player's picks or email appear
+- [x] 3.3 Add `GET /entries/:entryId/pick-sheet` (owner only) and verify with tests: owner gets games, picks, used teams and limit; another player and an admin get 403 with no picks; unknown entry 404; signed out 401
+- [x] 3.4 Refuse a pick for a team with no game that week in `POST /entries/:entryId/picks`; verify with tests that a bye-week team is refused with the picks unchanged and a playing team is accepted, and that the existing `pick-access` tests still pass
 
 ## 4. Dashboard building blocks
 
