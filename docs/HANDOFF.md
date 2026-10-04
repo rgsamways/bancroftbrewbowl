@@ -4,7 +4,7 @@ _Rewritten 2026-10-04 at the end of the long build session (slices 1 to 9). If y
 
 ## Start here
 
-The state in one line: **v2 is fully designed and planned; slices 1 to 10 (9a, 9b and 10) are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick, Standings, the admin activity record, the admin steps, the pool screens); `password-sign-in` is archived (Robin confirmed it on his phone).** The next job is slice 11, `menu-and-music` (needs a plan-mode design pass, new tables), in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
+The state in one line: **v2 is fully designed and planned; slices 1 to 11a (9a, 9b, 10 and 11a) are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick, Standings, the admin activity record, the admin steps, the pool screens); `password-sign-in` is archived (Robin confirmed it on his phone).** The next job is slice 11b, `music-events` (table `music_events`, designed in the approved plan: `event_date`, optional start and end times, Music sub-tab, admin Music screens), then 12, in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
 
 Read, in order:
 
@@ -22,7 +22,7 @@ Read, in order:
 - **Production (`bancroftbrewbowl.ca`) runs the v2 app through slice 9.** `main` is the source of truth and deploys both the dashboard (Vercel) and the API (Railway) on push; `staging` mirrors it. Archived changes are under `openspec/changes/archive/`, main specs under `openspec/specs/` (`openspec list` shows only what is still open).
 - **Built and live:** secure pick access, the v2 shell, browser tests, password sign-in and the sign-in screens, pool total, Home and Pick (with join pages), Standings, the admin activity record, the admin steps (Next step, Results, wipeout) and the pool screens (list, players, picks, settings, new-pool wizard).
 - **No open changes.** `password-sign-in` was archived 2026-10-04 after Robin's phone check.
-- **Next slice: 11, `menu-and-music`** (needs a plan-mode design pass, new tables, adds the Menu tab to both tab bars). Plan it with `openspec-propose`, call out the schema change before pushing, and run the migration on staging's own database first. After that: 12 `from-the-brewery` (also takes the announcement wizard moved out of slice 9), 13 help and extras, 14 optional roles, 15 cleanup and the v2.0.0 tag. Order and sizes: `docs/v2/V2_BUILD_PLAN.md`; status per slice: `openspec/ROADMAP.md`.
+- **Next slice: 11b, `music-events`** (one new table `music_events`: title, date, optional start and end times in Eastern wall-clock; Music sub-tab on the Menu tab and a Music list and 3-step wizard in admin; the "Live this weekend" Home card and its "show on Home" flag are slice 13). Plan it with `openspec-propose`, call out the schema change before pushing, and run the migration on staging's own database first. After that: 12 `from-the-brewery` (also takes the announcement wizard moved out of slice 9), 13 help and extras, 14 optional roles, 15 cleanup and the v2.0.0 tag. Order and sizes: `docs/v2/V2_BUILD_PLAN.md`; status per slice: `openspec/ROADMAP.md`.
 - **Robin's rules:** every slice goes live as soon as it is verified; no review gate; he decides. Wait for his go before starting each slice (plan first with `openspec-propose`, build only after he says go). Never write test data to production. Update the matching spec in `e2e/` whenever a slice changes a screen. Keep explanations short and simple. Ports 3001 and 5173 belong to other projects: never touch them.
 
 ## Things that matter (learned while building)
@@ -110,3 +110,12 @@ Read, in order:
 - Screens are in `pages/AdminRequests.tsx`. Spec: `e2e/admin-confirmations.spec.ts`.
 - **Tests now run one file at a time** (`fileParallelism: false` in `vitest.config.ts`): the admin summary reads across the whole database, so a waiting decision in another file's test could change its answer. `activity.test.ts` and `admin-pools.test.ts` mock `otherAdmins` to nothing, so they still test the sole-admin path.
 - Local database has leftover admin accounts (names like `canned-verify@example.com`), so locally there is always "another admin".
+
+## Slice 11a notes (menu-items, 2026-10-04)
+
+- Table `menu_items` (migration 0008): `kind` (beer, wine, drink, dish), `section`, name, style, abv (text as typed), description, optional `price_cents`, `options` jsonb (add-ons and side choices), `labels` (new, seasonal), `available`, `sort_order`. Drinks live in the fixed sections On tap, Wine, Other drinks; a dish names its own section. Items show in the order added; there is no reorder screen.
+- `GET /public/menu` needs no session and is sent with `Cache-Control: public, max-age=0, must-revalidate` (a 30 second cache made a sold-out switch look stale on reload). Admin routes: `GET/POST /menu/items`, `PATCH /menu/items/:id`, `PATCH .../availability`, `DELETE`. All record Activity (kinds `menu_item_*`, category menu).
+- `App.tsx` renders `/menu` and `/menu/kitchen` for signed-out visitors before the sign-in gate (`PublicMenuPage`); signed in they render inside the Shell with the Menu tab (`MenuPage`). Player tabs are Home, Pick, Standings, Menu, Admin; admin bar is Next step, Results, Menu, Pools, More.
+- Admin screens are in `pages/admin-menu/` (`draft.ts` holds the form-to-payload logic and has unit tests). Add-ons are typed one per line, price after a comma.
+- No seed data. The brewery enters the real list through the screens; production has an empty menu until then. The legal check of the menu wording with the owner and AGCO is still open.
+- Tests: `menu.test.ts` (API), `e2e/menu.spec.ts`, `e2e/admin-menu.spec.ts`. E2E items are named "E2E ..." and removed by each test.
