@@ -168,3 +168,9 @@ Read, in order:
 - Settings has "When other players' picks show"; it saves and locks with the other rules. `PATCH /pools/:id` now compares a locked pool's rules after normalising the stored ones, so saving unchanged old rules is not seen as a change. The admin Picks tab and the TV placeholder follow the rule.
 - Tests: `routes/reveal-picks.test.ts`, `e2e/reveal-picks.spec.ts` (season 2969), a step in the Settings e2e.
 
+## Menu import (2026-10-04)
+
+- The brewery's printed menus (kitchen, beer, liquor, non-alcoholic, wine) were transcribed from Robin's photos into `docs/menu-draft.md` and `apps/api/scripts/seed-menu.ts` (52 items, validated with the same schema as the admin screens). `pnpm seed-menu` from `apps/api` is a dry run; `--apply` writes; re-running skips items already there. Operator script, so it writes no Activity records.
+- Choices: beers show the three pour prices and their IBU in the description (the app has no section notes); wine uses the 5 oz price with the 9 oz price in the description; the seven beers below the dotted line on the printed sheet are labelled seasonal; flights ($13, extra taster $4) are not items. Left out until confirmed: Muskoka Spirits ($8.00).
+- Production: run it on Railway (`railway ssh --service api -- pnpm --filter @bbb/api seed-menu`, then again with `--apply`). Not yet run on production.
+
