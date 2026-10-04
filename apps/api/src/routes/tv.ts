@@ -6,6 +6,7 @@ import { entries, pools } from "../db/schema.js";
 import { requireSession } from "../lib/guards.js";
 import { currentWeek, loadSeasonWeeks } from "../lib/entry-state.js";
 import { pickCounts } from "../lib/pick-counts.js";
+import { revealRuleOf } from "../lib/pick-lock.js";
 import { computePickEmPoints } from "./entries.js";
 
 const byName = (a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: "base" });
@@ -40,6 +41,7 @@ export async function tvRoutes(fastify: FastifyInstance) {
       pool: { id: pool.id, name: pool.name, type: pool.type },
       weekNumber: week?.weekNumber ?? null,
       status,
+      revealPicks: revealRuleOf(pool),
       playersTotal: poolEntries.length,
       playersLeft: null,
       alive: [],
@@ -52,7 +54,7 @@ export async function tvRoutes(fastify: FastifyInstance) {
       body.alive = alive;
       body.playersLeft = alive.length;
       if (week) {
-        const counts = await pickCounts(poolId, week, now);
+        const counts = await pickCounts(poolId, week, revealRuleOf(pool), now);
         body.mostPicked = (counts?.teams ?? []).slice(0, 3).map((t) => ({
           team: t.team,
           picks: t.picks,

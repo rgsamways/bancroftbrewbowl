@@ -5,7 +5,7 @@ import { db } from "../db/client.js";
 import { entries, games, picks, pools } from "../db/schema.js";
 import { requireEntryOwner, requireSession } from "../lib/guards.js";
 import { teamsPlayingInWeek } from "../lib/entry-state.js";
-import { getLockedWeeks, getWeekLockTime } from "../lib/pick-lock.js";
+import { getRevealedWeeks, getWeekLockTime, revealRuleOf } from "../lib/pick-lock.js";
 import { visiblePicks } from "../lib/pick-visibility.js";
 import { parseBody } from "../lib/validate.js";
 
@@ -158,7 +158,8 @@ export async function pickRoutes(fastify: FastifyInstance) {
   });
 
   // Reads go through `visiblePicks`: you always see your own picks, everyone's
-  // picks for a week that has locked, and nothing of anyone else's before that
+  // picks for a week that has been revealed (locked, and for a pool that waits, also
+  // fully decided), and nothing of anyone else's before that
   // (an admin gets a "has picked" marker, with no team). See lib/pick-visibility.ts.
   fastify.get("/entries/:entryId/picks", async (request, reply) => {
     const session = await requireSession(request, reply);
@@ -173,7 +174,7 @@ export async function pickRoutes(fastify: FastifyInstance) {
     }
 
     const entryPicks = await db.query.picks.findMany({ where: eq(picks.entryId, entryId) });
-    const lockedWeeks = await getLockedWeeks(pool.seasonYear);
+    const lockedWeeks = await getRevealedWeeks(pool.seasonYear, revealRuleOf(pool));
     const viewer = { userId: session.user.id, isAdmin: Boolean(session.user.isAdmin) };
     reply.send(visiblePicks(entryPicks.map((p) => ({ ...p, ownerUserId: entry.userId })), viewer, lockedWeeks));
   });
@@ -201,7 +202,7 @@ export async function pickRoutes(fastify: FastifyInstance) {
       .innerJoin(entries, eq(picks.entryId, entries.id))
       .where(eq(entries.poolId, poolId));
 
-    const lockedWeeks = await getLockedWeeks(pool.seasonYear);
+    const lockedWeeks = await getRevealedWeeks(pool.seasonYear, revealRuleOf(pool));
     const viewer = { userId: session.user.id, isAdmin: Boolean(session.user.isAdmin) };
     reply.send(visiblePicks(rows, viewer, lockedWeeks));
   });

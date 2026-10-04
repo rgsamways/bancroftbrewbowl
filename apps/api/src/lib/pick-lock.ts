@@ -1,4 +1,5 @@
-import { and, eq, min } from "drizzle-orm";
+import { and, eq, min, sql } from "drizzle-orm";
+import type { RevealPicks } from "@bbb/shared";
 import { db } from "../db/client.js";
 import { games } from "../db/schema.js";
 
@@ -29,4 +30,34 @@ export async function getLockedWeeks(seasonYear: number, now: Date = new Date())
     .where(eq(games.seasonYear, seasonYear))
     .groupBy(games.weekNumber);
   return new Set(rows.filter((r) => r.lockTime && new Date(r.lockTime) <= now).map((r) => r.weekNumber));
+}
+
+/** A pool's reveal rule; a pool saved before the rule existed behaves as "at_lock". */
+export function revealRuleOf(pool: { rules: unknown }): RevealPicks {
+  const rule = (pool.rules as { reveal_picks?: RevealPicks } | null)?.reveal_picks;
+  return rule === "after_final_game" ? "after_final_game" : "at_lock";
+}
+
+/** Whether a week's picks may be shown to others: it has locked and, for "after_final_game",
+ * every game of the week has a result. The one test every reader of other players' picks uses. */
+export function isRevealed(week: { lockTime: Date; gamesPending: number }, rule: RevealPicks, now: Date): boolean {
+  if (now < week.lockTime) return false;
+  return rule === "after_final_game" ? week.gamesPending === 0 : true;
+}
+
+/** The week numbers whose picks other players may see: the locked weeks for "at_lock", and
+ * the locked weeks with nothing still undecided for "after_final_game". */
+export async function getRevealedWeeks(seasonYear: number, rule: RevealPicks, now: Date = new Date()): Promise<Set<number>> {
+  const locked = await getLockedWeeks(seasonYear, now);
+  if (rule !== "after_final_game") return locked;
+  const rows = await db
+    .select({
+      weekNumber: games.weekNumber,
+      pending: sql<number>`(count(*) filter (where ${games.result} = 'pending'))::int`,
+    })
+    .from(games)
+    .where(eq(games.seasonYear, seasonYear))
+    .groupBy(games.weekNumber);
+  const undecided = new Set(rows.filter((r) => r.pending > 0).map((r) => r.weekNumber));
+  return new Set([...locked].filter((w) => !undecided.has(w)));
 }

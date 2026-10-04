@@ -16,6 +16,10 @@ export type TieHandling = (typeof TIE_HANDLING)[number];
 export const TIEBREAKERS = ["playoff_performance"] as const;
 export type Tiebreaker = (typeof TIEBREAKERS)[number];
 
+// When other players' picks become visible: at the lock (the default) or only once the week's last game has a result.
+export const REVEAL_PICKS = ["at_lock", "after_final_game"] as const;
+export type RevealPicks = (typeof REVEAL_PICKS)[number];
+
 export const PICK_DEADLINE_RULES = ["first_kickoff_of_week", "per_game_kickoff"] as const;
 export type PickDeadlineRule = (typeof PICK_DEADLINE_RULES)[number];
 

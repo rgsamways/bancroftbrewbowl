@@ -24,7 +24,9 @@ export function PicksTab({ pool }: { pool: PoolRow }) {
   const shown = week ?? (weeks.find((w) => !w.completed) ?? weeks[weeks.length - 1]!).weekNumber;
   const idx = weeks.findIndex((w) => w.weekNumber === shown);
   const info = weeks[idx]!;
-  const locked = info.locked;
+  const later = (pool.rules as { reveal_picks?: string }).reveal_picks === "after_final_game";
+  // Other players' teams show once the week has locked and, for a pool that waits, every game has a result.
+  const locked = info.locked && (!later || info.completed);
 
   const weekPicks = picks.filter((p) => p.weekNumber === shown);
   const picksFor = (entryId: string) => weekPicks.filter((p) => p.entryId === entryId);
@@ -51,7 +53,7 @@ export function PicksTab({ pool }: { pool: PoolRow }) {
     const mine = picksFor(e.id);
     if (mine.length === 0) return { text: "Hasn't picked", tone: "muted" as const };
     const teams = mine.map((p) => p.teamCode).filter((t): t is string => t !== null);
-    if (teams.length === 0) return { text: "Picked", sub: "Team hidden until the lock", tone: "muted" as const };
+    if (teams.length === 0) return { text: "Picked", sub: later ? "Team hidden until the week's games are final" : "Team hidden until the lock", tone: "muted" as const };
     const names = teams.map(teamNickname).join(" and ");
     if (e.isYou && !locked) return { text: `You · ${names}, your pick`, tone: "plain" as const };
     return { text: names, tone: "plain" as const };
@@ -98,7 +100,9 @@ export function PicksTab({ pool }: { pool: PoolRow }) {
       <p className="text-sm text-brand-muted">
         {locked
           ? "This week has locked, so everyone can see everyone's picks. Before a week locks, even admins only see who has picked."
-          : "Teams are hidden until the week locks. That goes for everyone, admins too. You can still see who needs a nudge."}
+          : later
+            ? "Teams are hidden until every game of the week has a result. That goes for everyone, admins too. You can still see who needs a nudge."
+            : "Teams are hidden until the week locks. That goes for everyone, admins too. You can still see who needs a nudge."}
       </p>
 
       <div role="group" aria-label="Filter" className="flex gap-2 overflow-x-auto pb-1">

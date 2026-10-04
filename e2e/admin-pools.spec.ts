@@ -250,8 +250,17 @@ test("Settings: the rules lock and unlock, editing while unlocked, the total whi
     await expect
       .poll(async () => (await db.query(`select name from pools where id = $1`, [poolId])).rows[0].name)
       .toBe(`${poolName} (edited)`);
+    // The reveal rule: saved with the other rules, then locked with them.
+    const reveal = page.getByLabel("When other players' picks show");
+    await expect(reveal).toHaveValue("at_lock");
+    await reveal.selectOption("after_final_game");
+    await page.getByRole("button", { name: "Save changes" }).click();
+    await expect
+      .poll(async () => (await db.query(`select rules->>'reveal_picks' as r from pools where id = $1`, [poolId])).rows[0].r)
+      .toBe("after_final_game");
     await page.getByRole("button", { name: "Lock the rules" }).click();
     await expect(page.getByRole("heading", { name: "Rules are locked" })).toBeVisible();
+    await expect(reveal).toBeDisabled();
     expect((await activity(db, userId, "pool_unlocked")).length).toBe(1);
     expect((await activity(db, userId, "pool_locked")).length).toBe(1);
 

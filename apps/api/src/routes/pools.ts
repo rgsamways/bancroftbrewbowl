@@ -108,7 +108,8 @@ export async function poolRoutes(fastify: FastifyInstance) {
     const settingsChanged =
       (updates.name !== undefined && updates.name !== pool.name) ||
       (updates.seasonYear !== undefined && updates.seasonYear !== pool.seasonYear) ||
-      (updates.rules !== undefined && JSON.stringify(updates.rules) !== JSON.stringify(pool.rules));
+      (updates.rules !== undefined &&
+        JSON.stringify(updates.rules) !== JSON.stringify(rulesSchemaForType(pool.type).parse(pool.rules)));
     if (settingsChanged && pool.status !== "draft" && body.status !== "draft") {
       reply.status(409).send({ error: "The rules are locked. Unlock the pool to change them." });
       return;

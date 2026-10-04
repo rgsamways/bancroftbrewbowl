@@ -93,7 +93,9 @@ export function PoolTv() {
           <div className="mt-auto rounded-[18px] border border-brand-border bg-brand-surface px-5 py-4">
             <small className="text-[15px] text-brand-muted">Most picked this week</small>
             {data.mostPicked.length === 0 ? (
-              <p className="mt-2 text-lg text-brand-muted">Shown once picks lock</p>
+              <p className="mt-2 text-lg text-brand-muted">
+                {data.revealPicks === "after_final_game" ? "Shown when the week's games are final" : "Shown once picks lock"}
+              </p>
             ) : (
               data.mostPicked.map((m, i) => (
                 <div

@@ -1,5 +1,6 @@
 // Shapes of GET /pools/:poolId/tv and GET /pools/:poolId/recap, and the small rules the pages share.
 // No Node imports: bundled into the browser.
+import type { RevealPicks } from "./enums.js";
 
 export type MostPicked = {
   team: string;
@@ -21,6 +22,8 @@ export type PoolTv = {
   pool: { id: string; name: string; type: "survivor" | "pick_em" };
   weekNumber: number | null;
   status: TvStatus;
+  /** When the pool shows other players' picks, so the page can say when most picked will appear. */
+  revealPicks: RevealPicks;
   playersTotal: number;
   /** Survivor: how many are alive, and their names (A to Z). */
   playersLeft: number | null;

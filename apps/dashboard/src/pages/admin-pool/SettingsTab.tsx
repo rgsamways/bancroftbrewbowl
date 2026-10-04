@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import {
   PICK_EM_TIE_HANDLING,
+  REVEAL_PICKS,
+  type RevealPicks,
   TIE_HANDLING,
   parsePoolTotal,
   poolTotalToInput,
@@ -301,6 +303,27 @@ export function SettingsTab({ pool, onChanged }: { pool: PoolRow; onChanged: (po
             </select>
           </label>
         )}
+
+        <label className={fieldLabel}>
+          When other players' picks show
+          <select
+            value={rules.reveal_picks ?? "at_lock"}
+            disabled={locked}
+            onChange={(e) => setRules({ ...rules, reveal_picks: e.target.value as RevealPicks })}
+            className={`${inputClass} mt-1`}
+          >
+            {REVEAL_PICKS.map((v) => (
+              <option key={v} value={v}>
+                {v === "at_lock" ? "When the week locks" : "After the week's last game is final"}
+              </option>
+            ))}
+          </select>
+          <span className="mt-1 block text-xs font-normal text-brand-muted">
+            {(rules.reveal_picks ?? "at_lock") === "at_lock"
+              ? "Once the first game kicks off, everyone can see everyone's picks."
+              : "Picks stay private all weekend, until every game of the week has a result."}
+          </span>
+        </label>
 
         {error && (
           <p role="alert" className="text-sm text-brand-danger">

@@ -161,3 +161,10 @@ Read, in order:
 - "Out this week" counts entries with `eliminated_week = N`, so a waiting wipeout makes it lag until an admin resolves it.
 - Tests: `routes/tv-recap.test.ts`, `lib/recap.test.ts`, `packages/shared/src/tv-recap.test.ts`, `e2e/tv.spec.ts` (1280 by 720), `e2e/recap.spec.ts`. Seasons used: API 2910 and up, e2e 2996 to 2998.
 - **Late start (Robin's plan, not run yet):** fill results up to the current week with `pnpm seed-schedule 2026` (from `apps/api`; it writes results without scoring, so the missed weeks are a bye for everyone), then post a From the brewery announcement saying the pool started mid-season. Check production has no picks in the past weeks first. Run locally first to look at the results.
+
+## Reveal setting notes (reveal-picks-setting, 2026-10-04)
+
+- Pool rule `reveal_picks` (`at_lock` default, or `after_final_game`) in both rules schemas; it lives in the `pools.rules` JSON, so no migration, and a pool saved before it existed reads as `at_lock` (`revealRuleOf` in `lib/pick-lock.ts`). One test, `isRevealed`, decides whether other players' picks may be shown: the week has locked and, for the later rule, no game is still pending. `getRevealedWeeks` feeds `visiblePicks` for both picks routes; `pickCounts` (TV most picked, recap) uses `isRevealed` too. Own picks are always visible; admins see only "picked" before the reveal.
+- Settings has "When other players' picks show"; it saves and locks with the other rules. `PATCH /pools/:id` now compares a locked pool's rules after normalising the stored ones, so saving unchanged old rules is not seen as a change. The admin Picks tab and the TV placeholder follow the rule.
+- Tests: `routes/reveal-picks.test.ts`, `e2e/reveal-picks.spec.ts` (season 2969), a step in the Settings e2e.
+

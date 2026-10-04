@@ -1,7 +1,9 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "../db/client.js";
 import { entries, picks } from "../db/schema.js";
+import type { RevealPicks } from "@bbb/shared";
 import type { SeasonWeek } from "./entry-state.js";
+import { isRevealed } from "./pick-lock.js";
 
 export type PickCounts = {
   /** Players (entries) who picked at least once that week. */
@@ -11,14 +13,15 @@ export type PickCounts = {
 };
 
 /** How many picks each team got in one pool and week. Other players' picks stay hidden until
- * the week locks (see pick-visibility.ts), so this answers null before the lock: no route can
- * leak a count early because the gate is here, not in the callers. */
+ * the pool's reveal time (see pick-visibility.ts and isRevealed), so this answers null before
+ * it: no route can leak a count early because the gate is here, not in the callers. */
 export async function pickCounts(
   poolId: string,
-  week: Pick<SeasonWeek, "weekNumber" | "lockTime">,
+  week: Pick<SeasonWeek, "weekNumber" | "lockTime" | "gamesPending">,
+  rule: RevealPicks,
   now: Date
 ): Promise<PickCounts | null> {
-  if (now < week.lockTime) return null;
+  if (!isRevealed(week, rule, now)) return null;
 
   const rows = await db
     .select({ team: picks.teamCode, count: sql<number>`count(*)::int` })
