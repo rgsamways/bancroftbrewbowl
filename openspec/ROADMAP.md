@@ -17,7 +17,7 @@ Easier to use, phone-first front end with a polished, modern look, built with th
 | 1 | `secure-pick-access` | **Done and archived** (`archive/2026-10-04-secure-pick-access`). Live on production since 2026-10-04 (commit `6408182`). 54 tests; 21 real-session checks passed on staging. The extra two-account check on production was skipped at Robin's decision. |
 | 2 | `v2-shell` | **Done and archived** (`archive/2026-10-04-v2-shell`). Live since 2026-10-04 (commit `70cb66c`): header, bottom tabs, Inter and copper tokens. 79 tests; 27 real-browser checks at 390 wide. Leaves temporary pieces for later slices to remove (see HANDOFF.md). |
 | 3 | `e2e-smoke` | **Done and archived** (`archive/2026-10-04-e2e-smoke`). `pnpm test:e2e` runs 25 real-browser checks at 390 wide against a local stack; CI runs them too. Test tooling only; no app change. |
-| 4 | `password-sign-in` + `v2-signin` | `password-sign-in` planned and valid; `v2-signin` planned and valid (2026-10-04), applied after it. Neither started; waiting for Robin's go. |
+| 4 | `password-sign-in` + `v2-signin` | `password-sign-in` built and live on staging+production (2026-10-04); waiting only on a real-phone password-manager check (task 5.3) before archiving. `v2-signin` planned and valid, not started. |
 | 5 | `pool-total` | Not written (one nullable column) |
 | 6 | `v2-home-and-pick` | Not written |
 | 7 | `v2-standings` | Not written |
