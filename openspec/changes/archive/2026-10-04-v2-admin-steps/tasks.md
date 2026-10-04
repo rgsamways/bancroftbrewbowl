@@ -30,5 +30,5 @@
 
 - [x] 7.1 Rewrite `e2e/admin-results.spec.ts`, update `e2e/admin-activity.spec.ts` (Activity via More), `e2e/pool-total.spec.ts` and `e2e/frame.spec.ts` (admin bar, routes) and `e2e/pick-privacy.spec.ts` for the new routes, delete the old Schedule page, add `e2e/admin-steps.spec.ts` for each state, and check no sideways scroll and 44 pixel buttons; verify `pnpm test:e2e` passes
 - [x] 7.2 Run `pnpm lint`, `pnpm typecheck`, `pnpm typecheck:e2e`, `pnpm test` and `pnpm test:e2e` and verify all pass, and that the activity coverage test still passes
-- [ ] 7.3 Walk the screens in real Chrome at 390 by 844 against the local stack (ports 3011 and 5183 only) and call `GET /admin/summary` on `api-staging`; record what was seen
-- [ ] 7.4 Update `openspec/ROADMAP.md`, `docs/V2_BUILD_PLAN.md` and `docs/HANDOFF.md` (note the roster status-edit gap that `v2-admin-pools` closes), sync specs, archive the change, push to `staging`, then promote to `main` and confirm the deploys
+- [x] 7.3 Walk the screens in real Chrome at 390 by 844 against the local stack (ports 3011 and 5183 only) and call `GET /admin/summary` on `api-staging`; record what was seen (Every screen walked by browser specs and screenshots; `api-staging` answers 401 signed out for the new route. The staging preview site cannot reach the staging API.)
+- [x] 7.4 Update `openspec/ROADMAP.md`, `docs/V2_BUILD_PLAN.md` and `docs/HANDOFF.md` (note the roster status-edit gap that `v2-admin-pools` closes), sync specs, archive the change, push to `staging`, then promote to `main` and confirm the deploys

@@ -4,7 +4,7 @@ _Written 2026-10-04, end of the long mockup-and-planning session. If you're read
 
 ## Start here
 
-The state in one line: **v2 is fully designed and planned; slices 1 to 8 are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick, Standings, the admin activity record); `password-sign-in` stays open only for a real-phone password-manager check.** The next job is slice 9, `v2-admin-steps` (the biggest admin slice; plan it with Robin first), in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
+The state in one line: **v2 is fully designed and planned; slices 1 to 8 and 9a are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick, Standings, the admin activity record, the admin steps); `password-sign-in` stays open only for a real-phone password-manager check.** The next job is slice 9b, `v2-admin-pools` (pools list, Players roster with status edit, Picks, Settings, delete, new-pool wizard; it closes the roster status-edit gap below), in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
 
 Read, in order:
 
@@ -79,3 +79,11 @@ Read, in order:
 - `GET /admin/activity` (admin only, 50 per page, cursor, filters). The Activity page is `/admin/activity`, linked from the interim admin sub-navigation until slice 9 moves it under "More".
 - Test cleanup removes the records its own admins made (`cleanupFixtures`, `TestDb.cleanup`). If local activity rows ever pile up, they came from a test that skipped cleanup.
 - Python on this Windows machine writes files in cp1252 unless told otherwise: always pass `encoding="utf-8"` when editing source with a script (a stray byte once corrupted an en dash in `nfl.ts`).
+
+## Slice 9a notes (v2-admin-steps, 2026-10-04)
+
+- The admin side has its own layout (`components/AdminLayout.tsx`): bottom bar Next step, Results, Pools, More, and a bar-less `FocusLayout` for task screens (results one at a time, wipeout). `RequireAdmin` sends non-admins home; the server still enforces admin access. The old Schedule page is gone (`/admin/schedule` redirects to Results). The pool dashboard now lives at `/admin/pools` and `/admin/pools/:poolId`.
+- `GET /admin/summary` chooses the next step (`routes/admin-summary.ts`, `chooseNextStep`): no schedule, then a waiting wipeout, then results for games that have kicked off with no result, then season complete or caught up. "Current season" is the latest season that has games, which is why tests that call it use seasons far above everything else (3500 and up).
+- Result buttons only appear for games that have kicked off; this is a screen rule, the endpoint is unchanged. Entering scores is no longer in the screens (the API remains).
+- **Known gap for 9b:** nothing in the screens edits a player's status or adds a player, although both APIs exist, so a wrongly eliminated player (after correcting a result) cannot be restored from the UI yet. The correction warning tells the admin to fix it on the roster; `v2-admin-pools` builds that roster.
+- Announcements and the Menu tab were deliberately left for slices 12 and 11. Promotions stays reachable under More until then.
