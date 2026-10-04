@@ -25,5 +25,5 @@
 
 - [x] 4.1 Update `e2e/pool-total.spec.ts`, `e2e/pick-privacy.spec.ts` and `e2e/frame.spec.ts` for the new pool routes, add `e2e/admin-pools.spec.ts` for each flow, and check no sideways scroll and 44 pixel buttons on every new screen; verify `pnpm test:e2e` passes
 - [x] 4.2 Run `pnpm lint`, `pnpm typecheck`, `pnpm typecheck:e2e`, `pnpm test` and `pnpm test:e2e` and verify all pass, and that the activity coverage test still passes
-- [ ] 4.3 Walk the screens in real Chrome at 390 by 844 against the local stack (ports 3011 and 5183 only) and check the changed endpoints answer 401 signed out on `api-staging`; record what was seen
-- [ ] 4.4 Update `openspec/ROADMAP.md`, `docs/HANDOFF.md` and `docs/v2/V2_BUILD_PLAN.md`, sync specs, archive the change, push to `staging`, then promote to `main` and confirm the deploys
+- [x] 4.3 Walk the screens in real Chrome at 390 by 844 against the local stack (ports 3011 and 5183 only) and check the changed endpoints answer 401 signed out on `api-staging`; record what was seen (Every screen walked by browser specs and screenshots; the changed endpoints answer 401 signed out on `api-staging`. The staging preview site cannot reach the staging API.)
+- [x] 4.4 Update `openspec/ROADMAP.md`, `docs/HANDOFF.md` and `docs/v2/V2_BUILD_PLAN.md`, sync specs, archive the change, push to `staging`, then promote to `main` and confirm the deploys

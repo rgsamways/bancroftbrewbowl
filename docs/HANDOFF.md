@@ -4,7 +4,7 @@ _Written 2026-10-04, end of the long mockup-and-planning session. If you're read
 
 ## Start here
 
-The state in one line: **v2 is fully designed and planned; slices 1 to 8 and 9a are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick, Standings, the admin activity record, the admin steps); `password-sign-in` stays open only for a real-phone password-manager check.** The next job is slice 9b, `v2-admin-pools` (pools list, Players roster with status edit, Picks, Settings, delete, new-pool wizard; it closes the roster status-edit gap below), in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
+The state in one line: **v2 is fully designed and planned; slices 1 to 9 (9a and 9b) are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick, Standings, the admin activity record, the admin steps, the pool screens); `password-sign-in` stays open only for a real-phone password-manager check.** The next job is slice 10, `admin-confirmations` (one new table, so a schema-change call-out before pushing), in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
 
 Read, in order:
 
@@ -85,5 +85,14 @@ Read, in order:
 - The admin side has its own layout (`components/AdminLayout.tsx`): bottom bar Next step, Results, Pools, More, and a bar-less `FocusLayout` for task screens (results one at a time, wipeout). `RequireAdmin` sends non-admins home; the server still enforces admin access. The old Schedule page is gone (`/admin/schedule` redirects to Results). The pool dashboard now lives at `/admin/pools` and `/admin/pools/:poolId`.
 - `GET /admin/summary` chooses the next step (`routes/admin-summary.ts`, `chooseNextStep`): no schedule, then a waiting wipeout, then results for games that have kicked off with no result, then season complete or caught up. "Current season" is the latest season that has games, which is why tests that call it use seasons far above everything else (3500 and up).
 - Result buttons only appear for games that have kicked off; this is a screen rule, the endpoint is unchanged. Entering scores is no longer in the screens (the API remains).
-- **Known gap for 9b:** nothing in the screens edits a player's status or adds a player, although both APIs exist, so a wrongly eliminated player (after correcting a result) cannot be restored from the UI yet. The correction warning tells the admin to fix it on the roster; `v2-admin-pools` builds that roster.
+- The roster status gap noted here was closed by `v2-admin-pools` (slice 9b).
 - Announcements and the Menu tab were deliberately left for slices 12 and 11. Promotions stays reachable under More until then.
+
+## Slice 9b notes (v2-admin-pools, 2026-10-04)
+
+- Pools: `/admin/pools` (list), `/admin/pools/:poolId?tab=players|picks|settings`, and the four-step wizard at `/admin/pools/new` (no tab bar). Components live in `pages/admin-pool/`. The old four-tab dashboard, its popups and `AdminPanelContext` are gone.
+- Players tab: search, Show all, Invited and You marks, inline Alive/Out editor (restores wrongly eliminated players), Add a player (email first; the form asks for a name only after the server answers 422 `NAME_REQUIRED`). A waiting wipeout is flagged with a link.
+- Picks tab is Survivor only; teams stay hidden before the lock for everyone except the admin's own row (the server already enforces this).
+- **Server rules added:** `PATCH /pools/:id` refuses name, season and rule changes on a locked pool (409) unless the same request unlocks it; the total and the lock always work. `PATCH /entries/:id` is validated (`updateEntrySchema`; Out needs a week 1 to 25). `GET /pools/:id/entries` adds `invited` and `isYou` for admins only.
+- Admin edits of their own entry are allowed and flagged in Activity; slice 10 turns that into "ask another admin to confirm".
+- Test seasons: API/e2e tests that touch the admin summary use seasons 3500+; tests that edit a pool's season through the API must stay inside 2000 to 2100 (the schema limit).
