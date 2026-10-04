@@ -174,7 +174,9 @@ Read, in order:
 - Choices: beers show the three pour prices and their IBU in the description (the app has no section notes); wine uses the 5 oz price with the 9 oz price in the description; the seven beers below the dotted line on the printed sheet are labelled seasonal; the beer flight ($13, choice of 4, extra taster $4 each) is an item at the end of On tap, added after the first run. Muskoka Spirits ($8.00, a canned vodka soda) was added after the first run; re-running the script adds only it.
 - Production: first run done 2026-10-04 (52 items). Run on Railway with `--environment production` (the CLI in this folder is linked to staging): `railway ssh --service api --environment production -- pnpm --filter @bbb/api seed-menu`, then again with `--apply`.
 
-## Late-start catch-up steps (2026-10-04)
+## Late-start catch-up steps (2026-10-04) - DONE on production
+
+Done 2026-10-04 by Robin from this list: cleared two early picks (his own: DEN week 3, KC week 4), imported results for all 18 weeks (weeks 1 to 3 decided, week 4 partly), verified with `check-late-start` (0 undecided in weeks 1 to 3, no picks anywhere, 2 of 2 alive). Players have a bye for weeks 1 to 4; the first week anyone can pick is week 5. Still to do: post the "We're starting mid-season" announcement (From the brewery, week 5) and re-run `seed-schedule 2026` after the week 4 games finish and again before week 6 if launch slips.
 
 - `pnpm check-late-start` (read-only, counts only) showed production with 2 players and one pick each in weeks 3 and 4 (Robin chose to clear them so everyone has a clean bye).
 - `pnpm clear-early-picks --through 4` lists, then with `--apply` deletes, pending picks in locked weeks up to week 4 only. Then `pnpm seed-schedule 2026` fills the results (no scoring), then post the From the brewery announcement. Run each on production with `railway ssh --service api --environment production -- pnpm --filter @bbb/api <script>`.
