@@ -185,3 +185,10 @@ Done 2026-10-04 by Robin from this list: cleared two early picks (his own: DEN w
 
 - A new account is named with its email until the player sets a display name, and Standings showed it. `publicName` / `needsDisplayName` (`packages/shared/src/display-name.ts`) now decide what other players see: an empty or "@" name shows as the part before the "@", else "A player". Used by Standings, TV, the Home champion line and `GET /pools/:id/entries` (`resolveEntry`). Admin-only screens that show emails are unchanged. Home shows a "What should we call you?" card until a real name is saved. Tests: `routes/safe-names.test.ts`, `display-name.test.ts`, `e2e/display-name.spec.ts` (season 2968).
 
+## ESPN results button (espn-results-button, 2026-10-04)
+
+- Admin Results has "Check for results": `GET /admin/results/espn` previews (writes nothing; asks ESPN only for weeks that have kicked off and still have an undecided game); `POST /admin/results/espn/apply` re-reads ESPN itself, fills only still-undecided games that are final, then `scoreGame` per game (same as hand entry), and the route writes one `results_imported` Activity record. A decided game is never overwritten; differences are shown, not applied. ESPN trouble gives a 502 with "enter results by hand".
+- `lib/espn.ts` is the one ESPN reader (also used by `scripts/seed-schedule.ts`, which still writes results without scoring). `ESPN_BASE_URL` overrides the address; e2e points it at `e2e/helpers/espn-stub.mjs` (port 3021) so tests never contact ESPN.
+- Tests: `routes/espn-results.test.ts` (fake reader), `lib/espn.test.ts`, `e2e/espn-results.spec.ts` (season 2967).
+- Weekly routine now: after the games finish, an admin taps Check for results, then Apply. The terminal step is no longer needed.
+

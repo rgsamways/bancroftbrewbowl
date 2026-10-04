@@ -12,6 +12,7 @@ import { breweryRoutes } from "../routes/brewery.js";
 import { wipeoutRoutes } from "../routes/wipeouts.js";
 import { standingsRoutes } from "../routes/standings.js";
 import { tvRoutes } from "../routes/tv.js";
+import { espnResultsRoutes } from "../routes/espn-results.js";
 import { recapRoutes } from "../routes/recap.js";
 import { homeRoutes } from "../routes/home.js";
 import { passwordRoutes } from "../routes/password.js";
@@ -39,6 +40,7 @@ export async function buildTestApp(): Promise<FastifyInstance> {
   await app.register(homeRoutes);
   await app.register(standingsRoutes);
   await app.register(tvRoutes);
+  await app.register(espnResultsRoutes);
   await app.register(recapRoutes);
   await app.register(activityRoutes);
   await app.register(adminSummaryRoutes);

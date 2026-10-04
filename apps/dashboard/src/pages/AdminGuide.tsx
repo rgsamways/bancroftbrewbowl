@@ -16,7 +16,9 @@ export function AdminGuide() {
 
       <FaqGroup title="Every week">
         <Faq q="Enter results as games finish" open>
-          Open Results, then tap the winner of each game. Do it once and it counts in every pool this season. A tie has its own button.
+          Open Results, then tap the winner of each game. Do it once and it counts in every pool this season. A tie has its own button. Or
+          tap Check for results: it looks up the games that have finished on ESPN, shows them, and saves them only when you tap Apply. A
+          result you entered by hand is never changed that way.
         </Faq>
         <Faq q='If you see "Needs your attention"'>
           That's a wipeout: a result would knock out everyone left in a pool. Nothing is applied until you choose who stays in. Open it

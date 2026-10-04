@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test";
 import path from "node:path";
-import { API_PORT, API_URL, ROOT, WEB_PORT, WEB_URL, databaseUrl } from "./env";
+import { API_PORT, API_URL, ESPN_STUB_PORT, ESPN_STUB_URL, ROOT, WEB_PORT, WEB_URL, databaseUrl } from "./env";
 import { assertLocalDatabase } from "./guard";
 
 // Runs before any server starts or any row is written.
@@ -23,6 +23,15 @@ export default defineConfig({
   },
   webServer: [
     {
+      // A stand-in for ESPN, so the tests never contact the real service.
+      command: "node e2e/helpers/espn-stub.mjs",
+      cwd: ROOT,
+      url: `${ESPN_STUB_URL}/health`,
+      reuseExistingServer: false,
+      timeout: 30_000,
+      env: { ESPN_STUB_PORT: String(ESPN_STUB_PORT) },
+    },
+    {
       command: "pnpm exec tsx src/index.ts",
       cwd: path.join(ROOT, "apps", "api"),
       url: `${API_URL}/health`,
@@ -33,6 +42,7 @@ export default defineConfig({
         BETTER_AUTH_URL: API_URL,
         DASHBOARD_URL: WEB_URL,
         DATABASE_URL: databaseUrl() ?? "",
+        ESPN_BASE_URL: ESPN_STUB_URL,
       },
     },
     {

@@ -8,6 +8,7 @@ export type ActivityCategory = (typeof ACTIVITY_CATEGORIES)[number];
 export const ACTIVITY_KINDS = {
   result_entered: { title: "Entered a result", category: "standings" },
   result_changed: { title: "Changed a result", category: "standings" },
+  results_imported: { title: "Imported results from ESPN", category: "standings" },
   score_updated: { title: "Updated a score", category: "standings" },
   wipeout_resolved: { title: "Resolved a wipeout", category: "standings" },
   player_status_changed: { title: "Changed a player's status", category: "standings" },

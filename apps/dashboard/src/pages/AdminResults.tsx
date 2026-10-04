@@ -6,6 +6,7 @@ import { api, ApiError } from "../lib/api";
 import { useApi } from "../lib/useApi";
 import { useServerNow } from "../lib/useServerClock";
 import { teamNickname } from "../lib/teams";
+import { EspnCheck } from "../components/EspnCheck";
 
 type Result = "pending" | "home_win" | "away_win" | "tie";
 type AdminGameRow = {
@@ -145,6 +146,13 @@ export function AdminResults() {
           {message}
         </p>
       )}
+
+      <EspnCheck
+        onApplied={async ({ wipeout: held }) => {
+          if (held) setWipeout(true);
+          await Promise.all([loadGames(), reloadSummary()]);
+        }}
+      />
 
       {waitingForWizard && (
         <Link

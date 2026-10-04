@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 // Fixed private ports: 3001 and 5173 belong to other projects on this machine.
 export const API_PORT = 3011;
 export const WEB_PORT = 5183;
+export const ESPN_STUB_PORT = 3021;
+export const ESPN_STUB_URL = `http://localhost:${ESPN_STUB_PORT}`;
 export const API_URL = `http://localhost:${API_PORT}`;
 export const WEB_URL = `http://localhost:${WEB_PORT}`;
 
