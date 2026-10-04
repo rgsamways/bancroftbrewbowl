@@ -74,6 +74,7 @@ const items: CreateMenuItemInput[] = [
   beer("Highfalls ST", "5.4", "33", "Creamy Chocolate Stout", true),
   beer("Rocky Radler", "4.2", "N/A", "Cranberry Radler", true),
   beer("Twisted Timber", "5.0", "N/A", "Hard Ice Tea", true),
+  createMenuItemSchema.parse({ kind: "beer", name: "Beer flight", priceCents: cents(13), description: "Your choice of 4 beers. Add an extra taster for $4 each." }),
 
   // Wine (price is the 5 oz glass; the 9 oz price is in the description)
   wine("Jackson Triggs Sauvignon Blanc", "White", 8.75, 11.5),

@@ -31,7 +31,7 @@ Same side upgrade ($5, your choice of the six sides) and Corn Bread $6. "All mea
 
 ## Drinks (from the closer photos, all readable)
 
-**Beer pours (the same for every beer):** Brew Master's pint 20 oz $8.50, Brewer's choice 12 oz half pint $6.50, pitcher 64 oz $22. Flights $13.00 with a choice of 4 (extra taster $4 each). "Ask us about our seasonal draft options."
+**Beer pours (the same for every beer):** Brew Master's pint 20 oz $8.50, Brewer's choice 12 oz half pint $6.50, pitcher 64 oz $22. Flights $13.00 with a choice of 4 (extra taster $4 each); added as the item "Beer flight" at the end of On tap. "Ask us about our seasonal draft options."
 
 | Beer | ABV | IBU | Style |
 | --- | --- | --- | --- |
