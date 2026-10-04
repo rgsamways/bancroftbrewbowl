@@ -25,5 +25,5 @@
 ## 6. Verify and ship
 
 - [x] 6.1 Run `pnpm lint`, `pnpm typecheck` and `pnpm test` from the repo root and verify all pass
-- [ ] 6.2 Push to the `staging` branch and, with two real accounts on the staging preview and `api-staging`, verify: A cannot read or change B's picks before the lock, A can read B's picks once the week has locked, the player list shows A no emails, and an admin sees "has picked" with no team before the lock; record what was seen
+- [x] 6.2 Push to the `staging` branch and, with two real accounts on the staging preview and `api-staging`, verify: A cannot read or change B's picks before the lock, A can read B's picks once the week has locked, the player list shows A no emails, and an admin sees "has picked" with no team before the lock; record what was seen
 - [ ] 6.3 Update `openspec/ROADMAP.md`, sync specs, archive the change, promote `staging` to `main`, and repeat the two-account check on production
