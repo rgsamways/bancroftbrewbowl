@@ -27,10 +27,10 @@ test("an admin sets the pool total, players see it on Standings, and clearing hi
     await expect(player.getByText("Pool total")).toHaveCount(0);
 
     // The admin opens the pool's settings. The pool is locked (active), and the field still works.
-    await admin.goto(`/admin/pools/${poolId}`);
-    await admin.getByRole("button", { name: "Pool settings" }).click();
+    await admin.goto(`/admin/pools/${poolId}?tab=settings`);
     const field = admin.getByLabel("Shown to players on Standings");
-    await expect(admin.getByRole("button", { name: "Save changes" })).toBeDisabled();
+    await expect(admin.getByRole("heading", { name: "Rules are locked" })).toBeVisible();
+    await expect(admin.getByRole("button", { name: "Save changes" })).toHaveCount(0); // the rules are read-only
     await expect(field).toBeEnabled();
 
     await field.fill("lots");

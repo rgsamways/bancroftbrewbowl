@@ -1,7 +1,6 @@
-export type NavKey = "pools" | "promotions" | "activity" | "account";
+export type NavKey = "promotions" | "activity" | "account";
 
 export const NAV_LABELS: Record<NavKey, string> = {
-  pools: "Pools",
   promotions: "Promotions",
   activity: "Activity",
   account: "Account",
@@ -13,6 +12,5 @@ export function matchNav(pathname: string): NavKey | null {
   if (pathname === "/account") return "account";
   if (pathname === "/admin/promotions") return "promotions";
   if (pathname === "/admin/activity") return "activity";
-  if (pathname === "/admin/pools" || pathname.startsWith("/admin/pools/")) return "pools";
   return null;
 }

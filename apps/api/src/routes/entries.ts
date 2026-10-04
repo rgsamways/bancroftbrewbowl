@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
-import { createEntrySchema, type PickEmRulesConfig } from "@bbb/shared";
+import { createEntrySchema, updateEntrySchema, type PickEmRulesConfig } from "@bbb/shared";
 import { db } from "../db/client.js";
 import { entries, picks, pools, user } from "../db/schema.js";
 import { requireAdmin, requireSession } from "../lib/guards.js";
@@ -83,6 +83,12 @@ export async function entryRoutes(fastify: FastifyInstance) {
       return;
     }
 
+    // A person with no account yet needs a name so the roster can show who they are.
+    if (!existingUser && !body.display_name) {
+      reply.status(422).send({ error: "This email has no account yet. Add their name too.", code: "NAME_REQUIRED" });
+      return;
+    }
+
     const actor = actorOf(session);
     const pool = await db.query.pools.findFirst({ where: eq(pools.id, poolId) });
     const entry = await db.transaction(async (tx) => {
@@ -94,7 +100,7 @@ export async function entryRoutes(fastify: FastifyInstance) {
             : { poolId, invitedEmail: body.email, invitedName: body.display_name }
         )
         .returning();
-      const addedName = existingUser?.name ?? body.display_name;
+      const addedName = existingUser?.name ?? body.display_name ?? body.email;
       await recordActivity(tx, actor, {
         kind: "player_added",
         summary: `${actor.name} added ${addedName} to ${pool?.name ?? "a pool"}.`,
@@ -156,18 +162,29 @@ export async function entryRoutes(fastify: FastifyInstance) {
       with: { user: true },
     });
 
+    // For an admin the roster also says who has no account yet and which entry is theirs.
+    // Players do not get these two flags.
+    const adminFlags = (entry: (typeof poolEntries)[number]) =>
+      session.user.isAdmin ? { invited: entry.user === null, isYou: entry.userId === session.user.id } : {};
+
     if (pool?.type === "pick_em") {
       const tieHandling = (pool.rules as PickEmRulesConfig).tie_handling;
       const pointsByEntry = await computePickEmPoints(poolEntries.map((e) => e.id), tieHandling);
       reply.send(
-        poolEntries.map((entry) =>
-          resolveEntry(entry, pointsByEntry.get(entry.id) ?? 0, { includeEmail: seesEmail(entry.userId) })
-        )
+        poolEntries.map((entry) => ({
+          ...resolveEntry(entry, pointsByEntry.get(entry.id) ?? 0, { includeEmail: seesEmail(entry.userId) }),
+          ...adminFlags(entry),
+        }))
       );
       return;
     }
 
-    reply.send(poolEntries.map((entry) => resolveEntry(entry, undefined, { includeEmail: seesEmail(entry.userId) })));
+    reply.send(
+      poolEntries.map((entry) => ({
+        ...resolveEntry(entry, undefined, { includeEmail: seesEmail(entry.userId) }),
+        ...adminFlags(entry),
+      }))
+    );
   });
 
   fastify.patch("/entries/:entryId", async (request, reply) => {
@@ -175,7 +192,8 @@ export async function entryRoutes(fastify: FastifyInstance) {
     if (!session) return;
 
     const { entryId } = request.params as { entryId: string };
-    const body = request.body as Partial<{ status: "alive" | "eliminated"; eliminatedWeek: number | null }>;
+    const body = parseBody(updateEntrySchema, request.body, reply);
+    if (!body) return;
     const actor = actorOf(session);
 
     const before = await db.query.entries.findFirst({ where: eq(entries.id, entryId), with: { user: true, pool: true } });
@@ -184,8 +202,22 @@ export async function entryRoutes(fastify: FastifyInstance) {
       return;
     }
 
+    // Alive clears the week; Out needs one (from this request or already on the entry).
+    const status = body.status ?? before.status;
+    let eliminatedWeek = body.eliminatedWeek === undefined ? before.eliminatedWeek : body.eliminatedWeek;
+    if (before.status === "alive" && body.status === undefined && body.eliminatedWeek != null) {
+      reply.status(400).send({ error: "Only a player who is out has a week they went out." });
+      return;
+    }
+    if (status === "alive") eliminatedWeek = null;
+    if (status === "eliminated" && eliminatedWeek === null) {
+      reply.status(400).send({ error: "Say which week they went out." });
+      return;
+    }
+    const changes = { status, eliminatedWeek };
+
     const entry = await db.transaction(async (tx) => {
-      const [updated] = await tx.update(entries).set(body).where(eq(entries.id, entryId)).returning();
+      const [updated] = await tx.update(entries).set(changes).where(eq(entries.id, entryId)).returning();
       const who = before.user?.name ?? before.invitedName ?? "a player";
       const poolName = before.pool.name;
       const sentence =

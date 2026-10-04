@@ -103,6 +103,17 @@ export async function poolRoutes(fastify: FastifyInstance) {
       });
     }
 
+    // The rules lock is real: while a pool is locked its name, season and rules cannot change
+    // (unless this same request unlocks it). The pool total and the lock itself always can.
+    const settingsChanged =
+      (updates.name !== undefined && updates.name !== pool.name) ||
+      (updates.seasonYear !== undefined && updates.seasonYear !== pool.seasonYear) ||
+      (updates.rules !== undefined && JSON.stringify(updates.rules) !== JSON.stringify(pool.rules));
+    if (settingsChanged && pool.status !== "draft" && body.status !== "draft") {
+      reply.status(409).send({ error: "The rules are locked. Unlock the pool to change them." });
+      return;
+    }
+
     // One record per kind of change, so "changed only the total" says so and nothing else.
     const record: { kind: "pool_locked" | "pool_unlocked" | "pool_settings_changed" | "pool_total_changed"; summary: string }[] = [];
     if (updates.status !== undefined && updates.status !== pool.status) {
@@ -114,10 +125,6 @@ export async function poolRoutes(fastify: FastifyInstance) {
         record.push({ kind: "pool_settings_changed", summary: `${actor.name} marked ${pool.name} as ${updates.status}.` });
       }
     }
-    const settingsChanged =
-      (updates.name !== undefined && updates.name !== pool.name) ||
-      (updates.seasonYear !== undefined && updates.seasonYear !== pool.seasonYear) ||
-      (updates.rules !== undefined && JSON.stringify(updates.rules) !== JSON.stringify(pool.rules));
     if (settingsChanged) {
       record.push({ kind: "pool_settings_changed", summary: `${actor.name} changed the settings of ${pool.name}.` });
     }

@@ -16,7 +16,9 @@ import { JoinPage } from "./pages/JoinPage";
 import { ActivityPage } from "./pages/ActivityPage";
 import { PoolStandings } from "./pages/PoolStandings";
 import { PickScreen } from "./pages/PickScreen";
-import { AdminDashboard } from "./pages/AdminDashboard";
+import { AdminPools } from "./pages/AdminPools";
+import { AdminPool } from "./pages/AdminPool";
+import { NewPoolWizard } from "./pages/NewPoolWizard";
 import { PromotionsPage } from "./pages/PromotionsPage";
 import { PickLanding, StandingsLanding } from "./pages/TabLanding";
 
@@ -50,11 +52,12 @@ export default function App() {
           <Route path="/admin/more" element={<AdminMore />} />
           <Route path="/admin/activity" element={<ActivityPage />} />
           <Route path="/admin/promotions" element={<PromotionsPage />} />
-          <Route path="/admin/pools" element={<AdminDashboard />} />
-          <Route path="/admin/pools/:poolId" element={<AdminDashboard />} />
+          <Route path="/admin/pools" element={<AdminPools />} />
+          <Route path="/admin/pools/:poolId" element={<AdminPool />} />
         </Route>
         <Route element={<FocusLayout />}>
           <Route path="/admin/results/steps" element={<ResultsWizard />} />
+          <Route path="/admin/pools/new" element={<NewPoolWizard />} />
           <Route path="/admin/wipeout/:poolId/:wipeoutId" element={<WipeoutDecision />} />
         </Route>
         <Route path="/admin/schedule" element={<Navigate to="/admin/results" replace />} />

@@ -1,6 +1,5 @@
 import { Link, Navigate, Outlet, useLocation } from "react-router";
 import { Ellipsis, ClipboardCheck, Layers, ListChecks, type LucideIcon } from "lucide-react";
-import { AdminPanelProvider } from "./AdminPanelContext";
 import { AppHeader } from "./AppHeader";
 import { PageHeader } from "./Shell";
 import { useSession, type AppUser } from "../lib/auth-client";
@@ -66,16 +65,14 @@ function AdminTabs() {
 
 export function AdminLayout() {
   return (
-    <AdminPanelProvider>
-      <div className="flex min-h-screen flex-col bg-brand-bg">
+    <div className="flex min-h-screen flex-col bg-brand-bg">
         <AppHeader />
         <main className="flex-1 pb-28">
           <PageHeader />
           <Outlet />
         </main>
         <AdminTabs />
-      </div>
-    </AdminPanelProvider>
+    </div>
   );
 }
 

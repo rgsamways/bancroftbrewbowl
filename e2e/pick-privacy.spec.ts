@@ -94,16 +94,16 @@ test("a player cannot change or delete another player's pick (403), and it stays
 });
 
 test("admin picks table: other players' teams are hidden, the admin's own is shown", async () => {
-  await admin.goto(`/admin/pools/${poolId}`);
-  await admin.locator('button:text-is("Picks")').click();
-  await expect(admin.locator("table")).toBeVisible();
-  await expect(admin.getByText("Walk Player")).toBeVisible();
-  const cells = await admin.$$eval("tbody tr", (rows) => rows.map((r) => [...r.querySelectorAll("td")].map((c) => c.textContent!.trim())));
-  const rowFor = (name: string) => cells.find((c) => c[0] === name) ?? [];
-  expect(rowFor("Walk Other")[1]).toBe("Picked");
-  expect(rowFor("Walk Player")[1]).toBe("Picked");
-  expect(rowFor("Walk Admin")[1]).toBe("DAL");
-  expect(await admin.innerText("table")).not.toMatch(/\bPHI\b/);
+  await admin.goto(`/admin/pools/${poolId}?tab=picks`);
+  await expect(admin.getByText("Teams are hidden until the week locks.")).toBeVisible();
+  // Alive 3 (the player, the other player, the admin), Picked 3 (the player hasn't picked yet in this setup).
+  const rows = admin.locator("main ul li");
+  await expect(rows.filter({ hasText: "Walk Admin" })).toContainText("You \u00b7 Cowboys, your pick");
+  await expect(rows.filter({ hasText: "Walk Other" })).toContainText("Picked");
+  await expect(rows.filter({ hasText: "Walk Other" })).toContainText("Team hidden until the lock");
+  // Nobody else's team is anywhere in the page.
+  const page = await admin.locator("main").innerText();
+  expect(page).not.toMatch(/\bPHI\b|Eagles/);
 });
 
 test("an admin still sees every player's email but cannot change a player's pick (403)", async () => {

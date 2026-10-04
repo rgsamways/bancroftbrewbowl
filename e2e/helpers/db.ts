@@ -105,6 +105,25 @@ export class TestDb {
     await this.client.query(`update entries set status = 'eliminated', eliminated_week = $2 where id = $1`, [entryId, week]);
   }
 
+  /** An entry for someone who has no account yet (added by an admin by email). */
+  async createInvitedEntry(poolId: string, email: string, name: string) {
+    return (
+      await this.client.query(`insert into entries (pool_id, invited_email, invited_name) values ($1, $2, $3) returning id`, [poolId, email, name])
+    ).rows[0].id as string;
+  }
+
+  /** The email of a user made with createPlayer (so a test can add them by email). */
+  async emailOf(userId: string) {
+    return (await this.client.query(`select email from "user" where id = $1`, [userId])).rows[0].email as string;
+  }
+
+  /** Track a pool that the app created (for example through the wizard) so cleanup deletes it. */
+  async adoptPool(name: string) {
+    const rows = (await this.client.query(`select id from pools where name = $1`, [name])).rows;
+    for (const r of rows) if (!this.poolIds.includes(r.id)) this.poolIds.push(r.id);
+    return rows.map((r) => r.id as string);
+  }
+
   async addPick(entryId: string, week: number, teamCode: string) {
     await this.client.query(`insert into picks (entry_id, week_number, team_code) values ($1, $2, $3)`, [entryId, week, teamCode]);
   }

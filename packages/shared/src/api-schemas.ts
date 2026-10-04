@@ -2,7 +2,7 @@ import { MAX_POOL_TOTAL_CENTS } from "./pool-total.js";
 import { z } from "zod";
 import { cannedPromotionConfigSchema } from "./canned-promotions.js";
 import { NFL_TEAM_CODES } from "./teams.js";
-import { POOL_STATUSES, POOL_TYPES } from "./enums.js";
+import { ENTRY_STATUSES, POOL_STATUSES, POOL_TYPES } from "./enums.js";
 
 // `rules` is intentionally loose here (not `survivorRulesConfigSchema` or
 // `pickEmRulesConfigSchema` directly) — which shape applies depends on
@@ -45,10 +45,21 @@ export const resolveWipeoutSchema = z.object({
 export type ResolveWipeoutInput = z.infer<typeof resolveWipeoutSchema>;
 
 export const createEntrySchema = z.object({
-  display_name: z.string().min(1),
+  // Only needed when the email has no account yet; the route asks for it (NAME_REQUIRED) if so.
+  display_name: z.string().min(1).optional(),
   email: z.string().email(),
 });
 export type CreateEntryInput = z.infer<typeof createEntrySchema>;
+
+/** A player's status edit: only these two fields can be written. */
+export const updateEntrySchema = z
+  .object({
+    status: z.enum(ENTRY_STATUSES).optional(),
+    eliminatedWeek: z.number().int().min(1).max(25).nullable().optional(),
+  })
+  .strict()
+  .refine((v) => v.status !== undefined || v.eliminatedWeek !== undefined, { message: "Nothing to change" });
+export type UpdateEntryInput = z.infer<typeof updateEntrySchema>;
 
 export const enterGameResultSchema = z.object({
   result: z.enum(["home_win", "away_win", "tie"]),

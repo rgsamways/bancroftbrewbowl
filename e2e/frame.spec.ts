@@ -155,8 +155,9 @@ test("an admin gets an Admin tab that opens the admin area with its own tab bar"
   await p.waitForURL("**/admin/results");
 
   await go(p, `/admin/pools/${poolA}`);
-  await expect(p.locator('button:text-is("Picks")')).toBeVisible();
-  await expect(p.locator('button:text-is("Entries")')).toBeVisible();
+  await expect(p.getByRole("navigation", { name: "Pool sections" }).getByRole("link", { name: "Players" })).toBeVisible();
+  await expect(p.getByRole("navigation", { name: "Pool sections" }).getByRole("link", { name: "Picks" })).toBeVisible();
+  await expect(p.getByRole("navigation", { name: "Pool sections" }).getByRole("link", { name: "Settings" })).toBeVisible();
 
   // And back to the player view, with the player bar again.
   await go(p, "/admin/more");
