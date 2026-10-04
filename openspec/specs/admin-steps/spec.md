@@ -130,11 +130,15 @@ The system SHALL show for a waiting wipeout the pool, week and game, that nothin
 - **THEN** each shows the team they picked, because the week has locked
 
 ### Requirement: More
-The system SHALL provide a More screen with: Enter results, Activity (who changed what), All pools, the season schedule check, "Switch back to the player view", and Me. The old Promotions page SHALL remain reachable from More until the announcements work replaces it.
+The system SHALL provide a More screen with: Enter results, From the brewery, Activity (who changed what), All pools, the season schedule check, "Switch back to the player view", and Me.
 
 #### Scenario: Back to the player view
 - **WHEN** the admin taps "Switch back to the player view"
 - **THEN** they land on the player Home with the player tab bar
+
+#### Scenario: From the brewery
+- **WHEN** the admin opens More
+- **THEN** they see From the brewery and no Promotions page
 
 ### Requirement: The old Schedule page is gone
 The system SHALL no longer offer the old Schedule page; its address SHALL lead to Results.

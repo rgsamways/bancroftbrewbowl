@@ -27,5 +27,5 @@
 
 - [x] 6.1 `pnpm lint`, `typecheck`, `typecheck:e2e`, `test`, `test:e2e` pass
 - [x] 6.2 Call out the schema change; push to `staging`; confirm migration 0010 ran on staging's own database and `/me/summary` still answers
-- [ ] 6.3 Promote to `main`; confirm the production deploy and migration (read-only checks, no test data)
-- [ ] 6.4 Archive (syncs specs), update ROADMAP and HANDOFF
+- [x] 6.3 Promote to `main`; confirm the production deploy and migration (read-only checks, no test data)
+- [x] 6.4 Archive (syncs specs), update ROADMAP and HANDOFF
