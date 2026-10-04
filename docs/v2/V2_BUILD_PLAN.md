@@ -50,8 +50,8 @@ Owner-only writes, picks hidden until the lock (admins see "picked" without the 
 - Mockups: any page, for the frame; `home.html` and `account.html` most.
 - Done when: every existing route renders inside the new shell on a phone, the bar highlights correctly, and an admin sees the Admin tab and a player does not.
 
-### 3. `e2e-smoke`
-Promote the throwaway Playwright walkthroughs into the repo: sign in, join, pick, standings, admin results. They run at 390 by 844 and are part of "verified" for every later slice.
+### 3. `e2e-smoke` (done)
+Promote the throwaway Playwright walkthroughs into the repo: sign in, join, pick, standings, admin results. They run at 390 by 844 and are part of "verified" for every later slice. **From here on, every slice that changes a screen updates its test in `e2e/` as part of "verified"** (`pnpm test:e2e`).
 
 ### 4. `password-sign-in` + `v2-signin`
 - `password-sign-in` exactly as planned (password for everyone, 10 characters, no sign-up by password, no forgot-password flow, operator reset script). Its first tasks prove the library assumptions for better-auth 1.1.9 before anything depends on them.

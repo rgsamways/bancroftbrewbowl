@@ -15,3 +15,7 @@ coverage/
 # Generated mockup screenshots (regenerate from the HTML; the HTML is the source)
 docs/v2/mockups/*.png
 !docs/v2/mockups/home.png
+
+# Playwright output
+e2e-results/
+e2e-report/

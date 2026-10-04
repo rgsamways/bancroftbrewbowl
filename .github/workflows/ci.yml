@@ -43,6 +43,22 @@ jobs:
 
       - run: pnpm typecheck
 
+      - run: pnpm typecheck:e2e
+
       - run: pnpm --filter @bbb/api db:migrate
 
       - run: pnpm test
+
+      - name: Browser tests (phone width)
+        run: pnpm test:e2e
+        env:
+          BETTER_AUTH_SECRET: ci-only-secret-not-used-anywhere-else-0123456789
+
+      - name: Upload browser test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report
+          path: |
+            e2e-report
+            e2e-results
