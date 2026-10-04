@@ -33,6 +33,11 @@ Easier to use, phone-first front end with a polished, modern look, built with th
 | 14 | `roles-and-rules` | Optional; only if the owner wants to hand out parts of the work |
 | 15 | `v2-cleanup-and-release` | **Done and archived** (`archive/2026-10-04-v2-cleanup-and-release`). Removed the dead automatic-offers code (the empty `canned_promotions` table stays on purpose), fixed button contrast on Me, refreshed BUILD_PLAN, HANDOFF, NEW_CLIENT_SETUP and README. No schema change. **`v2.0.0` is not tagged yet: waiting for Robin's go (he wants the late-start plan settled first).** |
 
+### After v2 (Robin's requests, 2026-10-04)
+
+- `reveal-picks-setting`: **Done and archived** (`archive/2026-10-04-reveal-picks-setting`). Per-pool rule for when other players' picks show (at the lock, or after the week's last game is final); no schema change.
+- Noted in `docs/IDEAS.md`, not started: staff QR page, weekly in-person check-in, per-game pick locking, an "Update results from ESPN" button, staff roles (see `docs/ROLES_AND_RULES.md`).
+
 ## Don't forget (Robin, 2026-10-04)
 
 - **Late start and results cleanup.** _Plan agreed with Robin (2026-10-04): bring results up to the current week and treat the missed weeks as a bye for everyone (scoring only eliminates on a losing pick, so no one is eliminated); tell players the pool starts mid-season. `pnpm seed-schedule 2026` in `apps/api` already loads ESPN results without scoring. Robin said "do it later"; nothing has run on production._ The NFL is in week 4 and the site is starting several weeks in (Robin: launch is now expected in week 5 or 6, so more weeks are missing). We need a plan to clean up the NFL weekly results (production still has none entered for the early weeks) and to tell players the site started late so they understand. Raise it with Robin; don't bulk-score production without his say-so. Wording can use the From the brewery announcement tool or slice 13.
