@@ -4,7 +4,7 @@ _Rewritten 2026-10-04 at the end of the long build session (slices 1 to 9). If y
 
 ## Start here
 
-The state in one line: **v2 is fully designed and planned; slices 1 to 12 (9a, 9b, 10, 11a, 11b and 12) are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick, Standings, the admin activity record, the admin steps, the pool screens); `password-sign-in` is archived (Robin confirmed it on his phone).** The next job is slice 13, `v2-help-and-extras`, in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
+The state in one line: **v2 is fully designed and planned; slices 1 to 13a (9a, 9b, 10, 11a, 11b, 12 and 13a) are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick, Standings, the admin activity record, the admin steps, the pool screens); `password-sign-in` is archived (Robin confirmed it on his phone).** The next job is slice 13b, `tv-and-recap`, in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
 
 Read, in order:
 
@@ -22,7 +22,7 @@ Read, in order:
 - **Production (`bancroftbrewbowl.ca`) runs the v2 app through slice 9.** `main` is the source of truth and deploys both the dashboard (Vercel) and the API (Railway) on push; `staging` mirrors it. Archived changes are under `openspec/changes/archive/`, main specs under `openspec/specs/` (`openspec list` shows only what is still open).
 - **Built and live:** secure pick access, the v2 shell, browser tests, password sign-in and the sign-in screens, pool total, Home and Pick (with join pages), Standings, the admin activity record, the admin steps (Next step, Results, wipeout) and the pool screens (list, players, picks, settings, new-pool wizard).
 - **No open changes.** `password-sign-in` was archived 2026-10-04 after Robin's phone check.
-- **Next slice: 13, `v2-help-and-extras`** (how to play, the admin guide, the table card with a real QR code, TV standings, add-to-home-screen help, the weekly recap card, and the Home "Live this weekend" card with its "show on Home" flag; no schema change expected except that flag). Plan it with `openspec-propose` and wait for Robin's go. After that: 14 optional roles (only if the owner wants it), 15 cleanup and the v2.0.0 tag. Order and sizes: `docs/v2/V2_BUILD_PLAN.md`; status per slice: `openspec/ROADMAP.md`.
+- **Next slice: 13b, `tv-and-recap`** (TV standings as a signed-in page, survivor first, and the weekly recap card; both need new server numbers: most picked per team after the lock, players out this week, biggest upset; no schema change expected). Plan it with `openspec-propose` and wait for Robin's go. Before the v2.0.0 tag Robin also wants a plan for the late start and the results cleanup (see "Still open"). After that: 14 optional roles (only if the owner wants it), 15 cleanup and the v2.0.0 tag. Order and sizes: `docs/v2/V2_BUILD_PLAN.md`; status per slice: `openspec/ROADMAP.md`.
 - **Robin's rules:** every slice goes live as soon as it is verified; no review gate; he decides. Wait for his go before starting each slice (plan first with `openspec-propose`, build only after he says go). Never write test data to production. Update the matching spec in `e2e/` whenever a slice changes a screen. Keep explanations short and simple. Ports 3001 and 5173 belong to other projects: never touch them.
 
 ## Things that matter (learned while building)
@@ -137,3 +137,11 @@ Read, in order:
 - Removed: `routes/promotions.ts`, `PromotionsPage.tsx`, `WeekWidgets.tsx`, the Promotions nav entries (the old address redirects). The four automatic offers (`canned-promotions` routes and table) stay in the code but nothing links to them; delete in slice 15 if wanted.
 - Not built, on purpose: any offer linked to standings or winning (waits on the owner and AGCO), the second single-page announcement form, the past-announcements list.
 - Tests: `brewery.test.ts` (API; its own seasons 3700 and up, and every game it creates must be listed for cleanup, a leak there broke other suites that use "latest season"), `packages/shared/src/brewery.test.ts`, `e2e/admin-brewery.spec.ts`, `e2e/brewery-home.spec.ts`.
+
+## Slice 13a notes (help-and-info, 2026-10-04)
+
+- Static pages: How to play at `/help` (linked from Me) and the Admin guide at `/admin/guide` (linked from More), both built from the `Faq` component (native `details`). Copy was updated from the mockups: password sign-in exists, Me is opened from the avatar, From the brewery replaces Announcements, and the guide explains "ask another admin to confirm".
+- Install card (`components/InstallCard.tsx`, rule in `lib/install.ts`): shown in a browser tab until "Not now" (kept in `localStorage` as `bbb:install-dismissed`), never when running from the home screen.
+- Live this weekend: `GET /me/summary` `brewery.live` is the first music event this weekend (same rule as the Music tab). It is automatic: no "show on Home" switch, and no column for one.
+- Table card at `/admin/table-card`: QR drawn in the browser with the `qrcode` package (its own lazy chunk), encoding `<origin>/menu`; Print button; print styles hide everything but the card.
+- Test note: `e2e/frame.spec.ts` now waits for the pool tabs before reading them (a missing wait that failed about one run in three once Home got slightly slower).

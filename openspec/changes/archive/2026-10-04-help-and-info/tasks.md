@@ -22,5 +22,5 @@
 ## 5. Verify and ship
 
 - [x] 5.1 `pnpm lint`, `typecheck`, `typecheck:e2e`, `test`, `test:e2e` pass
-- [ ] 5.2 Push to `staging`, check it, then promote to `main`; confirm the production deploy (read-only checks, no test data)
-- [ ] 5.3 Archive (syncs specs), update ROADMAP and HANDOFF
+- [x] 5.2 Push to `staging`, check it, then promote to `main`; confirm the production deploy (read-only checks, no test data)
+- [x] 5.3 Archive (syncs specs), update ROADMAP and HANDOFF
