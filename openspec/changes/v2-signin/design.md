@@ -33,3 +33,9 @@
 ## Migration Plan
 
 No data change. Ship by the normal staging then main path; roll back by reverting the commit.
+
+## Findings from task 1.1 (better-auth 1.1.9)
+
+- A valid link redirects to the callback URL with a session cookie. A second use, or a bad token, redirects to `<callbackURL>?error=INVALID_TOKEN` with no cookie. No explicit error callback or custom verify route is needed; the app reads and clears `?error=` on load.
+- better-auth's client can report a dropped connection as neither data nor error, so "sent" means the service answered with data.
+- React runs initial state twice in development, so the marker is read once at module load.

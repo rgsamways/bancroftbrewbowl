@@ -89,7 +89,7 @@ test("the avatar opens Me, no tab is marked there, and Sign out signs out", asyn
   expect(clear, "last line of a long page sits clear above the tab bar").toBe(true);
 
   await p.getByRole("button", { name: "Sign out" }).click();
-  await expect(p.getByText("Send magic link")).toBeVisible();
+  await expect(p.getByText("Email me a sign-in link")).toBeVisible();
 });
 
 test("one alive pool: Pick goes straight to the pick screen, Standings to the pool", async () => {

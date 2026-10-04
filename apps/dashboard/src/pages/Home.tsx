@@ -4,7 +4,7 @@ import { CANNED_PROMOTION_LABELS, type PromotionKind } from "@bbb/shared";
 import { useSession } from "../lib/auth-client";
 import { api } from "../lib/api";
 
-type Pool = { id: string; name: string; seasonYear: number; status: string };
+type Pool = { id: string; name: string; seasonYear: number; status: string; type?: string };
 type MyEntry = {
   id: string;
   poolId: string;
@@ -33,8 +33,12 @@ type EligibleResponse = {
 
 export function Home() {
   const { data: session } = useSession();
-  const [myEntries, setMyEntries] = useState<MyEntry[]>([]);
-  const [pools, setPools] = useState<Pool[]>([]);
+  // null until the request has returned, so a returning player never sees the first-run
+  // welcome flash while their pools load.
+  const [loadedEntries, setMyEntries] = useState<MyEntry[] | null>(null);
+  const [loadedPools, setPools] = useState<Pool[] | null>(null);
+  const myEntries = loadedEntries ?? [];
+  const pools = loadedPools ?? [];
 
   function refresh() {
     api<MyEntry[]>("/me/entries").then(setMyEntries);
@@ -45,6 +49,11 @@ export function Home() {
 
   const joinedPoolIds = new Set(myEntries.map((e) => e.poolId));
   const availablePools = pools.filter((p) => !joinedPoolIds.has(p.id));
+
+  if (loadedEntries === null || loadedPools === null) return null;
+  if (loadedEntries.length === 0) {
+    return <FirstRunWelcome name={session?.user.name} pools={availablePools} onJoined={refresh} />;
+  }
 
   return (
     <div className="mx-auto max-w-lg px-6 pb-6">
@@ -287,6 +296,112 @@ function JoinPoolRow({ pool, onJoined }: { pool: Pool; onJoined: () => void }) {
           Join
         </button>
       </span>
+    </li>
+  );
+}
+
+const POOL_BLURBS: Record<string, string> = {
+  survivor:
+    "Pick one team to win each week, and you can only use each team once. If your team loses, you're out. Last one standing wins.",
+  pick_em:
+    "Pick the winner of every game each week. Every correct pick scores a point, and the most points wins.",
+};
+
+const FIRST_RUN_STEPS = [
+  ["Join a pool", "Pick the kind of game you want to play."],
+  ["Make your picks", "Choose before the first game of the week kicks off."],
+  ["Watch it play out", "Check the standings and come back next week."],
+] as const;
+
+/** What a signed-in person who is in no pool yet sees on Home. */
+function FirstRunWelcome({ name, pools, onJoined }: { name?: string; pools: Pool[]; onJoined: () => void }) {
+  return (
+    <div className="mx-auto max-w-lg space-y-6 px-6 pb-6">
+      <section className="rounded-[20px] border border-brand-border bg-brand-surface p-5">
+        <h1 className="text-3xl font-semibold leading-tight text-brand-text">
+          Welcome{name ? `, ${name}` : ""}
+        </h1>
+        <p className="mt-2 text-sm text-brand-muted">
+          You're signed in. Join a pool below to start playing. It takes one tap.
+        </p>
+      </section>
+
+      <section>
+        <h2 className="mb-2 text-sm font-semibold text-brand-muted">How it works</h2>
+        <ol className="space-y-3">
+          {FIRST_RUN_STEPS.map(([title, text], index) => (
+            <li key={title} className="flex gap-3">
+              <span
+                aria-hidden="true"
+                className="grid h-7 w-7 flex-none place-items-center rounded-full bg-brand-accent-soft text-sm font-semibold text-brand-accent"
+              >
+                {index + 1}
+              </span>
+              <p className="text-sm text-brand-muted">
+                <span className="block font-semibold text-brand-text">{title}</span>
+                {text}
+              </p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section>
+        <h2 className="mb-2 text-sm font-semibold text-brand-muted">Pools you can join</h2>
+        {pools.length === 0 ? (
+          <p className="rounded border border-brand-border bg-brand-surface p-4 text-sm text-brand-muted">
+            No pools are open yet. Check back soon.
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {pools.map((pool) => (
+              <FirstRunPoolCard key={pool.id} pool={pool} onJoined={onJoined} />
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <p className="text-xs text-brand-faint">Please drink responsibly.</p>
+    </div>
+  );
+}
+
+function FirstRunPoolCard({ pool, onJoined }: { pool: Pool; onJoined: () => void }) {
+  const [error, setError] = useState<string | null>(null);
+  const [joining, setJoining] = useState(false);
+
+  async function join() {
+    setError(null);
+    setJoining(true);
+    try {
+      await api(`/pools/${pool.id}/join`, { method: "POST" });
+      onJoined();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to join");
+      setJoining(false);
+    }
+  }
+
+  return (
+    <li className="rounded-[14px] border border-brand-border bg-brand-surface p-4">
+      <p className="font-semibold text-brand-text">{pool.name}</p>
+      <p className="text-xs text-brand-muted">
+        {pool.type === "pick_em" ? "Pick 'em" : "Survivor"} &middot; {pool.seasonYear} season
+      </p>
+      <p className="mt-2 text-sm text-brand-muted">{POOL_BLURBS[pool.type ?? "survivor"] ?? POOL_BLURBS.survivor}</p>
+      {error && (
+        <p role="alert" className="mt-2 text-sm text-brand-danger">
+          {error}
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={join}
+        disabled={joining}
+        className="mt-3 min-h-11 w-full rounded bg-brand-accent px-3 py-2 font-semibold text-brand-accent-ink hover:bg-brand-accent-hover disabled:opacity-40"
+      >
+        Join {pool.name}
+      </button>
     </li>
   );
 }

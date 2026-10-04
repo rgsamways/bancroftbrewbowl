@@ -19,10 +19,16 @@ test("join a pool, reach the pick screen from the Pick tab, pick a team", async 
     const poolRow = (await db.query(`select name from pools where id = $1`, [poolId])).rows[0].name as string;
     await db.createGame(SEASON, 1, "KC", "BUF");
 
+    // A player in no pool yet gets the first-run welcome, with the pool ready to join.
     await page.goto("/");
-    const row = page.locator("li", { hasText: poolRow });
-    await row.getByRole("button", { name: "Join" }).click();
-    await expect(page.locator("li", { hasText: poolRow }).getByRole("button", { name: "Join" })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Welcome, Joan Joiner" })).toBeVisible();
+    await expect(page.getByText("How it works")).toBeVisible();
+    await expect(page.getByText("Join a pool", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: `Join ${poolRow}` }).click();
+
+    // Joining replaces the welcome with the normal Home.
+    await expect(page.getByText("Your pools")).toBeVisible();
+    await expect(page.getByText("How it works")).toHaveCount(0);
 
     await page.click('nav[aria-label="Main"] a:has-text("Pick")');
     await page.waitForURL(new RegExp(`/pool/${poolId}/entry/[^/]+/pick$`));
