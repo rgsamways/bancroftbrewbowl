@@ -19,6 +19,7 @@
 ## 4. Verify and ship
 
 - [x] 4.1 `pnpm test:e2e` passes
-- [ ] 4.2 Push to `staging`, check it, promote to `main`, confirm the deploy (no schema change, no test data on production)
-- [ ] 4.3 Archive the change
-- [ ] 4.4 **Wait for Robin's go**, then tag `v2.0.0` on `main` and push the tag
+- [x] 4.2 Push to `staging`, check it, promote to `main`, confirm the deploy (no schema change, no test data on production)
+- [x] 4.3 Archive the change
+
+Not part of this change: tagging `v2.0.0` on `main` (and pushing the tag) is Robin's call and happens after his go; it is tracked in `openspec/ROADMAP.md` and `docs/HANDOFF.md`.
