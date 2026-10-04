@@ -1,6 +1,6 @@
 # Session Handoff
 
-_Written 2026-10-04, end of the long mockup-and-planning session. If you're reading this significantly later, treat the specifics below as a snapshot, not live truth: check `git log`, `openspec list` and the live site first._
+_Rewritten 2026-10-04 at the end of the long build session (slices 1 to 9). If you're reading this significantly later, treat the specifics below as a snapshot, not live truth: check `git log`, `openspec list` and the live site first._
 
 ## Start here
 
@@ -19,20 +19,25 @@ Read, in order:
 
 ## Where things stand
 
-- `main` is at the docs-and-mockups commits made at the end of this session; production (`bancroftbrewbowl.ca`) is the old app and unchanged. A `staging` branch and environment exist (see `CLAUDE.md`).
-- **`secure-pick-access` is done:** live on production since 2026-10-04 and archived (it created the main spec `openspec/specs/pick-access`). **`password-sign-in` is written, valid and not started** (part of slice 4). `openspec list` will show them as in progress with 0 tasks done; that is accurate.
-- **Robin's release rule:** each slice goes live as soon as it is verified. No private review gate; he decides. Staging is a quick self-check.
+- **Production (`bancroftbrewbowl.ca`) runs the v2 app through slice 9.** `main` is the source of truth and deploys both the dashboard (Vercel) and the API (Railway) on push; `staging` mirrors it. Archived changes are under `openspec/changes/archive/`, main specs under `openspec/specs/` (`openspec list` shows only what is still open).
+- **Built and live:** secure pick access, the v2 shell, browser tests, password sign-in and the sign-in screens, pool total, Home and Pick (with join pages), Standings, the admin activity record, the admin steps (Next step, Results, wipeout) and the pool screens (list, players, picks, settings, new-pool wizard).
+- **Open change: `password-sign-in`** (14 of 16 tasks done, built and live). Two things remain: task 5.3, Robin checking on a real phone that the password manager offers to fill and save and that the email field shows the email keyboard; then task 5.4's archive (`openspec archive password-sign-in`). Don't archive before Robin confirms.
+- **Next slice: 10, `admin-confirmations`** (one new table `admin_requests`; the "another admin confirms" rule in `docs/ROLES_AND_RULES.md`). It is not written yet. Plan it with `openspec-propose`, call out the schema change before pushing, and run the migration on staging's own database first. After that: 11 `menu-and-music` (needs a plan-mode design pass, new tables, adds the Menu tab to both tab bars), 12 `from-the-brewery` (also takes the announcement wizard moved out of slice 9), 13 help and extras, 14 optional roles, 15 cleanup and the v2.0.0 tag. Order and sizes: `docs/v2/V2_BUILD_PLAN.md`; status per slice: `openspec/ROADMAP.md`.
+- **Robin's rules:** every slice goes live as soon as it is verified; no review gate; he decides. Wait for his go before starting each slice (plan first with `openspec-propose`, build only after he says go). Never write test data to production. Update the matching spec in `e2e/` whenever a slice changes a screen. Keep explanations short and simple. Ports 3001 and 5173 belong to other projects: never touch them.
 
-## Things found this session that matter
+## Things that matter (learned while building)
 
-- **Three real holes in the existing API** (see `secure-pick-access`): any signed-in player can read everyone's picks before the lock, change or delete another player's pick, and read every player's email.
-- **better-auth is pinned at 1.1.9** and differs from Tobi's (^1.7). It has no switch to turn off password sign-up, so `password-sign-in` closes those endpoints with `disabledPaths` and proves it in a test first.
-- **The `per_game_kickoff` deadline rule exists in pool settings but no server code reads it.** Locking is the first kickoff of the week.
-- **The schedule import is a script** (`apps/api/scripts/seed-schedule.ts`), not a screen. `apps/api/scripts/make-admin.ts` makes an admin.
-- Adding a player by email and editing a player's status exist in the API but are not in today's admin screens.
-- **Temporary pieces left on purpose:** (the Pick and Standings tabs now share `pages/TabLanding.tsx`, which uses `GET /me/summary`), the Pools / Schedule / Promotions links row on admin pages (in `Shell.tsx`, replaced in slice 9), and the admin Pools page's tab row that now scrolls inside itself. Old pages still have white text on copper buttons (3.4 to 1 contrast); each is fixed with dark ink as its page is redone.
-- **The staging preview site can't call the staging API** (`api-staging` has no `DASHBOARD_URL`), so screens are checked locally in real Chrome.
-- **Browser tests (slice 3):** `pnpm test:e2e` (Docker Postgres up) starts its own API on port 3011 and the dashboard on 5183, runs the specs in `e2e/` in Chrome at 390 by 844, and deletes the data it created. It refuses to run unless `DATABASE_URL` is a local database (`e2e/guard.ts`). Failures keep a screenshot and trace in `e2e-results/`. Specs: frame and tabs, pick privacy, sign-in, join and pick, standings, admin results. **A slice that changes a screen updates its spec in the same change.** `pnpm typecheck:e2e` checks the e2e code; CI runs both. Never touch ports 3001 or 5173 (other projects).
+- **better-auth is pinned at 1.1.9** (Tobi's is ^1.7). Its `disabledPaths` option is typed but does nothing at runtime, so password sign-up and reset are refused by a hook in `apps/api/src/auth.ts` (`passwordHook`). Its rate limiter only runs when `NODE_ENV=production` and only matches paths when the request URL starts with `BETTER_AUTH_URL`; both are handled (`rateLimit` in `auth.ts`, `to-web-request.ts` honours `x-forwarded-proto`).
+- **Weeks and states have one definition:** `apps/api/src/lib/entry-state.ts` (current week = first week with an undecided game; a week locks at its first kickoff; `per_game_kickoff` exists in settings but nothing reads it). Home, Pick, the Pick and Standings tabs and the admin Next step all use it. Kickoffs are stored as UTC and shown in Eastern time (`packages/shared/src/game-time.ts`).
+- **One request per screen:** `GET /me/summary` (Home), `GET /entries/:id/pick-sheet` (Pick), `GET /pools/:id/standings` (Standings), `GET /admin/summary` (Next step), `GET /admin/activity` (Activity). Countdowns use the server's time sent with the response.
+- **Every admin write route records who did it** in `admin_activity` through `recordActivity` (`apps/api/src/lib/activity.ts`), and a test (`activity-coverage.test.ts`) fails if a new admin write route has no record or if app code updates or deletes a record. New kinds of change are added to `packages/shared/src/admin-activity.ts` (no migration).
+- **Server rules worth knowing:** a pick must be for a team that plays that week; a locked pool refuses name, season and rule changes; a player's status edit is validated (Out needs a week 1 to 25); picks stay hidden until the week locks, for admins too, except their own.
+- **Schema changes so far in this build:** `pools.pool_total_cents` and the `admin_activity` table (migrations 0005 and 0006). Railway's `preDeploy` migrates automatically; call out any schema-changing push first.
+- **Testing:** `pnpm lint`, `pnpm typecheck`, `pnpm typecheck:e2e`, `pnpm test` (API tests use the real Docker Postgres) and `pnpm test:e2e` (real Chrome at 390 by 844, own API on 3011 and dashboard on 5183, refuses a non-local database). Test cleanup removes the data and the activity records its own admins made; if rows pile up locally, a test skipped cleanup. Seasons used by tests: 3500 and up for anything that calls the admin summary (it looks at the latest season with games), 2000 to 2100 for anything that edits a pool's season (schema limit), around 2970 to 2999 for the rest.
+- **The staging preview site can't call the staging API** (`api-staging` has no `DASHBOARD_URL`), so screens are checked locally in real Chrome and staging is checked by calling its API.
+- **Editing files with Python on this Windows machine:** always pass `encoding="utf-8"`; the default (cp1252) once wrote a bad byte into a source file. In the Bash tool, heredocs containing apostrophes can fail to parse: write such files with the Write tool, or write a script file and run it.
+- **Temporary pieces still in place:** the Promotions page (reachable from admin More) and its automatic offers, until slice 12 replaces them; the Activity link lives under More until menu items arrive. Old pages may still have white text on copper buttons (3.4 to 1 contrast); fix with dark ink when each is redone.
+- **The schedule import is a script** (`apps/api/scripts/seed-schedule.ts`), not a screen; `apps/api/scripts/make-admin.ts` makes an admin; `apps/api/scripts/reset-password.ts` resets a password (see `docs/NEW_CLIENT_SETUP.md`).
 
 ## Decisions already made (don't re-ask; details in memory)
 
