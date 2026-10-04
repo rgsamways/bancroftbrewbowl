@@ -56,7 +56,7 @@ test.afterAll(async () => {
 test("a player with no pools: tabs, header, and the join-a-pool message", async () => {
   const p = pages.nopool;
   await go(p, "/");
-  expect(await tabLabels(p)).toBe("Home | Pick | Standings");
+  expect(await tabLabels(p)).toBe("Home | Pick | Standings | Menu");
   expect(await currentTab(p)).toBe("Home");
   expect(await p.$$('button[aria-label="Open navigation"], button[aria-label="Page help"], aside')).toHaveLength(0);
   await expect(p.locator('header a[aria-label="Brew Bowl home"]')).toHaveAttribute("href", "/");
@@ -132,7 +132,7 @@ test("only entry eliminated: Pick shows their season, with the way to standings"
 test("an admin gets an Admin tab that opens the admin area with its own tab bar", async () => {
   const p = pages.admin;
   await go(p, "/");
-  expect(await tabLabels(p)).toBe("Home | Pick | Standings | Admin");
+  expect(await tabLabels(p)).toBe("Home | Pick | Standings | Menu | Admin");
 
   await p.click('nav[aria-label="Main"] a:has-text("Admin")');
   await p.waitForURL("**/admin");
@@ -141,7 +141,7 @@ test("an admin gets an Admin tab that opens the admin area with its own tab bar"
   const adminTabs = await p.$$eval('nav[aria-label="Admin"] a', (as) =>
     as.map((a) => ({ label: a.textContent!.trim(), current: a.getAttribute("aria-current") === "page", height: Math.round(a.getBoundingClientRect().height) }))
   );
-  expect(adminTabs.map((t) => t.label).join(" | ")).toBe("Next step | Results | Pools | More");
+  expect(adminTabs.map((t) => t.label).join(" | ")).toBe("Next step | Results | Menu | Pools | More");
   expect(adminTabs.filter((t) => t.current).map((t) => t.label)).toEqual(["Next step"]);
   for (const t of adminTabs) expect(t.height).toBeGreaterThanOrEqual(44);
 

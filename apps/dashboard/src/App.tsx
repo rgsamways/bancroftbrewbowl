@@ -22,6 +22,10 @@ import { AdminPool } from "./pages/AdminPool";
 import { NewPoolWizard } from "./pages/NewPoolWizard";
 import { PromotionsPage } from "./pages/PromotionsPage";
 import { PickLanding, StandingsLanding } from "./pages/TabLanding";
+import { MenuPage, PublicMenuPage } from "./pages/Menu";
+import { AdminMenu } from "./pages/admin-menu/AdminMenu";
+import { AddItemWizard } from "./pages/admin-menu/AddItemWizard";
+import { EditItem } from "./pages/admin-menu/EditItem";
 
 export default function App() {
   const { data: session, isPending } = useSession();
@@ -32,7 +36,16 @@ export default function App() {
   const loadedOnce = useRef(false);
   if (!isPending) loadedOnce.current = true;
   if (isPending && !loadedOnce.current) return null;
-  if (!session) return <Login />;
+  // The menu is public (the table QR code opens it); everything else needs a sign-in.
+  if (!session) {
+    return (
+      <Routes>
+        <Route path="/menu" element={<PublicMenuPage />} />
+        <Route path="/menu/kitchen" element={<PublicMenuPage kitchen />} />
+        <Route path="*" element={<Login />} />
+      </Routes>
+    );
+  }
 
   return (
     <Routes>
@@ -43,6 +56,8 @@ export default function App() {
         <Route path="/pick" element={<PickLanding />} />
         <Route path="/join/:poolId" element={<JoinPage />} />
         <Route path="/standings" element={<StandingsLanding />} />
+        <Route path="/menu" element={<MenuPage />} />
+        <Route path="/menu/kitchen" element={<MenuPage kitchen />} />
         <Route path="/pool/:poolId" element={<PoolStandings />} />
         <Route path="/pool/:poolId/entry/:entryId/pick" element={<PickScreen />} />
       </Route>
@@ -53,12 +68,15 @@ export default function App() {
           <Route path="/admin/more" element={<AdminMore />} />
           <Route path="/admin/activity" element={<ActivityPage />} />
           <Route path="/admin/promotions" element={<PromotionsPage />} />
+          <Route path="/admin/menu" element={<AdminMenu />} />
+          <Route path="/admin/menu/:id" element={<EditItem />} />
           <Route path="/admin/pools" element={<AdminPools />} />
           <Route path="/admin/pools/:poolId" element={<AdminPool />} />
         </Route>
         <Route element={<FocusLayout />}>
           <Route path="/admin/results/steps" element={<ResultsWizard />} />
           <Route path="/admin/pools/new" element={<NewPoolWizard />} />
+          <Route path="/admin/menu/new" element={<AddItemWizard />} />
           <Route path="/admin/wipeout/:poolId/:wipeoutId" element={<WipeoutDecision />} />
           <Route path="/admin/requests/:id" element={<ConfirmRequest />} />
           <Route path="/admin/requests/:id/decline" element={<DeclineRequest />} />

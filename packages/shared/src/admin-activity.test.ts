@@ -18,8 +18,8 @@ describe("activity kinds", () => {
     expect(kinds).not.toContain("promotion_created");
   });
 
-  it("the Menu filter is empty until menu kinds exist", () => {
-    expect(kindsForFilter("menu")).toEqual([]);
+  it("the Menu filter shows the four menu kinds", () => {
+    expect(kindsForFilter("menu").sort()).toEqual(["menu_item_added", "menu_item_availability_changed", "menu_item_changed", "menu_item_removed"]);
   });
 });
 

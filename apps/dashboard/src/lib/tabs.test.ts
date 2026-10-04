@@ -2,22 +2,21 @@ import { describe, expect, it } from "vitest";
 import { activeTab, tabsFor } from "./tabs.js";
 
 describe("tabsFor", () => {
-  it("gives a player Home, Pick and Standings", () => {
-    expect(tabsFor({ isAdmin: false }).map((t) => t.label)).toEqual(["Home", "Pick", "Standings"]);
+  it("gives a player Home, Pick, Standings and Menu", () => {
+    expect(tabsFor({ isAdmin: false }).map((t) => t.label)).toEqual(["Home", "Pick", "Standings", "Menu"]);
   });
 
-  it("gives an admin the same three plus Admin, last", () => {
-    expect(tabsFor({ isAdmin: true }).map((t) => t.label)).toEqual(["Home", "Pick", "Standings", "Admin"]);
+  it("gives an admin the same four plus Admin, last", () => {
+    expect(tabsFor({ isAdmin: true }).map((t) => t.label)).toEqual(["Home", "Pick", "Standings", "Menu", "Admin"]);
   });
 
-  it("has no Menu tab yet and no Me tab", () => {
+  it("has no Me tab", () => {
     const labels = tabsFor({ isAdmin: true }).map((t) => t.label);
-    expect(labels).not.toContain("Menu");
     expect(labels).not.toContain("Me");
   });
 
   it("points each tab at its own address", () => {
-    expect(tabsFor({ isAdmin: true }).map((t) => t.to)).toEqual(["/", "/pick", "/standings", "/admin"]);
+    expect(tabsFor({ isAdmin: true }).map((t) => t.to)).toEqual(["/", "/pick", "/standings", "/menu", "/admin"]);
   });
 });
 
@@ -30,6 +29,9 @@ describe("activeTab", () => {
     ["/standings", "standings"],
     ["/pool/p1", "standings"],
     ["/pool/p1/", "standings"],
+    ["/menu", "menu"],
+    ["/menu/kitchen", "menu"],
+    ["/menu/", "menu"],
     ["/admin", "admin"],
     ["/admin/p1", "admin"],
     ["/admin/schedule", "admin"],
@@ -46,5 +48,6 @@ describe("activeTab", () => {
     expect(activeTab("/somewhere/else")).toBeNull();
     expect(activeTab("/pool")).toBeNull();
     expect(activeTab("/administrator")).toBeNull(); // not under /admin
+    expect(activeTab("/menus")).toBeNull(); // not under /menu
   });
 });

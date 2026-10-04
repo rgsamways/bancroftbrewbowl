@@ -10,6 +10,7 @@ import { wipeoutRoutes } from "./routes/wipeouts.js";
 import { promotionRoutes } from "./routes/promotions.js";
 import { adminSummaryRoutes } from "./routes/admin-summary.js";
 import { adminRequestRoutes } from "./routes/admin-requests.js";
+import { menuRoutes } from "./routes/menu.js";
 import { activityRoutes } from "./routes/activity.js";
 import { standingsRoutes } from "./routes/standings.js";
 import { homeRoutes } from "./routes/home.js";
@@ -38,6 +39,7 @@ await fastify.register(standingsRoutes);
 await fastify.register(activityRoutes);
 await fastify.register(adminSummaryRoutes);
 await fastify.register(adminRequestRoutes);
+await fastify.register(menuRoutes);
 
 fastify.get("/health", async () => ({ ok: true }));
 

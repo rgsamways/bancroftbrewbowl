@@ -1,5 +1,5 @@
 import { Link, Navigate, Outlet, useLocation } from "react-router";
-import { Ellipsis, ClipboardCheck, Layers, ListChecks, type LucideIcon } from "lucide-react";
+import { Beer, Ellipsis, ClipboardCheck, Layers, ListChecks, type LucideIcon } from "lucide-react";
 import { AppHeader } from "./AppHeader";
 import { PageHeader } from "./Shell";
 import { useSession, type AppUser } from "../lib/auth-client";
@@ -16,11 +16,12 @@ export function RequireAdmin() {
   return isAdmin ? <Outlet /> : <Navigate to="/" replace />;
 }
 
-type AdminTabKey = "next" | "results" | "pools" | "more";
+type AdminTabKey = "next" | "results" | "menu" | "pools" | "more";
 
 const ADMIN_TABS: { key: AdminTabKey; label: string; to: string; icon: LucideIcon }[] = [
   { key: "next", label: "Next step", to: "/admin", icon: ListChecks },
   { key: "results", label: "Results", to: "/admin/results", icon: ClipboardCheck },
+  { key: "menu", label: "Menu", to: "/admin/menu", icon: Beer },
   { key: "pools", label: "Pools", to: "/admin/pools", icon: Layers },
   { key: "more", label: "More", to: "/admin/more", icon: Ellipsis },
 ];
@@ -30,6 +31,7 @@ export function activeAdminTab(pathname: string): AdminTabKey | null {
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
   if (path === "/admin") return "next";
   if (path === "/admin/results" || path.startsWith("/admin/results/")) return "results";
+  if (path === "/admin/menu" || path.startsWith("/admin/menu/")) return "menu";
   if (path === "/admin/pools" || path.startsWith("/admin/pools/")) return "pools";
   if (path === "/admin/more" || path === "/admin/activity" || path === "/admin/promotions") return "more";
   return null;
@@ -43,7 +45,7 @@ function AdminTabs() {
       aria-label="Admin"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-border bg-brand-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
-      <ul className="mx-auto grid max-w-lg grid-cols-4">
+      <ul className="mx-auto grid max-w-lg grid-cols-5">
         {ADMIN_TABS.map(({ key, label, to, icon: Icon }) => (
           <li key={key}>
             <Link

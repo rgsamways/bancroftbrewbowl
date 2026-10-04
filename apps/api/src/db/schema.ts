@@ -332,6 +332,34 @@ export const adminRequests = pgTable(
   ]
 );
 
+// The menu: beers, wines, other drinks and dishes. Public to read, admins write. Prices are
+// optional and display only (no ordering, no money in the app). `kind` and `labels` are plain
+// text checked against the lists in @bbb/shared, so a new one needs no migration. `options`
+// holds an item's add-ons or side choices and is only ever read and written with the item.
+export const menuItems = pgTable(
+  "menu_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    kind: text("kind").notNull(),
+    section: text("section").notNull(),
+    name: text("name").notNull(),
+    style: text("style"),
+    abv: text("abv"),
+    description: text("description"),
+    priceCents: integer("price_cents"),
+    options: jsonb("options").$type<{ name: string; priceCents: number | null }[]>().notNull().default([]),
+    labels: text("labels").array().notNull().default(sql`'{}'::text[]`),
+    available: boolean("available").notNull().default(true),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [index("menu_items_kind_section_idx").on(table.kind, table.section, table.sortOrder)]
+);
+
 export const poolsRelations = relations(pools, ({ many }) => ({
   entries: many(entries),
 }));

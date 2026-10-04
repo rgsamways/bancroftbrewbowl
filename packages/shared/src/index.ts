@@ -14,3 +14,4 @@ export * from "./standings.js";
 export * from "./admin-activity.js";
 export * from "./admin-summary.js";
 export * from "./admin-requests.js";
+export * from "./menu.js";

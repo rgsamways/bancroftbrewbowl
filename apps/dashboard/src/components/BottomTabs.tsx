@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router";
-import { House, ShieldCheck, Target, Trophy, type LucideIcon } from "lucide-react";
+import { Beer, House, ShieldCheck, Target, Trophy, type LucideIcon } from "lucide-react";
 import { useSession, type AppUser } from "../lib/auth-client";
 import { activeTab, tabsFor, type TabKey } from "../lib/tabs";
 
@@ -7,6 +7,7 @@ const ICONS: Record<TabKey, LucideIcon> = {
   home: House,
   pick: Target,
   standings: Trophy,
+  menu: Beer,
   admin: ShieldCheck,
 };
 

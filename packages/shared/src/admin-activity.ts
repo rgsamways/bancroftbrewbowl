@@ -24,6 +24,10 @@ export const ACTIVITY_KINDS = {
   promotion_created: { title: "Added an announcement", category: "content" },
   promotion_updated: { title: "Edited an announcement", category: "content" },
   promotion_deleted: { title: "Removed an announcement", category: "content" },
+  menu_item_added: { title: "Added a menu item", category: "menu" },
+  menu_item_changed: { title: "Changed a menu item", category: "menu" },
+  menu_item_removed: { title: "Removed a menu item", category: "menu" },
+  menu_item_availability_changed: { title: "Marked a menu item in or out", category: "menu" },
   canned_promotion_changed: { title: "Changed an automatic offer", category: "content" },
 } as const satisfies Record<string, { title: string; category: ActivityCategory }>;
 
