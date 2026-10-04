@@ -28,6 +28,8 @@ export type SummaryEntry = {
   correctThisWeek: number | null;
   /** Set when the season is over: the survivor champion or the pick 'em winner, if there is one. */
   champion: string | null;
+  /** Latest fully decided week in which this pool had picks, for the "Week N recap" card; null if none. */
+  recapWeek: number | null;
 };
 
 export type JoinablePool = { id: string; name: string; type: "survivor" | "pick_em"; seasonYear: number };

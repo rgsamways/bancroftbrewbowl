@@ -16,6 +16,8 @@ import { PasswordPage } from "./pages/PasswordPage";
 import { JoinPage } from "./pages/JoinPage";
 import { ActivityPage } from "./pages/ActivityPage";
 import { PoolStandings } from "./pages/PoolStandings";
+import { PoolTv } from "./pages/PoolTv";
+import { PoolRecap } from "./pages/PoolRecap";
 import { PickScreen } from "./pages/PickScreen";
 import { AdminPools } from "./pages/AdminPools";
 import { AdminPool } from "./pages/AdminPool";
@@ -56,6 +58,7 @@ export default function App() {
 
   return (
     <Routes>
+      <Route path="/pool/:poolId/tv" element={<PoolTv />} />
       <Route element={<Shell />}>
         <Route path="/" element={<Home />} />
         <Route path="/account" element={<Account />} />
@@ -68,6 +71,7 @@ export default function App() {
         <Route path="/menu/kitchen" element={<MenuPage tab="kitchen" />} />
         <Route path="/menu/music" element={<MenuPage tab="music" />} />
         <Route path="/pool/:poolId" element={<PoolStandings />} />
+        <Route path="/pool/:poolId/recap" element={<PoolRecap />} />
         <Route path="/pool/:poolId/entry/:entryId/pick" element={<PickScreen />} />
       </Route>
       <Route element={<RequireAdmin />}>

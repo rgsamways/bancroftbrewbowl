@@ -310,6 +310,20 @@ export function Home() {
         onSelect={setChosenId}
       />
       <Hero entry={selected} nowMs={nowMs} onLocked={onLocked} />
+      {selected.recapWeek !== null && (
+        <Link
+          to={`/pool/${selected.poolId}/recap`}
+          className="flex min-h-14 items-center justify-between rounded-[14px] border border-brand-border bg-brand-surface px-4 text-brand-text hover:border-brand-accent"
+        >
+          <span>
+            <span className="block font-semibold">Week {selected.recapWeek} recap</span>
+            <span className="block text-sm text-brand-muted">How the week went</span>
+          </span>
+          <span aria-hidden="true" className="text-brand-accent">
+            &rsaquo;
+          </span>
+        </Link>
+      )}
       <InstallCard />
 
       {offerPickEm.length > 0 && (

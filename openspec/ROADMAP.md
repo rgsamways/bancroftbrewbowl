@@ -29,7 +29,7 @@ Easier to use, phone-first front end with a polished, modern look, built with th
 | 11b | `music-events` | **Done and archived** (`archive/2026-10-04-music-events`). Table `music_events` (migration 0009); public music list at `/menu/music` (this weekend, coming up), Music tab beside Drinks and Kitchen, admin Music (list, three-step wizard, edit, remove). 267 tests, 70 real-browser checks. |
 | 12 | `from-the-brewery` | **Done and archived** (`archive/2026-10-04-from-the-brewery`). Extends `promotions` (migration 0010): featured item, specials, announcements; "At the brewery" on Home; admin From the brewery hub and wizards; interim Promotions page and the automatic offers removed from the screens. 282 tests, 73 real-browser checks. |
 | 13a | `help-and-info` | **Done and archived** (`archive/2026-10-04-help-and-info`). How to play (`/help`), Admin guide, install card on Home, automatic "Live this weekend" card, printable table card with a real QR to `/menu`. No schema change. 286 tests, 78 real-browser checks. |
-| 13b | `tv-and-recap` | Not written. TV standings (signed-in page) and the weekly recap card; both need new server numbers (most picked after the lock, players out, biggest upset). |
+| 13b | `tv-and-recap` | **Planned, waiting for Robin's go** (`openspec/changes/tv-and-recap`, valid, 4/4 artifacts). TV standings (signed-in page) and the weekly recap card, survivor and pick 'em; upset = winner the fewest players picked; no schema change. |
 | 14 | `roles-and-rules` | Optional; only if the owner wants to hand out parts of the work |
 | 15 | `v2-cleanup-and-release` | Not written; tags v2.0.0 |
 

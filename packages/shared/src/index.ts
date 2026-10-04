@@ -17,3 +17,4 @@ export * from "./admin-requests.js";
 export * from "./menu.js";
 export * from "./music.js";
 export * from "./brewery.js";
+export * from "./tv-recap.js";

@@ -262,6 +262,9 @@ export function PoolStandings() {
           <p className="mt-3 text-xs text-brand-faint">Points update as the brewery adds game results.</p>
         </section>
       )}
+      <Link to={`/pool/${poolId}/tv`} className="mb-4 flex min-h-11 items-center text-sm font-semibold text-brand-accent">
+        Show on TV
+      </Link>
       <p className="text-xs text-brand-faint">Please drink responsibly.</p>
     </div>
   );

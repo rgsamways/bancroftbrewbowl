@@ -14,6 +14,7 @@ import { entries, games, picks, pools } from "../db/schema.js";
 import { requireEntryOwner, requireSession } from "../lib/guards.js";
 import { deriveEntryState, loadSeasonWeeks, picksNeededFor, type SeasonWeek } from "../lib/entry-state.js";
 import { loadBreweryHome } from "../lib/brewery.js";
+import { latestRecapWeek, pickedWeeksByPool } from "../lib/recap.js";
 import { computePickEmPoints } from "./entries.js";
 
 type PoolRow = typeof pools.$inferSelect;
@@ -72,6 +73,8 @@ export async function homeRoutes(fastify: FastifyInstance) {
         await computePickEmPoints(ids, (pool.rules as PickEmRulesConfig).tie_handling)
       );
     }
+
+    const pickedWeeks = await pickedWeeksByPool(poolIds);
 
     const nameOf = (e: (typeof poolEntries)[number]) => e.user?.name ?? e.invitedName ?? "A player";
 
@@ -132,6 +135,7 @@ export async function homeRoutes(fastify: FastifyInstance) {
             ? thisWeekPicks.filter((p) => p.result === "win" || (p.result === "tie" && countsTie(pool))).length
             : null,
         champion,
+        recapWeek: latestRecapWeek(weeks, pickedWeeks.get(pool.id)),
       };
     });
 
