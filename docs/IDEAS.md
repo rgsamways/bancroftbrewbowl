@@ -48,3 +48,19 @@ The owner and his wife will likely want to hand duties to wait staff and other e
 ## Small fix to do when asked
 
 The top bar (`AppHeader.tsx`) is `max-w-3xl` with 16px side padding while the page content is `max-w-lg` with 24px, so on a phone the logo and avatar sit closer to the edges than the cards, and on a wide window the bar is wider than the content. One-line fix: match the content width and padding.
+
+## Per-game picks: wait until your game starts (noted 2026-10-04)
+
+Robin's point: people may want to wait until the game they want to pick starts to be decided (or kicks off) instead of locking in before the Thursday game. Today a whole week locks at its first kickoff, so a Thursday game locks every pick for the week.
+
+The setting already exists but does nothing: pool settings list a `per_game_kickoff` deadline rule, and no server code reads it (`docs/BUILD_PLAN.md` "Known gaps"; `apps/api/src/lib/pick-lock.ts` is the one place that decides today's rule). Special NFL-schedule handling would be needed. Things to think through when it is picked up:
+
+- **The lock moves from the week to the game.** A pick for a team locks at that team's kickoff, not the week's first kickoff. Thursday, Sunday early and late, Sunday night, Monday night, and later-season Saturday games and holiday games all lock separately.
+- **Survivor:** you can still choose any team whose game hasn't started. Open question: can you change a pick after an earlier game has started? For example, picked a Sunday team, the Thursday game ended and you'd have liked it. Likely rule: a pick can change until the kickoff of the game it is for, but you can't switch to a team whose game has already started. Double-pick weeks need a rule per pick.
+- **Pick 'em** is simpler: one pick per game, each locking at its own kickoff.
+- **Privacy:** "picks stay hidden until the week locks" (`lib/pick-visibility.ts`, `lib/pick-counts.ts`) would become "a pick is visible once its game has started". The TV most-picked list and the recap's most picked and upset use the same gate and would follow it.
+- **Home, Pick and the admin Next step** all use one definition of the current week and its lock time (`lib/entry-state.ts`). That would need a per-game version: countdown to the next lock, "locked" being partial, and "needs picks" meaning no unstarted game is picked.
+- **Flexed games.** The NFL moves kickoffs (flex scheduling, rescheduled games). Lock times must read the stored kickoff each time; the seed script (`pnpm seed-schedule`) refreshes them, but a late move after someone relied on it needs a rule.
+- **Fairness:** an admin who also plays must not be able to use the extra information; the existing "another admin confirms" rule and the recorded Activity stay.
+- **It changes the game.** Waiting for the late game is an advantage over people who locked early; consider whether the owner wants that, or a middle option (for example, the week locks at the first Sunday kickoff, with Thursday games as their own separate pick).
+- Needs a plan-mode design pass (it touches picks, visibility, scoring-adjacent rules, and likely the setting's meaning), and its tests must cover every game-day pattern: Thursday, Sunday, Monday, a flexed game, a bye team.
