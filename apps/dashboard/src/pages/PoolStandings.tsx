@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router";
 import type { PoolType } from "@bbb/shared";
 import { api } from "../lib/api";
+import { PoolTotalCard } from "../components/PoolTotalCard";
 
-type Pool = { id: string; name: string; seasonYear: number; status: string; type: PoolType };
+type Pool = { id: string; name: string; seasonYear: number; status: string; type: PoolType; poolTotalCents: number | null };
 type Entry = {
   id: string;
   displayName: string;
@@ -36,6 +37,7 @@ export function PoolStandings() {
     return (
       <div className="mx-auto max-w-2xl p-6">
         <h1 className="mb-6 font-display text-2xl font-bold text-brand-text">{pool.name}</h1>
+        <PoolTotalCard cents={pool.poolTotalCents} />
         <ul className="divide-y divide-brand-border rounded border border-brand-border bg-brand-surface">
           {standings.map((entry, index) => (
             <li key={entry.id} className="flex items-center justify-between px-3 py-2">
@@ -58,6 +60,7 @@ export function PoolStandings() {
   return (
     <div className="mx-auto max-w-2xl p-6">
       <h1 className="mb-6 font-display text-2xl font-bold text-brand-text">{pool.name}</h1>
+      <PoolTotalCard cents={pool.poolTotalCents} />
 
       <section>
         <h2 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-emerald-400">

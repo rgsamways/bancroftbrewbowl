@@ -6,3 +6,4 @@ export * from "./api-schemas.js";
 export * from "./canned-promotions.js";
 export * from "./pick-visibility.js";
 export * from "./password-form.js";
+export * from "./pool-total.js";

@@ -1,3 +1,4 @@
+import { MAX_POOL_TOTAL_CENTS } from "./pool-total.js";
 import { z } from "zod";
 import { cannedPromotionConfigSchema } from "./canned-promotions.js";
 import { NFL_TEAM_CODES } from "./teams.js";
@@ -26,6 +27,8 @@ export const updatePoolSchema = z.object({
   name: z.string().min(1).optional(),
   season_year: z.number().int().min(2000).max(2100).optional(),
   status: z.enum(POOL_STATUSES).optional(),
+  // Display-only pool total in cents; null clears it.
+  pool_total_cents: z.number().int().min(0).max(MAX_POOL_TOTAL_CENTS).nullable().optional(),
   // `type` is deliberately not updatable — immutable after creation.
   rules: z.record(z.string(), z.unknown()).optional(),
 });

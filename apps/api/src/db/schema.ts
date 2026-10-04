@@ -137,6 +137,8 @@ export const pools = pgTable("pools", {
   type: poolTypeEnum("type").notNull().default("survivor"),
   rules: jsonb("rules").$type<SurvivorRulesConfig | PickEmRulesConfig>().notNull(),
   status: poolStatusEnum("status").notNull().default("draft"),
+  // Display-only total an admin types in (cents). The app never handles money.
+  poolTotalCents: integer("pool_total_cents"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

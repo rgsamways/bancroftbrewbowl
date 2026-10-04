@@ -4,6 +4,8 @@ import { Plus, Cog } from "lucide-react";
 import {
   TIE_HANDLING,
   PICK_EM_TIE_HANDLING,
+  parsePoolTotal,
+  poolTotalToInput,
   type PoolType,
   type SurvivorRulesConfig,
   type PickEmRulesConfig,
@@ -21,6 +23,7 @@ type Pool = {
   status: string;
   type: PoolType;
   rules: SurvivorRulesConfig | PickEmRulesConfig;
+  poolTotalCents: number | null;
 };
 type Entry = { id: string; displayName: string; email: string; status: string; points?: number };
 type Game = {
@@ -362,6 +365,8 @@ function SettingsTab({ poolId, onDeleted }: { poolId: string; onDeleted: () => v
         {saved && <p className="text-sm text-emerald-400">Saved.</p>}
         {error && <p className="text-sm text-red-400">{error}</p>}
       </form>
+
+      <PoolTotalForm key={pool.id} pool={pool} onSaved={setPool} />
 
       <div className="rounded border border-red-900 bg-red-950/40 p-4">
         <h2 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-red-400">
@@ -807,5 +812,76 @@ function PicksTab({ poolId }: { poolId: string }) {
         </tbody>
       </table>
     </div>
+  );
+}
+
+// Separate from the settings form above so it still works while the rules are locked.
+function PoolTotalForm({ pool, onSaved }: { pool: Pool; onSaved: (pool: Pool) => void }) {
+  const [text, setText] = useState(poolTotalToInput(pool.poolTotalCents));
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  async function save(event: React.FormEvent) {
+    event.preventDefault();
+    setSaved(false);
+    const parsed = parsePoolTotal(text);
+    if (!parsed.ok) {
+      setError(parsed.message);
+      return;
+    }
+    setError(null);
+    setSaving(true);
+    try {
+      const updated = await api<Pool>(`/pools/${pool.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ pool_total_cents: parsed.cents }),
+      });
+      onSaved(updated);
+      setText(poolTotalToInput(updated.poolTotalCents));
+      setSaved(true);
+    } catch {
+      setError("The pool total was not saved. Check your connection and try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form onSubmit={save} className="flex flex-col gap-2 border-t border-brand-border pt-4">
+      <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-brand-muted">Pool total</h2>
+      <label className="flex flex-col gap-1 text-sm text-brand-text">
+        Shown to players on Standings
+        <div className="flex items-center gap-2">
+          <span aria-hidden="true" className="text-brand-muted">
+            $
+          </span>
+          <input
+            inputMode="decimal"
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            aria-invalid={error ? true : undefined}
+            className="w-full rounded border border-brand-border bg-brand-bg px-3 py-2 text-brand-text focus:border-brand-accent focus:outline-none"
+          />
+        </div>
+      </label>
+      <p className="text-xs text-brand-muted">
+        You type this in. The app only shows it and never handles money. You can change it any time, even while the
+        rules are locked. Leave it empty to hide it.
+      </p>
+      {error && (
+        <p role="alert" className="text-sm text-red-400">
+          {error}
+        </p>
+      )}
+      {saved && <p className="text-sm text-emerald-400">Saved.</p>}
+      <button
+        type="submit"
+        disabled={saving}
+        className="min-h-11 self-start rounded bg-brand-accent px-3 py-2 font-display font-semibold text-brand-accent-ink hover:bg-brand-accent-hover disabled:opacity-50"
+      >
+        Save pool total
+      </button>
+    </form>
   );
 }

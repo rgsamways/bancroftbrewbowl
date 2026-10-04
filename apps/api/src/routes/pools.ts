@@ -80,6 +80,8 @@ export async function poolRoutes(fastify: FastifyInstance) {
     if (body.name !== undefined) updates.name = body.name;
     if (body.season_year !== undefined) updates.seasonYear = body.season_year;
     if (body.status !== undefined) updates.status = body.status;
+    // Allowed in any status: the total is not a rule, so it stays editable once rules lock.
+    if (body.pool_total_cents !== undefined) updates.poolTotalCents = body.pool_total_cents;
     if (body.rules !== undefined) {
       updates.rules = rulesSchemaForType(pool.type).parse({
         ...(pool.rules as SurvivorRulesConfig | PickEmRulesConfig),

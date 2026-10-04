@@ -1,0 +1,1 @@
+ALTER TABLE "pools" ADD COLUMN "pool_total_cents" integer;

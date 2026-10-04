@@ -47,8 +47,8 @@ export class TestDb {
     return (await this.client.query(`select id from "user" where email = $1`, [email])).rows[0].id as string;
   }
 
-  async createPool(name: string, seasonYear: number, type: "survivor" | "pickem" = "survivor") {
-    const rules = type === "survivor" ? SURVIVOR_RULES : {};
+  async createPool(name: string, seasonYear: number, type: "survivor" | "pick_em" = "survivor") {
+    const rules = type === "survivor" ? SURVIVOR_RULES : { tie_handling: "void" };
     const id = (
       await this.client.query(
         `insert into pools (name, season_year, type, rules, status) values ($1, $2, $3, $4::jsonb, 'active') returning id`,
