@@ -46,3 +46,22 @@ export function formatCountdown(ms: number): string {
   if (hours > 0) return `${hours}h ${minutes}m`;
   return `${minutes}m`;
 }
+
+const zoneDateParts = (iso: string) => {
+  const [y, m, d] = dayKeyFormat.format(new Date(iso)).split("-").map(Number);
+  return { y: y!, m: m!, d: d! };
+};
+
+/** "Today · 5:04 PM", "Yesterday · 6:40 PM", "Mon · 9:15 AM" within the last week, otherwise "Oct 9 · 9:15 AM". Eastern. */
+export function formatActivityTime(iso: string, nowIso: string): string {
+  const then = zoneDateParts(iso);
+  const now = zoneDateParts(nowIso);
+  const dayNumber = (p: { y: number; m: number; d: number }) => Date.UTC(p.y, p.m - 1, p.d) / 86_400_000;
+  const daysAgo = dayNumber(now) - dayNumber(then);
+  const time = formatKickoffTime(iso);
+  if (daysAgo === 0) return `Today · ${time}`;
+  if (daysAgo === 1) return `Yesterday · ${time}`;
+  if (daysAgo > 1 && daysAgo < 7) return `${shortDayFormat.format(new Date(iso))} · ${time}`;
+  const monthDay = new Intl.DateTimeFormat("en-CA", { timeZone: DISPLAY_TIME_ZONE, month: "short", day: "numeric" }).format(new Date(iso));
+  return `${monthDay} · ${time}`;
+}

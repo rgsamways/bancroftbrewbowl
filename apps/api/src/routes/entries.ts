@@ -4,6 +4,7 @@ import { createEntrySchema, type PickEmRulesConfig } from "@bbb/shared";
 import { db } from "../db/client.js";
 import { entries, picks, pools, user } from "../db/schema.js";
 import { requireAdmin, requireSession } from "../lib/guards.js";
+import { actorOf, recordActivity } from "../lib/activity.js";
 import { parseBody } from "../lib/validate.js";
 
 type EntryRow = {
@@ -62,7 +63,8 @@ export async function computePickEmPoints(entryIds: string[], tieHandling: PickE
 
 export async function entryRoutes(fastify: FastifyInstance) {
   fastify.post("/pools/:poolId/entries", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    const session = await requireAdmin(request, reply);
+    if (!session) return;
 
     const { poolId } = request.params as { poolId: string };
     const body = parseBody(createEntrySchema, request.body, reply);
@@ -81,14 +83,26 @@ export async function entryRoutes(fastify: FastifyInstance) {
       return;
     }
 
-    const [entry] = await db
-      .insert(entries)
-      .values(
-        existingUser
-          ? { poolId, userId: existingUser.id }
-          : { poolId, invitedEmail: body.email, invitedName: body.display_name }
-      )
-      .returning();
+    const actor = actorOf(session);
+    const pool = await db.query.pools.findFirst({ where: eq(pools.id, poolId) });
+    const entry = await db.transaction(async (tx) => {
+      const [created] = await tx
+        .insert(entries)
+        .values(
+          existingUser
+            ? { poolId, userId: existingUser.id }
+            : { poolId, invitedEmail: body.email, invitedName: body.display_name }
+        )
+        .returning();
+      const addedName = existingUser?.name ?? body.display_name;
+      await recordActivity(tx, actor, {
+        kind: "player_added",
+        summary: `${actor.name} added ${addedName} to ${pool?.name ?? "a pool"}.`,
+        poolId: pool ? poolId : null,
+        affectsOwnEntry: existingUser?.id === actor.id,
+      });
+      return created!;
+    });
 
     reply.status(201).send(resolveEntry({ ...entry, user: existingUser ?? null }, undefined, WITH_EMAIL));
   });
@@ -157,17 +171,35 @@ export async function entryRoutes(fastify: FastifyInstance) {
   });
 
   fastify.patch("/entries/:entryId", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    const session = await requireAdmin(request, reply);
+    if (!session) return;
 
     const { entryId } = request.params as { entryId: string };
     const body = request.body as Partial<{ status: "alive" | "eliminated"; eliminatedWeek: number | null }>;
+    const actor = actorOf(session);
 
-    const [entry] = await db.update(entries).set(body).where(eq(entries.id, entryId)).returning();
-
-    if (!entry) {
+    const before = await db.query.entries.findFirst({ where: eq(entries.id, entryId), with: { user: true, pool: true } });
+    if (!before) {
       reply.status(404).send({ error: "Entry not found" });
       return;
     }
+
+    const entry = await db.transaction(async (tx) => {
+      const [updated] = await tx.update(entries).set(body).where(eq(entries.id, entryId)).returning();
+      const who = before.user?.name ?? before.invitedName ?? "a player";
+      const poolName = before.pool.name;
+      const sentence =
+        body.status !== undefined
+          ? `${actor.name} set ${who} to ${body.status === "alive" ? "alive" : "eliminated"} in ${poolName}.`
+          : `${actor.name} changed ${who}'s elimination week in ${poolName}.`;
+      await recordActivity(tx, actor, {
+        kind: "player_status_changed",
+        summary: sentence,
+        poolId: before.poolId,
+        affectsOwnEntry: before.userId === actor.id,
+      });
+      return updated!;
+    });
     const linkedUser = entry.userId ? await db.query.user.findFirst({ where: eq(user.id, entry.userId) }) : null;
     reply.send(resolveEntry({ ...entry, user: linkedUser ?? null }, undefined, WITH_EMAIL));
   });

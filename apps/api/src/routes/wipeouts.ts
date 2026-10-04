@@ -2,7 +2,8 @@ import type { FastifyInstance } from "fastify";
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { resolveWipeoutSchema } from "@bbb/shared";
 import { db } from "../db/client.js";
-import { entries, games, wipeoutEvents } from "../db/schema.js";
+import { entries, games, pools, wipeoutEvents } from "../db/schema.js";
+import { actorOf, recordActivity } from "../lib/activity.js";
 import { requireAdmin } from "../lib/guards.js";
 import { parseBody } from "../lib/validate.js";
 import { resolveEntry, WITH_EMAIL } from "./entries.js";
@@ -68,6 +69,14 @@ export async function wipeoutRoutes(fastify: FastifyInstance) {
     const survivingSet = new Set(body.surviving_entry_ids);
     const toEliminate = event.candidateEntryIds.filter((id) => !survivingSet.has(id));
 
+    const actor = actorOf(session);
+    const pool = await db.query.pools.findFirst({ where: eq(pools.id, poolId) });
+    // Whether the admin is one of the players this decision is about (kept alive or eliminated).
+    const ownCandidates = await db.query.entries.findMany({
+      where: and(inArray(entries.id, event.candidateEntryIds), eq(entries.userId, actor.id)),
+    });
+    const kept = body.surviving_entry_ids.length;
+
     const [updated] = await db.transaction(async (tx) => {
       if (toEliminate.length > 0) {
         await tx
@@ -75,7 +84,7 @@ export async function wipeoutRoutes(fastify: FastifyInstance) {
           .set({ status: "eliminated", eliminatedWeek: event.weekNumber })
           .where(inArray(entries.id, toEliminate));
       }
-      return tx
+      const resolved = await tx
         .update(wipeoutEvents)
         .set({
           resolvedAt: new Date(),
@@ -84,6 +93,17 @@ export async function wipeoutRoutes(fastify: FastifyInstance) {
         })
         .where(eq(wipeoutEvents.id, wipeoutId))
         .returning();
+      // In the same transaction, so the decision and its record stand or fall together.
+      await recordActivity(tx, actor, {
+        kind: "wipeout_resolved",
+        summary:
+          kept > 0
+            ? `${actor.name} kept ${kept} ${kept === 1 ? "player" : "players"} alive after a wipeout in ${pool?.name ?? "a pool"}.`
+            : `${actor.name} resolved a wipeout in ${pool?.name ?? "a pool"}: no players were kept alive.`,
+        poolId,
+        affectsOwnEntry: ownCandidates.length > 0,
+      });
+      return resolved;
     });
 
     reply.send(updated);

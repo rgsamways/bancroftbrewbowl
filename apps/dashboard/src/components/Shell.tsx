@@ -20,12 +20,13 @@ function PageHeader() {
 }
 
 // A stopgap: the old sidebar was the only link to the admin Schedule and Promotions
-// pages, so admin pages carry these three links until the step-by-step admin
+// pages, so admin pages carry these four links until the step-by-step admin
 // slice replaces this.
 const ADMIN_LINKS = [
   { to: "/admin", label: "Pools", key: "pools" },
   { to: "/admin/schedule", label: "Schedule", key: "schedule" },
   { to: "/admin/promotions", label: "Promotions", key: "promotions" },
+  { to: "/admin/activity", label: "Activity", key: "activity" },
 ] as const;
 
 function AdminSubNav() {
@@ -33,7 +34,7 @@ function AdminSubNav() {
   const current = matchNav(pathname);
   return (
     <div className="mx-auto w-full max-w-3xl px-4 pt-3">
-      <div className="grid grid-cols-3 gap-1.5 rounded-xl border border-brand-border bg-brand-surface p-1">
+      <div className="grid grid-cols-4 gap-1.5 rounded-xl border border-brand-border bg-brand-surface p-1">
         {ADMIN_LINKS.map((link) => (
           <Link
             key={link.key}

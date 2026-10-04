@@ -2,6 +2,11 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { vi } from "vitest";
 import { getSession } from "../lib/auth-plugin.js";
 import { entryRoutes } from "../routes/entries.js";
+import { activityRoutes } from "../routes/activity.js";
+import { cannedPromotionRoutes } from "../routes/canned-promotions.js";
+import { nflRoutes } from "../routes/nfl.js";
+import { promotionRoutes } from "../routes/promotions.js";
+import { wipeoutRoutes } from "../routes/wipeouts.js";
 import { standingsRoutes } from "../routes/standings.js";
 import { homeRoutes } from "../routes/home.js";
 import { passwordRoutes } from "../routes/password.js";
@@ -28,6 +33,11 @@ export async function buildTestApp(): Promise<FastifyInstance> {
   await app.register(passwordRoutes);
   await app.register(homeRoutes);
   await app.register(standingsRoutes);
+  await app.register(activityRoutes);
+  await app.register(nflRoutes);
+  await app.register(wipeoutRoutes);
+  await app.register(promotionRoutes);
+  await app.register(cannedPromotionRoutes);
   await app.ready();
   return app;
 }

@@ -6,6 +6,7 @@ import { games } from "../db/schema.js";
 import { requireAdmin } from "../lib/guards.js";
 import { parseBody } from "../lib/validate.js";
 import { scoreGame } from "../lib/scoring.js";
+import { actorOf, gameLabel, ownEntryChanged, ownEntryStatuses, recordActivity, resultText } from "../lib/activity.js";
 
 export async function nflRoutes(fastify: FastifyInstance) {
   // Every season a game exists for — purely informational (drives the
@@ -78,6 +79,14 @@ export async function nflRoutes(fastify: FastifyInstance) {
     const body = parseBody(enterGameResultSchema, request.body, reply);
     if (!body) return;
 
+    const existing = await db.query.games.findFirst({ where: eq(games.id, gameId) });
+    if (!existing) {
+      reply.status(404).send({ error: "Game not found" });
+      return;
+    }
+    const actor = actorOf(session);
+    const ownBefore = await ownEntryStatuses(db, actor.id);
+
     const [game] = await db
       .update(games)
       .set({ result: body.result, enteredBy: session.user.id, enteredAt: new Date() })
@@ -90,11 +99,22 @@ export async function nflRoutes(fastify: FastifyInstance) {
     }
 
     const scoring = await scoreGame(gameId);
+
+    // Written right after the result is saved and scored (scoring runs its own transactions).
+    // If this fails the request errors, so a result is never silently left unrecorded.
+    const ownAfter = await ownEntryStatuses(db, actor.id);
+    const entered = existing.result === "pending";
+    await recordActivity(db, actor, {
+      kind: entered ? "result_entered" : "result_changed",
+      summary: `${actor.name} ${entered ? "entered" : "changed"} a result: ${gameLabel(game)}, ${resultText(game, game.result)}.`,
+      affectsOwnEntry: ownEntryChanged(ownBefore, ownAfter),
+    });
     reply.send({ game, scoring });
   });
 
   fastify.patch("/nfl/games/:gameId/score", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    const session = await requireAdmin(request, reply);
+    if (!session) return;
 
     const { gameId } = request.params as { gameId: string };
     const body = parseBody(updateGameScoreSchema, request.body, reply);
@@ -110,6 +130,14 @@ export async function nflRoutes(fastify: FastifyInstance) {
       reply.status(404).send({ error: "Game not found" });
       return;
     }
+    const scoreText =
+      game.homeScore !== null && game.awayScore !== null
+        ? `${gameLabel(game)}, ${game.homeScore}–${game.awayScore}`
+        : gameLabel(game);
+    await recordActivity(db, actorOf(session), {
+      kind: "score_updated",
+      summary: `${session.user.name} updated the score: ${scoreText}.`,
+    });
     reply.send(game);
   });
 }

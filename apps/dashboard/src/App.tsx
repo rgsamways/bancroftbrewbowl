@@ -7,6 +7,7 @@ import { Home } from "./pages/Home";
 import { Account } from "./pages/Account";
 import { PasswordPage } from "./pages/PasswordPage";
 import { JoinPage } from "./pages/JoinPage";
+import { ActivityPage } from "./pages/ActivityPage";
 import { PoolStandings } from "./pages/PoolStandings";
 import { PickScreen } from "./pages/PickScreen";
 import { AdminDashboard } from "./pages/AdminDashboard";
@@ -38,6 +39,7 @@ export default function App() {
         <Route path="/pool/:poolId/entry/:entryId/pick" element={<PickScreen />} />
         <Route path="/admin/schedule" element={<SchedulePage />} />
         <Route path="/admin/promotions" element={<PromotionsPage />} />
+        <Route path="/admin/activity" element={<ActivityPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/:poolId" element={<AdminDashboard />} />
       </Route>

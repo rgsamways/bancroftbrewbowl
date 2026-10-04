@@ -112,13 +112,15 @@ export class TestDb {
   /** Count of all rows in the tables the tests touch; used to prove cleanup leaves nothing behind. */
   async footprint() {
     const count = async (table: string) => Number((await this.client.query(`select count(*) from ${table}`)).rows[0].count);
-    return { users: await count('"user"'), pools: await count("pools"), entries: await count("entries"), picks: await count("picks"), games: await count("games") };
+    return { users: await count('"user"'), pools: await count("pools"), entries: await count("entries"), picks: await count("picks"), games: await count("games"), activity: await count("admin_activity") };
   }
 
   async cleanup() {
     for (const id of this.poolIds) await this.client.query(`delete from pools where id = $1`, [id]);
     for (const year of this.seasons) await this.client.query(`delete from games where season_year = $1`, [year]);
     if (this.emails.length) {
+      // The app can never delete an activity record; the test cleanup removes the ones its admins made.
+      await this.client.query(`delete from admin_activity where actor_id in (select id from "user" where email = any($1))`, [this.emails]);
       await this.client.query(`delete from "user" where email = any($1)`, [this.emails]);
       await this.client.query(`delete from verification where value like any($1)`, [this.emails.map((e) => `%${e}%`)]);
     }

@@ -247,6 +247,26 @@ export const picks = pgTable(
   ]
 );
 
+// A permanent record of every change an admin makes to standings or content. Written by
+// the route code itself (so it always knows who is signed in), never edited or deleted
+// through the app. `summary` is the sentence as written at the time, so a later rename or
+// delete of a pool or account cannot rewrite history. `kind` is plain text checked against
+// the list in @bbb/shared, so a new kind needs no migration.
+export const adminActivity = pgTable(
+  "admin_activity",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    actorId: text("actor_id").references(() => user.id, { onDelete: "set null" }),
+    actorName: text("actor_name").notNull(),
+    kind: text("kind").notNull(),
+    summary: text("summary").notNull(),
+    poolId: uuid("pool_id").references(() => pools.id, { onDelete: "set null" }),
+    affectsOwnEntry: boolean("affects_own_entry").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index("admin_activity_created_at_idx").on(table.createdAt.desc())]
+);
+
 // Persists a "wipeout" decision (a game result that would eliminate every
 // remaining alive entry in a pool) so it survives past the HTTP response
 // that first detected it — see scorePoolForGame in lib/scoring.ts, which

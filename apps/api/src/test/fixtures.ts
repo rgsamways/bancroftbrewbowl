@@ -1,7 +1,7 @@
 import type { PickEmRulesConfig, SurvivorRulesConfig } from "@bbb/shared";
 import { inArray } from "drizzle-orm";
 import { db } from "../db/client.js";
-import { entries, games, picks, pools, user } from "../db/schema.js";
+import { adminActivity, entries, games, picks, pools, user } from "../db/schema.js";
 
 export async function createPool(type: "survivor", rules: SurvivorRulesConfig, seasonYear?: number): Promise<typeof pools.$inferSelect>;
 export async function createPool(type: "pick_em", rules: PickEmRulesConfig, seasonYear?: number): Promise<typeof pools.$inferSelect>;
@@ -70,5 +70,10 @@ export async function createPick(entryId: string, weekNumber: number, teamCode: 
 export async function cleanupFixtures(poolIds: string[], gameIds: string[], userIds: string[] = []) {
   if (poolIds.length > 0) await db.delete(pools).where(inArray(pools.id, poolIds));
   if (gameIds.length > 0) await db.delete(games).where(inArray(games.id, gameIds));
-  if (userIds.length > 0) await db.delete(user).where(inArray(user.id, userIds));
+  if (userIds.length > 0) {
+    // Admin routes under test write activity records. The app can never delete them; the test
+    // cleanup removes the ones its own admins made, before the accounts go.
+    await db.delete(adminActivity).where(inArray(adminActivity.actorId, userIds));
+    await db.delete(user).where(inArray(user.id, userIds));
+  }
 }

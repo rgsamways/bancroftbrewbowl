@@ -3,12 +3,14 @@ import { and, asc, desc, eq, inArray, max, min, ne, sql } from "drizzle-orm";
 import {
   updateCannedPromotionSchema,
   PROMOTION_KINDS,
+  CANNED_PROMOTION_LABELS,
   type CannedPromotionConfig,
   type PromotionKind,
 } from "@bbb/shared";
 import { db } from "../db/client.js";
 import { cannedPromotions, entries, games, picks, pools } from "../db/schema.js";
 import { requireAdmin, requireSession } from "../lib/guards.js";
+import { actorOf, recordActivity } from "../lib/activity.js";
 import { parseBody } from "../lib/validate.js";
 import { resolveEntry } from "./entries.js";
 
@@ -47,7 +49,9 @@ export async function cannedPromotionRoutes(fastify: FastifyInstance) {
   });
 
   fastify.patch("/canned-promotions/:kind", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    const session = await requireAdmin(request, reply);
+    if (!session) return;
+    const actor = actorOf(session);
 
     const { kind } = request.params as { kind: string };
     if (!KIND_SET.includes(kind)) {
@@ -72,11 +76,22 @@ export async function cannedPromotionRoutes(fastify: FastifyInstance) {
       updates.config = { ...(existing.config as CannedPromotionConfig), ...body.config };
     }
 
-    const [updated] = await db
-      .update(cannedPromotions)
-      .set(updates)
-      .where(eq(cannedPromotions.kind, kind as PromotionKind))
-      .returning();
+    const updated = await db.transaction(async (tx) => {
+      const [row] = await tx
+        .update(cannedPromotions)
+        .set(updates)
+        .where(eq(cannedPromotions.kind, kind as PromotionKind))
+        .returning();
+      const label = CANNED_PROMOTION_LABELS[kind as PromotionKind] ?? kind;
+      await recordActivity(tx, actor, {
+        kind: "canned_promotion_changed",
+        summary:
+          body.enabled !== undefined && body.enabled !== existing.enabled
+            ? `${actor.name} turned the automatic offer "${label}" ${body.enabled ? "on" : "off"}.`
+            : `${actor.name} changed the automatic offer "${label}".`,
+      });
+      return row!;
+    });
     reply.send(updated);
   });
 

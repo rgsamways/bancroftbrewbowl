@@ -4,6 +4,7 @@ import { createPromotionSchema, updatePromotionSchema } from "@bbb/shared";
 import { db } from "../db/client.js";
 import { promotions } from "../db/schema.js";
 import { requireAdmin, requireSession } from "../lib/guards.js";
+import { actorOf, recordActivity } from "../lib/activity.js";
 import { parseBody } from "../lib/validate.js";
 
 export async function promotionRoutes(fastify: FastifyInstance) {
@@ -23,26 +24,37 @@ export async function promotionRoutes(fastify: FastifyInstance) {
   });
 
   fastify.post("/promotions", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    const session = await requireAdmin(request, reply);
+    if (!session) return;
+    const actor = actorOf(session);
 
     const body = parseBody(createPromotionSchema, request.body, reply);
     if (!body) return;
 
-    const [promotion] = await db
-      .insert(promotions)
-      .values({
-        seasonYear: body.season_year,
-        weekNumber: body.week_number,
-        title: body.title,
-        description: body.description,
-      })
-      .returning();
+    const promotion = await db.transaction(async (tx) => {
+      const [created] = await tx
+        .insert(promotions)
+        .values({
+          seasonYear: body.season_year,
+          weekNumber: body.week_number,
+          title: body.title,
+          description: body.description,
+        })
+        .returning();
+      await recordActivity(tx, actor, {
+        kind: "promotion_created",
+        summary: `${actor.name} added the announcement "${body.title}" for week ${body.week_number}, ${body.season_year}.`,
+      });
+      return created!;
+    });
 
     reply.status(201).send(promotion);
   });
 
   fastify.patch("/promotions/:promotionId", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    const session = await requireAdmin(request, reply);
+    if (!session) return;
+    const actor = actorOf(session);
 
     const { promotionId } = request.params as { promotionId: string };
     const body = parseBody(updatePromotionSchema, request.body, reply);
@@ -54,11 +66,16 @@ export async function promotionRoutes(fastify: FastifyInstance) {
     if (body.title !== undefined) updates.title = body.title;
     if (body.description !== undefined) updates.description = body.description;
 
-    const [promotion] = await db
-      .update(promotions)
-      .set(updates)
-      .where(eq(promotions.id, promotionId))
-      .returning();
+    const promotion = await db.transaction(async (tx) => {
+      const [row] = await tx.update(promotions).set(updates).where(eq(promotions.id, promotionId)).returning();
+      if (row) {
+        await recordActivity(tx, actor, {
+          kind: "promotion_updated",
+          summary: `${actor.name} edited the announcement "${row.title}".`,
+        });
+      }
+      return row;
+    });
 
     if (!promotion) {
       reply.status(404).send({ error: "Promotion not found" });
@@ -68,10 +85,21 @@ export async function promotionRoutes(fastify: FastifyInstance) {
   });
 
   fastify.delete("/promotions/:promotionId", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    const session = await requireAdmin(request, reply);
+    if (!session) return;
+    const actor = actorOf(session);
 
     const { promotionId } = request.params as { promotionId: string };
-    const [deleted] = await db.delete(promotions).where(eq(promotions.id, promotionId)).returning();
+    const deleted = await db.transaction(async (tx) => {
+      const [row] = await tx.delete(promotions).where(eq(promotions.id, promotionId)).returning();
+      if (row) {
+        await recordActivity(tx, actor, {
+          kind: "promotion_deleted",
+          summary: `${actor.name} removed the announcement "${row.title}".`,
+        });
+      }
+      return row;
+    });
 
     if (!deleted) {
       reply.status(404).send({ error: "Promotion not found" });
