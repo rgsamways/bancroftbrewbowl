@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router";
-import { formatRank, type JoinablePool, type MeSummary, type SummaryEntry } from "@bbb/shared";
+import {
+  formatMenuPrice,
+  formatRank,
+  SPECIAL_TAG_TEXT,
+  STANDARD_ANNOUNCEMENT,
+  styleLine,
+  type BreweryHome,
+  type JoinablePool,
+  type MeSummary,
+  type SummaryEntry,
+} from "@bbb/shared";
 import { useSession } from "../lib/auth-client";
 import { useApi } from "../lib/useApi";
 import { useServerNow } from "../lib/useServerClock";
@@ -23,6 +33,47 @@ function poolBlurb(type: JoinablePool["type"]) {
 
 function Footer() {
   return <p className="mt-8 text-xs text-brand-faint">Please drink responsibly.</p>;
+}
+
+/** What is happening at the brewery: the featured item, specials on today, and the announcement
+ * (or the standard message). Anything that does not apply is left out. */
+function AtTheBrewery({ brewery }: { brewery: BreweryHome }) {
+  const note = brewery.announcement ?? STANDARD_ANNOUNCEMENT;
+  const featured = brewery.featured;
+  const price = featured ? formatMenuPrice(featured.priceCents) : null;
+  const card = "rounded-[14px] border border-brand-border bg-brand-surface p-4";
+  return (
+    <section aria-label="At the brewery">
+      <h2 className="mb-2 text-sm font-semibold text-brand-muted">At the brewery</h2>
+      <ul className="space-y-3">
+        {featured && (
+          <li className={card}>
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-accent">Featured</p>
+            <p className="mt-1 font-semibold text-brand-text">
+              {featured.name}
+              {price && <span className="ml-2 font-normal text-brand-muted">{price}</span>}
+            </p>
+            {styleLine(featured) && <p className="text-sm text-brand-muted">{styleLine(featured)}</p>}
+            <Link to={featured.kind === "dish" ? "/menu/kitchen" : "/menu"} className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-brand-accent">
+              See the menu
+            </Link>
+          </li>
+        )}
+        {brewery.specials.map((sp) => (
+          <li key={sp.id} className={card}>
+            {sp.tag && <p className="text-xs font-semibold uppercase tracking-wide text-brand-accent">{SPECIAL_TAG_TEXT[sp.tag]}</p>}
+            <p className="mt-1 font-semibold text-brand-text">{sp.title}</p>
+            {sp.details && <p className="text-sm text-brand-muted">{sp.details}</p>}
+            <p className="text-sm text-brand-muted">{sp.when}</p>
+          </li>
+        ))}
+        <li className={card}>
+          <p className="font-semibold text-brand-text">{note.title}</p>
+          <p className="mt-1 text-sm text-brand-muted">{note.message}</p>
+        </li>
+      </ul>
+    </section>
+  );
 }
 
 type Described = {
@@ -263,6 +314,7 @@ export function Home() {
       )}
 
       <JoinCards pools={others} heading="Pools you can join" />
+      <AtTheBrewery brewery={data.brewery} />
       <Footer />
     </div>
   );

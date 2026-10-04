@@ -276,28 +276,12 @@ describe("admin activity record", () => {
       await db.delete(adminActivity).where(eq(adminActivity.id, row!.id));
     });
 
-    it("announcements and automatic offers are recorded", async () => {
+    it("changes to the automatic offers are recorded", async () => {
       const alex = await admin();
       actAs(as(alex));
-      const created = await send("POST", "/promotions", { season_year: 2097, week_number: 3, title: "Wing night", description: "Half price wings" });
-      expect(created.statusCode).toBe(201);
-      const id = created.json().id as string;
-      let [r] = await records(alex);
-      expect(r).toMatchObject({ kind: "promotion_created" });
-      expect(r!.summary).toBe('Alex Admin added the announcement "Wing night" for week 3, 2097.');
-
-      await send("PATCH", `/promotions/${id}`, { title: "Wing Night!" });
-      [r] = await records(alex);
-      expect(r).toMatchObject({ kind: "promotion_updated" });
-      expect(r!.summary).toBe('Alex Admin edited the announcement "Wing Night!".');
-
-      await send("DELETE", `/promotions/${id}`);
-      [r] = await records(alex);
-      expect(r).toMatchObject({ kind: "promotion_deleted" });
-
       await send("PATCH", "/canned-promotions/survivor_sunday", { enabled: true });
       await send("PATCH", "/canned-promotions/survivor_sunday", { enabled: false });
-      [r] = await records(alex);
+      const [r] = await records(alex);
       expect(r).toMatchObject({ kind: "canned_promotion_changed" });
       expect(r!.summary).toContain("turned the automatic offer");
       expect(r!.summary).toContain("off");

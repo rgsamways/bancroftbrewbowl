@@ -20,7 +20,8 @@ import { PickScreen } from "./pages/PickScreen";
 import { AdminPools } from "./pages/AdminPools";
 import { AdminPool } from "./pages/AdminPool";
 import { NewPoolWizard } from "./pages/NewPoolWizard";
-import { PromotionsPage } from "./pages/PromotionsPage";
+import { AdminBrewery } from "./pages/admin-brewery/AdminBrewery";
+import { AnnouncementWizard, FeatureWizard, SpecialWizard } from "./pages/admin-brewery/wizards";
 import { PickLanding, StandingsLanding } from "./pages/TabLanding";
 import { MenuPage, PublicMenuPage } from "./pages/Menu";
 import { AdminMenu } from "./pages/admin-menu/AdminMenu";
@@ -71,7 +72,7 @@ export default function App() {
           <Route path="/admin/results" element={<AdminResults />} />
           <Route path="/admin/more" element={<AdminMore />} />
           <Route path="/admin/activity" element={<ActivityPage />} />
-          <Route path="/admin/promotions" element={<PromotionsPage />} />
+          <Route path="/admin/brewery" element={<AdminBrewery />} />
           <Route path="/admin/menu" element={<AdminMenu />} />
           <Route path="/admin/menu/:id" element={<EditItem />} />
           <Route path="/admin/music/:id" element={<EditMusic />} />
@@ -82,6 +83,9 @@ export default function App() {
           <Route path="/admin/results/steps" element={<ResultsWizard />} />
           <Route path="/admin/pools/new" element={<NewPoolWizard />} />
           <Route path="/admin/menu/new" element={<AddItemWizard />} />
+          <Route path="/admin/brewery/feature" element={<FeatureWizard />} />
+          <Route path="/admin/brewery/special" element={<SpecialWizard />} />
+          <Route path="/admin/brewery/announcement" element={<AnnouncementWizard />} />
           <Route path="/admin/music/new" element={<AddMusicWizard />} />
           <Route path="/admin/wipeout/:poolId/:wipeoutId" element={<WipeoutDecision />} />
           <Route path="/admin/requests/:id" element={<ConfirmRequest />} />
@@ -89,6 +93,7 @@ export default function App() {
           <Route path="/admin/requests/:id/done/:outcome" element={<RequestDone />} />
         </Route>
         <Route path="/admin/schedule" element={<Navigate to="/admin/results" replace />} />
+        <Route path="/admin/promotions" element={<Navigate to="/admin/brewery" replace />} />
       </Route>
     </Routes>
   );

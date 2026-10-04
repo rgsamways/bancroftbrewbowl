@@ -32,11 +32,15 @@ export type SummaryEntry = {
 
 export type JoinablePool = { id: string; name: string; type: "survivor" | "pick_em"; seasonYear: number };
 
+import type { BreweryHome } from "./brewery.js";
+
 export type MeSummary = {
   serverNow: string;
   entries: SummaryEntry[];
   /** Open pools the player is not in. */
   joinablePools: JoinablePool[];
+  /** What is happening at the brewery, for the "At the brewery" section of Home. */
+  brewery: BreweryHome;
 };
 
 export type SheetGame = {

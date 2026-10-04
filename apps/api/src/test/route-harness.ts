@@ -9,7 +9,7 @@ import { musicRoutes } from "../routes/music.js";
 import { activityRoutes } from "../routes/activity.js";
 import { cannedPromotionRoutes } from "../routes/canned-promotions.js";
 import { nflRoutes } from "../routes/nfl.js";
-import { promotionRoutes } from "../routes/promotions.js";
+import { breweryRoutes } from "../routes/brewery.js";
 import { wipeoutRoutes } from "../routes/wipeouts.js";
 import { standingsRoutes } from "../routes/standings.js";
 import { homeRoutes } from "../routes/home.js";
@@ -44,7 +44,7 @@ export async function buildTestApp(): Promise<FastifyInstance> {
   await app.register(musicRoutes);
   await app.register(nflRoutes);
   await app.register(wipeoutRoutes);
-  await app.register(promotionRoutes);
+  await app.register(breweryRoutes);
   await app.register(cannedPromotionRoutes);
   await app.ready();
   return app;

@@ -13,6 +13,7 @@ import { db } from "../db/client.js";
 import { entries, games, picks, pools } from "../db/schema.js";
 import { requireEntryOwner, requireSession } from "../lib/guards.js";
 import { deriveEntryState, loadSeasonWeeks, picksNeededFor, type SeasonWeek } from "../lib/entry-state.js";
+import { loadBreweryHome } from "../lib/brewery.js";
 import { computePickEmPoints } from "./entries.js";
 
 type PoolRow = typeof pools.$inferSelect;
@@ -44,8 +45,10 @@ export async function homeRoutes(fastify: FastifyInstance) {
       .filter((p) => p.status !== "completed" && !joinedPoolIds.has(p.id))
       .map((p) => ({ id: p.id, name: p.name, type: p.type, seasonYear: p.seasonYear }));
 
+    const brewery = await loadBreweryHome(now);
+
     if (mine.length === 0) {
-      const empty: MeSummary = { serverNow: now.toISOString(), entries: [], joinablePools };
+      const empty: MeSummary = { serverNow: now.toISOString(), entries: [], joinablePools, brewery };
       reply.send(empty);
       return;
     }
@@ -132,7 +135,7 @@ export async function homeRoutes(fastify: FastifyInstance) {
       };
     });
 
-    const body: MeSummary = { serverNow: now.toISOString(), entries: summaryEntries, joinablePools };
+    const body: MeSummary = { serverNow: now.toISOString(), entries: summaryEntries, joinablePools, brewery };
     reply.send(body);
   });
 

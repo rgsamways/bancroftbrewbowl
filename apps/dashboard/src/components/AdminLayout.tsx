@@ -33,7 +33,7 @@ export function activeAdminTab(pathname: string): AdminTabKey | null {
   if (path === "/admin/results" || path.startsWith("/admin/results/")) return "results";
   if (path === "/admin/menu" || path.startsWith("/admin/menu/") || path.startsWith("/admin/music/")) return "menu";
   if (path === "/admin/pools" || path.startsWith("/admin/pools/")) return "pools";
-  if (path === "/admin/more" || path === "/admin/activity" || path === "/admin/promotions") return "more";
+  if (path === "/admin/more" || path === "/admin/activity" || path === "/admin/brewery" || path.startsWith("/admin/brewery/")) return "more";
   return null;
 }
 

@@ -1,7 +1,6 @@
-export type NavKey = "promotions" | "activity" | "account";
+export type NavKey = "activity" | "account";
 
 export const NAV_LABELS: Record<NavKey, string> = {
-  promotions: "Promotions",
   activity: "Activity",
   account: "Account",
 };
@@ -10,7 +9,6 @@ export const NAV_LABELS: Record<NavKey, string> = {
 // player tabs use lib/tabs.ts and the admin tabs use components/AdminLayout.tsx.
 export function matchNav(pathname: string): NavKey | null {
   if (pathname === "/account") return "account";
-  if (pathname === "/admin/promotions") return "promotions";
   if (pathname === "/admin/activity") return "activity";
   return null;
 }

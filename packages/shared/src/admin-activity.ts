@@ -31,6 +31,10 @@ export const ACTIVITY_KINDS = {
   music_event_added: { title: "Added a music event", category: "menu" },
   music_event_changed: { title: "Changed a music event", category: "menu" },
   music_event_removed: { title: "Removed a music event", category: "menu" },
+  brewery_feature_set: { title: "Featured a menu item", category: "content" },
+  brewery_special_added: { title: "Added a special", category: "content" },
+  brewery_announcement_posted: { title: "Posted an announcement", category: "content" },
+  brewery_item_removed: { title: "Removed a From the brewery post", category: "content" },
   canned_promotion_changed: { title: "Changed an automatic offer", category: "content" },
 } as const satisfies Record<string, { title: string; category: ActivityCategory }>;
 

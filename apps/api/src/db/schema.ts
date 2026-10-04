@@ -170,12 +170,22 @@ export const entries = pgTable("entries", {
 // Promotions belong to an NFL season/week, not a pool — same reasoning as
 // `games`: a bar's "Survivor Sunday" special for week 3 isn't specific to
 // any one pool. Multiple promotions can exist for the same week.
+// "From the brewery": announcements (one week), a featured menu item, and specials (days and
+// times, or one date). `kind` is plain text checked in @bbb/shared; rows from before it existed
+// are announcements. A feature "until changed" and a weekly special have no week.
 export const promotions = pgTable("promotions", {
   id: uuid("id").primaryKey().defaultRandom(),
-  seasonYear: integer("season_year").notNull(),
-  weekNumber: integer("week_number").notNull(),
+  kind: text("kind").notNull().default("announcement"),
+  seasonYear: integer("season_year"),
+  weekNumber: integer("week_number"),
   title: text("title").notNull(),
   description: text("description").notNull(),
+  menuItemId: uuid("menu_item_id").references(() => menuItems.id, { onDelete: "cascade" }),
+  days: integer("days").array(),
+  startTime: time("start_time"),
+  endTime: time("end_time"),
+  onDate: date("on_date", { mode: "string" }),
+  tag: text("tag"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

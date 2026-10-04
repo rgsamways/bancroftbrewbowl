@@ -148,7 +148,7 @@ test("an admin gets an Admin tab that opens the admin area with its own tab bar"
   await p.click('nav[aria-label="Admin"] a:has-text("More")');
   await p.waitForURL("**/admin/more");
   await expect(p.getByRole("link", { name: /^Activity/ })).toBeVisible();
-  await expect(p.getByRole("link", { name: /^Promotions/ })).toBeVisible();
+  await expect(p.getByRole("link", { name: /^From the brewery/ })).toBeVisible();
 
   // The old Schedule address now leads to Results.
   await go(p, "/admin/schedule");
@@ -183,7 +183,7 @@ test("no sideways scrolling on any frame screen at 390 wide", async () => {
   const routes: [Role, string][] = [
     ["one", "/"], ["one", "/account"], ["one", "/pick"], ["several", "/pick"], ["several", "/standings"],
     ["one", `/pool/${poolA}`], ["one", `/pool/${poolA}/entry/${entry.one}/pick`],
-    ["admin", "/admin"], ["admin", "/admin/results"], ["admin", "/admin/more"], ["admin", "/admin/activity"], ["admin", "/admin/promotions"], ["admin", `/admin/pools/${poolA}`],
+    ["admin", "/admin"], ["admin", "/admin/results"], ["admin", "/admin/more"], ["admin", "/admin/activity"], ["admin", "/admin/brewery"], ["admin", `/admin/pools/${poolA}`],
   ];
   const bad: string[] = [];
   for (const [role, path] of routes) {

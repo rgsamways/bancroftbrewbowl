@@ -8,7 +8,7 @@ const STEPS: Item[] = [{ to: "/admin/results/steps", title: "Enter results", det
 const TOOLS: Item[] = [
   { to: "/admin/pools", title: "All pools", detail: "Players, picks and settings" },
   { to: "/admin/activity", title: "Activity", detail: "Who changed what" },
-  { to: "/admin/promotions", title: "Promotions", detail: "Announcements and offers (until the new version)" },
+  { to: "/admin/brewery", title: "From the brewery", detail: "Features, specials, music, announcements" },
   { to: "/admin/results", title: "Season schedule", detail: "Check the schedule is loaded" },
 ];
 
