@@ -26,5 +26,5 @@
 
 - [x] 5.1 Run `pnpm lint`, `pnpm typecheck` and `pnpm test` from the repo root and verify all pass
 - [x] 5.2 Push to the `staging` branch and, on the staging preview and `api-staging`, walk through: link sign-in unchanged, set a password, sign out, sign in with it, wrong password message, change it, a direct sign-up request refused, and the reset script against the staging database; record what was seen
-- [ ] 5.3 On a real phone, confirm the password manager offers to fill and save the password and the keyboard shows an email layout on the email field
-- [ ] 5.4 Add the new sign-in options to the admin runbook or docs (how a locked-out person is helped, how to run the reset script), update `openspec/ROADMAP.md`, then sync specs, archive the change, and promote `staging` to `main`
+- [x] 5.3 On a real phone, confirm the password manager offers to fill and save the password and the keyboard shows an email layout on the email field
+- [x] 5.4 Add the new sign-in options to the admin runbook or docs (how a locked-out person is helped, how to run the reset script), update `openspec/ROADMAP.md`, then sync specs, archive the change, and promote `staging` to `main`

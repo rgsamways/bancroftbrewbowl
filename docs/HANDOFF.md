@@ -4,7 +4,7 @@ _Rewritten 2026-10-04 at the end of the long build session (slices 1 to 9). If y
 
 ## Start here
 
-The state in one line: **v2 is fully designed and planned; slices 1 to 10 (9a, 9b and 10) are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick, Standings, the admin activity record, the admin steps, the pool screens); `password-sign-in` stays open only for a real-phone password-manager check.** The next job is slice 11, `menu-and-music` (needs a plan-mode design pass, new tables), in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
+The state in one line: **v2 is fully designed and planned; slices 1 to 10 (9a, 9b and 10) are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick, Standings, the admin activity record, the admin steps, the pool screens); `password-sign-in` is archived (Robin confirmed it on his phone).** The next job is slice 11, `menu-and-music` (needs a plan-mode design pass, new tables), in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
 
 Read, in order:
 
@@ -21,7 +21,7 @@ Read, in order:
 
 - **Production (`bancroftbrewbowl.ca`) runs the v2 app through slice 9.** `main` is the source of truth and deploys both the dashboard (Vercel) and the API (Railway) on push; `staging` mirrors it. Archived changes are under `openspec/changes/archive/`, main specs under `openspec/specs/` (`openspec list` shows only what is still open).
 - **Built and live:** secure pick access, the v2 shell, browser tests, password sign-in and the sign-in screens, pool total, Home and Pick (with join pages), Standings, the admin activity record, the admin steps (Next step, Results, wipeout) and the pool screens (list, players, picks, settings, new-pool wizard).
-- **Open change: `password-sign-in`** (14 of 16 tasks done, built and live). Two things remain: task 5.3, Robin checking on a real phone that the password manager offers to fill and save and that the email field shows the email keyboard; then task 5.4's archive (`openspec archive password-sign-in`). Don't archive before Robin confirms.
+- **No open changes.** `password-sign-in` was archived 2026-10-04 after Robin's phone check.
 - **Next slice: 11, `menu-and-music`** (needs a plan-mode design pass, new tables, adds the Menu tab to both tab bars). Plan it with `openspec-propose`, call out the schema change before pushing, and run the migration on staging's own database first. After that: 12 `from-the-brewery` (also takes the announcement wizard moved out of slice 9), 13 help and extras, 14 optional roles, 15 cleanup and the v2.0.0 tag. Order and sizes: `docs/v2/V2_BUILD_PLAN.md`; status per slice: `openspec/ROADMAP.md`.
 - **Robin's rules:** every slice goes live as soon as it is verified; no review gate; he decides. Wait for his go before starting each slice (plan first with `openspec-propose`, build only after he says go). Never write test data to production. Update the matching spec in `e2e/` whenever a slice changes a screen. Keep explanations short and simple. Ports 3001 and 5173 belong to other projects: never touch them.
 
