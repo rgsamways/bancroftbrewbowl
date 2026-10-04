@@ -1,0 +1,21 @@
+## Context
+
+Mockups: `admin-brewery`, `admin-step-feature-*`, `admin-step-special-*`, `admin-step-ann-*`, and the "At the brewery" section of the `home*` pages. Menu items (`menu_items`) and the Eastern date helpers (`easternToday`, `weekdayOf`, `formatEventTime` in `packages/shared/src/music.ts`) exist. The current week is defined once in `lib/entry-state.ts` (first week with an undecided game); the admin summary treats the latest season with games as current.
+
+## Decisions
+
+- **One table, extended.** `promotions` gains `kind` (text, default `announcement`: `announcement|feature|special`), `menu_item_id` (uuid, references `menu_items`, on delete cascade), `days` (int[], 0 Sunday to 6 Saturday), `start_time` and `end_time` (time), `on_date` (date), `tag` (text: `kitchen_special|game_day|family_night`). `season_year` and `week_number` become nullable. `title` and `description` stay required: a feature stores the item's name and an empty description; a special without details stores an empty description. Old code always supplied the week, so loosening is safe.
+- **Which are showing.** Announcement: season and week equal the current week. Feature: week-scoped and equal to the current week, or no week at all ("until I change it"); hidden when its menu item is switched off. Special: today's Eastern weekday is in `days`, or `on_date` is today. Times are shown in the text, not used to hide it. Past one-day specials are hidden.
+- **One feature at a time.** Posting a feature removes any existing feature in the same transaction. Posting a second announcement for a week that already has one is allowed (the newest shows); the "Showing now" list lets the admin remove either.
+- **Home data.** `GET /me/summary` returns `brewery: { featured, specials, announcement }`: featured is `{ id, name, kind, style, abv, priceCents }` or null; specials are `{ id, title, details, tag, when }` with `when` text such as "Sundays, 1 – 4 PM"; announcement is `{ title, message }` or null. The client shows the standard "Watch with us" message when announcement is null. The schedule text is built in `packages/shared/src/brewery.ts` and unit tested.
+- **Admin routes** (`requireAdmin`, `recordActivity` in the same transaction, never needing a second admin): `GET /brewery/items` (what is showing now, with ids), `POST /brewery/features`, `POST /brewery/specials`, `POST /brewery/announcements`, `DELETE /brewery/items/:id`. Validation in `@bbb/shared`: announcement title 1 to 60 and message 1 to 300; special title 1 to 80, details up to 200, at least one day or a date (not both), end time needs a start time and must be later, one-day date not in the past; feature needs an existing menu item and either this week or no week; announcement week must be 1 to 22 and not before the current week.
+- **Retired.** `routes/promotions.ts` and `PromotionsPage.tsx` are removed together with the `promotions` nav entries. `routes/canned-promotions.ts` and its table stay in place but nothing links to them. Old `promotion_*` activity kinds stay so old records keep their titles; new kinds `brewery_feature_set`, `brewery_special_added`, `brewery_announcement_posted`, `brewery_item_removed` (category content).
+- **Screens.** `/admin/brewery` hub (four rows and Showing now with Remove that asks first), wizards in `FocusLayout` at `/admin/brewery/feature`, `/special`, `/announcement`; done screens return to From the brewery. Wizard copy for specials says to describe the food or drink and not to link it to winning, losing or picks. Admin tab highlight for `/admin/brewery*` is More.
+- **Home.** "At the brewery" shows only on the main Home view (not the first-run welcome), in the order featured, specials, announcement. The "Please drink responsibly." footer stays. The "Live this weekend" card is slice 13.
+- **No seed data, no test data in production.**
+
+## Risks
+
+- A bad migration blocks the deploy: run it on staging's own database first. Production may hold old announcement rows; they stay valid announcements and show only if their week is the current one.
+- Specials depend on the Eastern weekday; unit tests cover the weekday match and a date near midnight UTC.
+- Removing `/promotions` is a break for any caller; the only caller is the page removed here (checked by search before deleting).
