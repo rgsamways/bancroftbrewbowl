@@ -58,6 +58,10 @@ export const auth = betterAuth({
     : undefined,
   emailAndPassword: { enabled: true, minPasswordLength: 10 },
   hooks: { before: passwordHook },
+  // The library only limits requests when NODE_ENV is "production", which Railway does
+  // not set. Turn it on wherever the API runs on Railway (staging and production) so
+  // password guessing is slowed: sign-in paths allow 3 requests per 10 seconds.
+  rateLimit: { enabled: Boolean(process.env.RAILWAY_ENVIRONMENT_NAME) || process.env.NODE_ENV === "production" },
   user: {
     additionalFields: {
       isAdmin: { type: "boolean", defaultValue: false, input: false },
