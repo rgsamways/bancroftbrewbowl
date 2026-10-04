@@ -95,6 +95,7 @@ const items: CreateMenuItemInput[] = [
   drink("Cabot Trail Cream Liquor", 8),
   drink("Ultimate Brewkru Caesar", 13, undefined, [option("Extra skewer", 2.5)]),
   drink("Cottage Springs Raspberry Lemonade", 8),
+  drink("Muskoka Spirits", 8, "Canned vodka soda."),
   drink("Pop", 3.5, "Coke, Coke Zero, Sprite, ginger ale, tonic, soda water or iced tea."),
   drink("Juice", 3.5, undefined, [option("Apple"), option("Orange"), option("Cranberry")]),
   drink("Kool-Aid Jammers", 2),

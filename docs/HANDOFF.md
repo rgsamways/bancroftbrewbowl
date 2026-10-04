@@ -171,6 +171,6 @@ Read, in order:
 ## Menu import (2026-10-04)
 
 - The brewery's printed menus (kitchen, beer, liquor, non-alcoholic, wine) were transcribed from Robin's photos into `docs/menu-draft.md` and `apps/api/scripts/seed-menu.ts` (52 items, validated with the same schema as the admin screens). `pnpm seed-menu` from `apps/api` is a dry run; `--apply` writes; re-running skips items already there. Operator script, so it writes no Activity records.
-- Choices: beers show the three pour prices and their IBU in the description (the app has no section notes); wine uses the 5 oz price with the 9 oz price in the description; the seven beers below the dotted line on the printed sheet are labelled seasonal; flights ($13, extra taster $4) are not items. Left out until confirmed: Muskoka Spirits ($8.00).
-- Production: run it on Railway (`railway ssh --service api -- pnpm --filter @bbb/api seed-menu`, then again with `--apply`). Not yet run on production.
+- Choices: beers show the three pour prices and their IBU in the description (the app has no section notes); wine uses the 5 oz price with the 9 oz price in the description; the seven beers below the dotted line on the printed sheet are labelled seasonal; flights ($13, extra taster $4) are not items. Muskoka Spirits ($8.00, a canned vodka soda) was added after the first run; re-running the script adds only it.
+- Production: first run done 2026-10-04 (52 items). Run on Railway with `--environment production` (the CLI in this folder is linked to staging): `railway ssh --service api --environment production -- pnpm --filter @bbb/api seed-menu`, then again with `--apply`.
 

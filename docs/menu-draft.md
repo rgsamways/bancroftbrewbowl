@@ -54,7 +54,7 @@ Same side upgrade ($5, your choice of the six sides) and Corn Bread $6. "All mea
 | Twisted Timber | 5.0% | N/A | Hard Ice Tea |
 
 (The sheet has a dotted line between Hawkwatch and Miners Pick; what does it mean? Lighter and darker beers?)
-Also on tap: Cottage Springs Raspberry Lemonade $8.00 and Muskoka Spirits $8.00 (a spirit? what is it exactly?).
+Also on tap: Cottage Springs Raspberry Lemonade $8.00 and Muskoka Spirits $8.00 (a canned vodka soda, per Robin's search; added).
 
 **Liquor:** 1 oz $8.25, 2 oz $11.50 (vodka, gin, rum, rye, tequila). Cabot Trail Cream Liquor $8.00. Ultimate Brewkru Caesar $13.00. Add an extra skewer $2.50.
 
