@@ -4,7 +4,7 @@ _Written 2026-10-04, end of the long mockup-and-planning session. If you're read
 
 ## Start here
 
-The state in one line: **v2 is fully designed and planned; slices 1 and 2 are built, live and archived (the privacy fix, and the new app frame with the bottom tab bar); the individual v2 screens are not built yet.** The next job is slice 3, `e2e-smoke`, in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
+The state in one line: **v2 is fully designed and planned; slices 1 to 3 are built, live and archived (the privacy fix, the new app frame with the bottom tab bar, and the real-browser tests); the individual v2 screens are not built yet.** The next job is slice 4, `password-sign-in` + `v2-signin`, in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
 
 Read, in order:
 
@@ -31,7 +31,8 @@ Read, in order:
 - **The schedule import is a script** (`apps/api/scripts/seed-schedule.ts`), not a screen. `apps/api/scripts/make-admin.ts` makes an admin.
 - Adding a player by email and editing a player's status exist in the API but are not in today's admin screens.
 - **Temporary pieces slice 2 left on purpose:** the `/pick` and `/standings` landing pages (`pages/TabLanding.tsx`, replaced in slices 6 and 7), the Pools / Schedule / Promotions links row on admin pages (in `Shell.tsx`, replaced in slice 9), and the admin Pools page's tab row that now scrolls inside itself. Old pages still have white text on copper buttons (3.4 to 1 contrast); each is fixed with dark ink as its page is redone.
-- **The staging preview site can't call the staging API** (`api-staging` has no `DASHBOARD_URL`), so screens are checked locally in real Chrome. The local recipe: run the API on port 3011 and Vite on 5183 with `VITE_API_URL=http://localhost:3011`, sign in by reading the one-time token from the `verification` table (local email only logs the subject).
+- **The staging preview site can't call the staging API** (`api-staging` has no `DASHBOARD_URL`), so screens are checked locally in real Chrome.
+- **Browser tests (slice 3):** `pnpm test:e2e` (Docker Postgres up) starts its own API on port 3011 and the dashboard on 5183, runs the specs in `e2e/` in Chrome at 390 by 844, and deletes the data it created. It refuses to run unless `DATABASE_URL` is a local database (`e2e/guard.ts`). Failures keep a screenshot and trace in `e2e-results/`. Specs: frame and tabs, pick privacy, sign-in, join and pick, standings, admin results. **A slice that changes a screen updates its spec in the same change.** `pnpm typecheck:e2e` checks the e2e code; CI runs both. Never touch ports 3001 or 5173 (other projects).
 
 ## Decisions already made (don't re-ask; details in memory)
 
