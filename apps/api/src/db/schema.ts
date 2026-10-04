@@ -296,6 +296,42 @@ export const wipeoutEvents = pgTable(
   ]
 );
 
+// A decision waiting for a second admin to confirm it (the "another admin confirms" rule:
+// an admin who keeps their own entry alive in a wipeout, or edits their own status). Nothing
+// is applied until another admin confirms; `payload` holds the choice and, for a status
+// change, the entry as it was when asked so a stale request can be spotted. `kind` and
+// `status` are plain text checked against the lists in @bbb/shared.
+export const adminRequests = pgTable(
+  "admin_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    kind: text("kind").notNull(),
+    status: text("status").notNull().default("pending"),
+    poolId: uuid("pool_id")
+      .notNull()
+      .references(() => pools.id, { onDelete: "cascade" }),
+    wipeoutId: uuid("wipeout_id").references(() => wipeoutEvents.id, { onDelete: "cascade" }),
+    entryId: uuid("entry_id").references(() => entries.id, { onDelete: "cascade" }),
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
+    requestedBy: text("requested_by").references(() => user.id, { onDelete: "set null" }),
+    requestedByName: text("requested_by_name").notNull(),
+    decidedBy: text("decided_by").references(() => user.id, { onDelete: "set null" }),
+    decidedByName: text("decided_by_name"),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    declineReason: text("decline_reason"),
+    seenAt: timestamp("seen_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("admin_requests_wipeout_pending_unique")
+      .on(table.wipeoutId)
+      .where(sql`${table.status} = 'pending' AND ${table.wipeoutId} IS NOT NULL`),
+    uniqueIndex("admin_requests_entry_pending_unique")
+      .on(table.entryId)
+      .where(sql`${table.status} = 'pending' AND ${table.entryId} IS NOT NULL`),
+  ]
+);
+
 export const poolsRelations = relations(pools, ({ many }) => ({
   entries: many(entries),
 }));
@@ -314,4 +350,8 @@ export const wipeoutEventsRelations = relations(wipeoutEvents, ({ one }) => ({
   pool: one(pools, { fields: [wipeoutEvents.poolId], references: [pools.id] }),
   game: one(games, { fields: [wipeoutEvents.gameId], references: [games.id] }),
   resolver: one(user, { fields: [wipeoutEvents.resolvedBy], references: [user.id] }),
+}));
+
+export const adminRequestsRelations = relations(adminRequests, ({ one }) => ({
+  pool: one(pools, { fields: [adminRequests.poolId], references: [pools.id] }),
 }));

@@ -116,7 +116,7 @@ test("Players: search, Show all, marks, restoring and eliminating a player, own 
 
     // Your own entry says so, and the record is flagged.
     await page.getByRole("button", { name: /Rhea Roster/ }).click();
-    await expect(page.getByText("This is your own entry. The change is recorded in Activity and marked as your own entry.")).toBeVisible();
+    await expect(page.getByText("This is your own entry, so another admin has to confirm a change to it.")).toBeVisible();
     await page.getByRole("button", { name: "Cancel" }).click();
 
     // Add someone who has an account.

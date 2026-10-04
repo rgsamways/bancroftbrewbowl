@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { Check, ChevronRight } from "lucide-react";
 import { formatKickoff, type AdminSummary } from "@bbb/shared";
+import { api } from "../lib/api";
 import { useApi } from "../lib/useApi";
 import { teamNickname } from "../lib/teams";
 
@@ -14,8 +15,57 @@ function list(items: string[]) {
   return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
 }
 
-function StepCard({ summary }: { summary: AdminSummary }) {
+function StepCard({ summary, onDismissed }: { summary: AdminSummary; onDismissed: () => void }) {
   const next = summary.next;
+
+  if (next.kind === "confirm") {
+    const r = next.request;
+    return (
+      <section className="rounded-[20px] border border-amber-500/50 bg-brand-surface p-5">
+        <p className="text-xs font-semibold uppercase tracking-wide text-amber-400">Needs your confirmation</p>
+        <h2 className="mt-1 text-2xl font-semibold leading-tight text-brand-text">Confirm a decision from {r.requestedByName}</h2>
+        <p className="mt-2 text-sm text-brand-muted">
+          {r.kind === "wipeout_resolution"
+            ? `They chose who stays alive after a wipeout in ${r.poolName}, and their own name is on the list.`
+            : `They want to change their own status in ${r.poolName}.`}{" "}
+          It needs a second admin.
+        </p>
+        <Link to={`/admin/requests/${r.id}`} className={buttonClass}>
+          Start
+        </Link>
+      </section>
+    );
+  }
+
+  if (next.kind === "declined") {
+    const r = next.request;
+    return (
+      <section className="rounded-[20px] border border-amber-500/50 bg-brand-surface p-5">
+        <p className="text-xs font-semibold uppercase tracking-wide text-amber-400">Needs another look</p>
+        <h2 className="mt-1 text-2xl font-semibold leading-tight text-brand-text">
+          {r.decidedByName ?? "Another admin"} didn't confirm your decision
+        </h2>
+        {r.declineReason && <p className="mt-2 text-sm text-brand-muted">Reason: "{r.declineReason}"</p>}
+        <p className="mt-2 text-sm text-brand-muted">
+          Nothing has changed in {r.poolName}
+          {r.kind === "wipeout_resolution" ? ", so the wipeout is still waiting for a decision." : "."}
+        </p>
+        <Link
+          to={r.kind === "wipeout_resolution" && r.wipeoutId ? `/admin/wipeout/${r.poolId}/${r.wipeoutId}` : `/admin/pools/${r.poolId}?tab=players`}
+          className={buttonClass}
+        >
+          Review and choose again
+        </Link>
+        <button
+          type="button"
+          onClick={() => void api(`/admin/requests/${r.id}/seen`, { method: "POST" }).then(onDismissed)}
+          className="mt-2 flex min-h-12 w-full items-center justify-center rounded-[12px] border border-brand-border px-4 font-semibold text-brand-text hover:border-brand-accent"
+        >
+          Got it
+        </button>
+      </section>
+    );
+  }
 
   if (next.kind === "wipeout") {
     const w = next.wipeout;
@@ -100,7 +150,7 @@ function Row({ to, done, title, detail }: { to?: string; done?: boolean; title: 
 }
 
 export function NextStep() {
-  const { data: summary, error } = useApi<AdminSummary>("/admin/summary");
+  const { data: summary, error, reload } = useApi<AdminSummary>("/admin/summary");
 
   if (error && !summary) {
     return <p className="px-6 pt-6 text-sm text-brand-muted">We couldn't load your steps. Check your connection and try again.</p>;
@@ -117,7 +167,14 @@ export function NextStep() {
         </p>
       </div>
 
-      <StepCard summary={summary} />
+      <StepCard summary={summary} onDismissed={() => void reload()} />
+
+      {summary.requests.waiting.length > 0 && (
+        <p role="status" className="rounded-[14px] border border-brand-border bg-brand-surface p-4 text-sm text-brand-muted">
+          <strong className="text-brand-text">Waiting for another admin.</strong> {summary.requests.waiting[0]!.askedAdmins.join(", ")}{" "}
+          can confirm your decision in {summary.requests.waiting[0]!.poolName}. Nothing changes until they do.
+        </p>
+      )}
 
       {(hasWeek || summary.pools.length > 0) && (
         <section>

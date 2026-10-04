@@ -1,3 +1,5 @@
+import type { AdminRequestLine } from "./admin-requests.js";
+
 // Shape of GET /admin/summary: everything the admin "Next step" screen needs in one request,
 // with the choice of next step made on the server so it can be tested. No Node imports.
 
@@ -24,6 +26,8 @@ export type AdminPoolLine = {
 
 export type AdminNextStep =
   | { kind: "no_schedule" }
+  | { kind: "confirm"; request: AdminRequestLine }
+  | { kind: "declined"; request: AdminRequestLine }
   | { kind: "wipeout"; wipeout: AdminWipeout }
   | { kind: "results"; waiting: AdminGame[] }
   | { kind: "season_complete" }
@@ -42,6 +46,9 @@ export type AdminSummary = {
   /** Games that have kicked off with no result, oldest first. */
   waitingGames: AdminGame[];
   wipeouts: AdminWipeout[];
+  /** Requests for the viewer to confirm, ones they made that were declined (not yet
+   * dismissed), and ones they made that are still waiting. */
+  requests: { toConfirm: AdminRequestLine[]; declined: AdminRequestLine[]; waiting: AdminRequestLine[] };
   pools: AdminPoolLine[];
   /** True when a survivor pool exists in the current season (drives the correction warning). */
   hasSurvivorPool: boolean;

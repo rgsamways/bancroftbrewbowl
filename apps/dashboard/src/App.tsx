@@ -8,6 +8,7 @@ import { NextStep } from "./pages/NextStep";
 import { AdminResults } from "./pages/AdminResults";
 import { ResultsWizard } from "./pages/ResultsWizard";
 import { WipeoutDecision } from "./pages/WipeoutDecision";
+import { ConfirmRequest, DeclineRequest, RequestDone } from "./pages/AdminRequests";
 import { AdminMore } from "./pages/AdminMore";
 import { Home } from "./pages/Home";
 import { Account } from "./pages/Account";
@@ -59,6 +60,9 @@ export default function App() {
           <Route path="/admin/results/steps" element={<ResultsWizard />} />
           <Route path="/admin/pools/new" element={<NewPoolWizard />} />
           <Route path="/admin/wipeout/:poolId/:wipeoutId" element={<WipeoutDecision />} />
+          <Route path="/admin/requests/:id" element={<ConfirmRequest />} />
+          <Route path="/admin/requests/:id/decline" element={<DeclineRequest />} />
+          <Route path="/admin/requests/:id/done/:outcome" element={<RequestDone />} />
         </Route>
         <Route path="/admin/schedule" element={<Navigate to="/admin/results" replace />} />
       </Route>

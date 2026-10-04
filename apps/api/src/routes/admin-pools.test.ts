@@ -9,6 +9,13 @@ import { actAs, buildTestApp, type TestActor } from "../test/route-harness.js";
 
 vi.mock("../lib/auth-plugin.js", () => ({ getSession: vi.fn(), authPlugin: async () => {} }));
 
+// These tests cover what happens when the acting admin is the only admin (the change applies
+// at once, recorded and flagged). The confirmation path is in admin-requests.test.ts.
+vi.mock("../lib/admin-requests.js", async (original) => ({
+  ...(await original<typeof import("../lib/admin-requests.js")>()),
+  otherAdmins: async () => [],
+}));
+
 type User = Awaited<ReturnType<typeof createUser>>;
 const as = (u: User): TestActor => ({ id: u.id, name: u.name, email: u.email, isAdmin: u.isAdmin });
 

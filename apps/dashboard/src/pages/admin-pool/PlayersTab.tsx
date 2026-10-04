@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router";
-import { initials, type AdminSummary } from "@bbb/shared";
+import { Link, useNavigate } from "react-router";
+import { initials, type AdminSummary, type RequestCreated } from "@bbb/shared";
 import { api, ApiError } from "../../lib/api";
 import { useApi } from "../../lib/useApi";
 import { buttonClass, inputClass, secondaryButtonClass, type PoolRow, type RosterEntry } from "./shared";
@@ -30,6 +30,7 @@ function StatusEditor({
   const [week, setWeek] = useState(entry.eliminatedWeek ? String(entry.eliminatedWeek) : "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   async function save() {
     setError(null);
@@ -40,11 +41,13 @@ function StatusEditor({
     }
     setBusy(true);
     try {
-      await api(`/entries/${entry.id}`, {
+      const result = await api<Partial<RequestCreated> & object>(`/entries/${entry.id}`, {
         method: "PATCH",
         body: JSON.stringify(out ? { status: "eliminated", eliminatedWeek: weekNumber } : { status: "alive" }),
       });
-      onDone(true);
+      // Your own entry is not yours to change alone: it went to another admin to confirm.
+      if (result.request) navigate(`/admin/requests/${result.request.id}/done/sent`);
+      else onDone(true);
     } catch (e) {
       setError(`${e instanceof ApiError ? e.message : "Something went wrong"}. Nothing was changed.`);
       setBusy(false);
@@ -58,7 +61,7 @@ function StatusEditor({
       </p>
       {entry.isYou && (
         <p className="mt-2 rounded-[12px] border border-brand-border p-3 text-sm text-brand-muted">
-          This is your own entry. The change is recorded in Activity and marked as your own entry.
+          This is your own entry, so another admin has to confirm a change to it. Nothing changes until they do. (If you are the only admin, it applies at once and is recorded in Activity.)
         </p>
       )}
       <fieldset className="mt-3">

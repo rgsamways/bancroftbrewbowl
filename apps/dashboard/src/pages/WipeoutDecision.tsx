@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import type { RequestCreated } from "@bbb/shared";
 import { api, ApiError } from "../lib/api";
 import { useApi } from "../lib/useApi";
 import { teamNickname } from "../lib/teams";
@@ -12,8 +13,13 @@ type Wipeout = {
   weekNumber: number;
   game: { homeTeam: string; awayTeam: string } | null;
   candidateEntries: Candidate[];
+  /** The other admins who could confirm; empty when the viewer is the only admin. */
+  confirmingAdmins: string[];
 };
 type PoolInfo = { id: string; name: string };
+
+const nameList = (names: string[]) =>
+  names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 
 /** A result would knock out every player left in a survivor pool. Nothing has been applied; the
  * admin ticks who stays in and everyone unticked is eliminated. */
@@ -56,6 +62,7 @@ export function WipeoutDecision() {
   const total = event.candidateEntries.length;
   const k = kept.size;
   const mine = event.candidateEntries.find((c) => c.isYou);
+  const needsAnother = Boolean(mine && kept.has(mine.id) && event.confirmingAdmins.length > 0);
 
   function toggle(id: string) {
     setKept((current) => {
@@ -70,11 +77,12 @@ export function WipeoutDecision() {
     setBusy(true);
     setMessage(null);
     try {
-      await api(`/pools/${poolId}/wipeouts/${wipeoutId}/resolve`, {
+      const result = await api<Partial<RequestCreated> & object>(`/pools/${poolId}/wipeouts/${wipeoutId}/resolve`, {
         method: "POST",
         body: JSON.stringify({ surviving_entry_ids: [...kept] }),
       });
-      navigate("/admin", { replace: true });
+      // A choice that keeps the admin's own entry becomes a request for another admin.
+      navigate(result.request ? `/admin/requests/${result.request.id}/done/sent` : "/admin", { replace: true });
     } catch (e) {
       setMessage(`${e instanceof ApiError ? e.message : "Something went wrong"}. Nothing was changed.`);
       setBusy(false);
@@ -95,9 +103,15 @@ export function WipeoutDecision() {
         Everyone you leave unticked is eliminated.
       </p>
 
-      {mine && (
+      {mine && !needsAnother && (
         <p className="mt-3 rounded-[12px] border border-brand-border bg-brand-surface p-3 text-sm text-brand-muted">
           You're one of these players. This decision is recorded in Activity and marked as your own entry.
+        </p>
+      )}
+      {needsAnother && (
+        <p role="status" className="mt-3 rounded-[12px] border border-amber-500/50 bg-brand-surface p-3 text-sm text-brand-muted">
+          <strong className="text-brand-text">You ticked your own name.</strong> So another admin has to confirm this. Nothing changes until
+          they do. {nameList(event.confirmingAdmins)} can confirm.
         </p>
       )}
 
@@ -141,7 +155,7 @@ export function WipeoutDecision() {
         onClick={() => void confirm()}
         className="mt-4 flex min-h-12 w-full items-center justify-center rounded-[12px] bg-brand-accent px-4 font-semibold text-brand-accent-ink hover:bg-brand-accent-hover disabled:opacity-50"
       >
-        {k === 0 ? "Eliminate everyone" : `Keep ${k} ${k === 1 ? "player" : "players"} alive`}
+        {needsAnother ? "Ask another admin to confirm" : k === 0 ? "Eliminate everyone" : `Keep ${k} ${k === 1 ? "player" : "players"} alive`}
       </button>
     </>
   );

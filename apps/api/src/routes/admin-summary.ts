@@ -1,9 +1,10 @@
 import type { FastifyInstance } from "fastify";
-import { and, asc, eq, isNull, sql } from "drizzle-orm";
-import type { AdminGame, AdminNextStep, AdminPoolLine, AdminSummary, AdminWipeout } from "@bbb/shared";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
+import type { AdminRequestLine, AdminGame, AdminNextStep, AdminPoolLine, AdminSummary, AdminWipeout } from "@bbb/shared";
 import { db } from "../db/client.js";
-import { entries, games, pools, wipeoutEvents } from "../db/schema.js";
+import { adminRequests, entries, games, pools, wipeoutEvents } from "../db/schema.js";
 import { requireAdmin } from "../lib/guards.js";
+import { otherAdmins } from "../lib/admin-requests.js";
 import { currentWeek, loadSeasonWeeks } from "../lib/entry-state.js";
 
 /** The one next step, in priority order: no schedule at all; a wipeout decision (it holds back
@@ -14,8 +15,12 @@ export function chooseNextStep(input: {
   wipeouts: AdminWipeout[];
   waitingGames: AdminGame[];
   hasCurrentWeek: boolean;
+  toConfirm?: AdminRequestLine[];
+  declined?: AdminRequestLine[];
 }): AdminNextStep {
   if (input.seasonYear === null) return { kind: "no_schedule" };
+  if (input.toConfirm?.length) return { kind: "confirm", request: input.toConfirm[0]! };
+  if (input.declined?.length) return { kind: "declined", request: input.declined[0]! };
   if (input.wipeouts.length > 0) return { kind: "wipeout", wipeout: input.wipeouts[0]! };
   if (input.waitingGames.length > 0) return { kind: "results", waiting: input.waitingGames };
   if (!input.hasCurrentWeek) return { kind: "season_complete" };
@@ -89,7 +94,38 @@ export async function adminSummaryRoutes(fastify: FastifyInstance) {
       candidates: e.candidateEntryIds.length,
     }));
 
-    const next = chooseNextStep({ seasonYear, wipeouts, waitingGames, hasCurrentWeek: week !== null });
+    // Requests for another admin's confirmation. The viewer's own pending ones are "waiting" and
+    // their wipeout is not offered to them again; declined ones show until dismissed.
+    const adminId = session.user.id;
+    const asLine = (r: typeof adminRequests.$inferSelect & { pool: { name: string } }, asked: string[]): AdminRequestLine => ({
+      id: r.id,
+      kind: r.kind as AdminRequestLine["kind"],
+      poolId: r.poolId,
+      poolName: r.pool.name,
+      requestedByName: r.requestedByName,
+      wipeoutId: r.wipeoutId,
+      declineReason: r.declineReason,
+      decidedByName: r.decidedByName,
+      askedAdmins: asked,
+    });
+    const pending = await db.query.adminRequests.findMany({
+      where: eq(adminRequests.status, "pending"),
+      orderBy: [asc(adminRequests.createdAt)],
+      with: { pool: true },
+    });
+    const declinedRows = await db.query.adminRequests.findMany({
+      where: and(eq(adminRequests.status, "declined"), eq(adminRequests.requestedBy, adminId), isNull(adminRequests.seenAt)),
+      orderBy: [desc(adminRequests.createdAt)],
+      with: { pool: true },
+    });
+    const askedNames = (await otherAdmins(db, adminId)).map((a) => a.name);
+    const toConfirm = pending.filter((r) => r.requestedBy !== adminId).map((r) => asLine(r, []));
+    const waiting = pending.filter((r) => r.requestedBy === adminId).map((r) => asLine(r, askedNames));
+    const declined = declinedRows.map((r) => asLine(r, askedNames));
+    const waitingWipeouts = new Set(waiting.map((r) => r.wipeoutId));
+    const mineWipeouts = wipeouts.filter((w) => !waitingWipeouts.has(w.wipeoutId));
+
+    const next = chooseNextStep({ seasonYear, wipeouts: mineWipeouts, waitingGames, hasCurrentWeek: week !== null, toConfirm, declined });
 
     const body: AdminSummary = {
       serverNow: now.toISOString(),
@@ -101,7 +137,8 @@ export async function adminSummaryRoutes(fastify: FastifyInstance) {
       lockTime: week ? week.lockTime.toISOString() : null,
       locked: week ? now >= week.lockTime : false,
       waitingGames,
-      wipeouts,
+      wipeouts: mineWipeouts,
+      requests: { toConfirm, declined, waiting },
       pools: poolLines,
       hasSurvivorPool: allPools.some((p) => p.type === "survivor" && p.seasonYear === seasonYear),
       next,

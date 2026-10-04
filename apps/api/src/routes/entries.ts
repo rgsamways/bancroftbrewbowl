@@ -1,10 +1,11 @@
 import type { FastifyInstance } from "fastify";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
-import { createEntrySchema, updateEntrySchema, type PickEmRulesConfig } from "@bbb/shared";
+import { createEntrySchema, needsConfirmation, updateEntrySchema, type PickEmRulesConfig, type RequestCreated } from "@bbb/shared";
 import { db } from "../db/client.js";
 import { entries, picks, pools, user } from "../db/schema.js";
 import { requireAdmin, requireSession } from "../lib/guards.js";
 import { actorOf, recordActivity } from "../lib/activity.js";
+import { applyStatusChange, createRequest, otherAdmins, settleRequestsFor } from "../lib/admin-requests.js";
 import { parseBody } from "../lib/validate.js";
 
 type EntryRow = {
@@ -216,9 +217,35 @@ export async function entryRoutes(fastify: FastifyInstance) {
     }
     const changes = { status, eliminatedWeek };
 
+    const who = before.user?.name ?? before.invitedName ?? "a player";
+
+    // Changing your own status is not yours to decide alone: it becomes a request for another admin.
+    const others = await otherAdmins(db, actor.id);
+    if (needsConfirmation({ touchesOwnEntry: before.userId === actor.id, otherAdmins: others.length })) {
+      const request = await db.transaction(async (tx) => {
+        const created = await createRequest(tx, {
+          kind: "status_change",
+          poolId: before.poolId,
+          entryId,
+          payload: { from: { status: before.status, eliminatedWeek: before.eliminatedWeek }, to: changes },
+          actor,
+        });
+        await recordActivity(tx, actor, {
+          kind: "confirmation_requested",
+          summary: `${actor.name} asked another admin to confirm a change to their own status in ${before.pool.name}.`,
+          poolId: before.poolId,
+          affectsOwnEntry: true,
+        });
+        return created;
+      });
+      const created: RequestCreated = { request: { id: request.id, askedAdmins: others.map((a) => a.name) } };
+      reply.status(202).send(created);
+      return;
+    }
+
     const entry = await db.transaction(async (tx) => {
-      const [updated] = await tx.update(entries).set(changes).where(eq(entries.id, entryId)).returning();
-      const who = before.user?.name ?? before.invitedName ?? "a player";
+      const updated = await applyStatusChange(tx, entryId, changes);
+      await settleRequestsFor(tx, { entryId });
       const poolName = before.pool.name;
       const sentence =
         body.status !== undefined
@@ -230,7 +257,7 @@ export async function entryRoutes(fastify: FastifyInstance) {
         poolId: before.poolId,
         affectsOwnEntry: before.userId === actor.id,
       });
-      return updated!;
+      return updated;
     });
     const linkedUser = entry.userId ? await db.query.user.findFirst({ where: eq(user.id, entry.userId) }) : null;
     reply.send(resolveEntry({ ...entry, user: linkedUser ?? null }, undefined, WITH_EMAIL));
