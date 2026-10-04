@@ -21,6 +21,6 @@
 ## 4. Verify and ship
 
 - [x] 4.1 `pnpm lint`, `typecheck`, `typecheck:e2e`, `test`, `test:e2e` pass
-- [ ] 4.2 Call out the schema change; push to `staging`, confirm migration ran on staging's own database and its API works
-- [ ] 4.3 Promote to `main`, confirm production deploy and migration
-- [ ] 4.4 Sync specs, archive, update ROADMAP and HANDOFF
+- [x] 4.2 Call out the schema change; push to `staging`, confirm migration ran on staging's own database and its API works
+- [x] 4.3 Promote to `main`, confirm production deploy and migration
+- [x] 4.4 Sync specs, archive, update ROADMAP and HANDOFF
