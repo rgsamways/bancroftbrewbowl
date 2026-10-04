@@ -66,3 +66,9 @@ The setting already exists but does nothing: pool settings list a `per_game_kick
 - **Fairness:** the early-information worry is settled by the point above. The existing "another admin confirms" rule and Activity stay for admins who also play.
 - **It changes the game a little.** Waiting for a late game lets you use news (injuries, line moves) that early lockers don't have. Robin doesn't see that as a problem; the owner should still agree. A middle option: the week locks at the first Sunday kickoff, with Thursday games as their own separate pick.
 - Needs a plan-mode design pass (it touches picks, visibility, scoring-adjacent rules, and likely the setting's meaning), and its tests must cover every game-day pattern: Thursday, Sunday, Monday, a flexed game, a bye team.
+
+## "Update results from ESPN" button (noted 2026-10-04)
+
+Robin's idea: let the owner, his wife or whoever has permission run a weekly "update the pools" step instead of entering scores and outcomes by hand.
+
+Shape I'd suggest: a button on the admin Results screen. It fetches finished games from ESPN (reusing the logic in `apps/api/scripts/seed-schedule.ts`), shows a preview ("6 games finished since last time: ..."), and applies only on Confirm. Applying scores each game the same way hand-entered results are scored today (`lib/scoring.ts`: eliminations, mulligans, wipeouts held for an admin), so it is not the same as the schedule script, which writes results without scoring. It only fills games that are still pending, never overwrites a result an admin entered, and flags disagreements. Each use is one Activity record under the admin's name. Stays a button (the project has no scheduled jobs by design). A rule like `import_results` would join the staff rules in `docs/ROLES_AND_RULES.md`. Risk: ESPN's endpoint is public but unofficial, so keep the manual Results screens as the backup. The same button could do the late-start catch-up. No schema change expected.
