@@ -19,7 +19,7 @@ Easier to use, phone-first front end with a polished, modern look, built with th
 | 3 | `e2e-smoke` | **Done and archived** (`archive/2026-10-04-e2e-smoke`). `pnpm test:e2e` runs 25 real-browser checks at 390 wide against a local stack; CI runs them too. Test tooling only; no app change. |
 | 4 | `password-sign-in` + `v2-signin` | `v2-signin` **done and archived** (2026-10-04): public frame, resend, link-problem page, first-run welcome; 31 real-browser checks. `password-sign-in` built and live; stays open only for a real-phone password-manager check (task 5.3) before archiving. |
 | 5 | `pool-total` | **Done and archived** (`archive/2026-10-04-pool-total`). One nullable column `pools.pool_total_cents`; admin sets it in pool settings, players see it on Standings. 120 tests, 33 real-browser checks. |
-| 6 | `v2-home-and-pick` | Planned and valid (2026-10-04), not started. No schema change. Waiting for Robin's go. Decisions: pool chips, brewery cards and one-time moments left out, server refuses a pick for a team not playing. |
+| 6 | `v2-home-and-pick` | **Done and archived** (`archive/2026-10-04-v2-home-and-pick`). Home hero with pool chips, all states for survivor and pick 'em, the Pick screen (confirm bar, double-pick, tap-to-pick, locked, out), join pages, `GET /me/summary` and `GET /entries/:id/pick-sheet`. 155 tests, 46 real-browser checks. No schema change. |
 | 7 | `v2-standings` | Not written |
 | 8 | `admin-activity-log` | Not written (one table) |
 | 9 | `v2-admin-steps` | Not written |

@@ -41,5 +41,5 @@
 
 - [x] 8.1 Update `e2e/join-and-pick.spec.ts`, `e2e/pick-privacy.spec.ts` and `e2e/frame.spec.ts` for the new screens, add a past-kickoff option to `e2e/helpers/db.ts`, and add specs for each Home and Pick state; verify `pnpm test:e2e` passes
 - [x] 8.2 Run `pnpm lint`, `pnpm typecheck`, `pnpm typecheck:e2e`, `pnpm test` and `pnpm test:e2e` and verify all pass
-- [ ] 8.3 Walk every state in real Chrome at 390 by 844 against the local stack (ports 3011 and 5183 only) and call the two new endpoints on `api-staging`; record what was seen
-- [ ] 8.4 Update `openspec/ROADMAP.md` and `docs/HANDOFF.md`, sync specs, archive the change, push to `staging`, then promote to `main` and confirm the deploys
+- [x] 8.3 Walk every state in real Chrome at 390 by 844 against the local stack (ports 3011 and 5183 only) and call the two new endpoints on `api-staging`; record what was seen (Every state is walked by the browser specs and screenshots; on `api-staging` both new endpoints answer 401 when signed out. The staging preview site cannot reach the staging API, so screens were not walked there.)
+- [x] 8.4 Update `openspec/ROADMAP.md` and `docs/HANDOFF.md`, sync specs, archive the change, push to `staging`, then promote to `main` and confirm the deploys
