@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { asc, eq } from "drizzle-orm";
-import { rankOf, sharePercent, type PickEmRulesConfig, type PoolTv, type TvStatus } from "@bbb/shared";
+import { publicName, rankOf, sharePercent, type PickEmRulesConfig, type PoolTv, type TvStatus } from "@bbb/shared";
 import { db } from "../db/client.js";
 import { entries, pools } from "../db/schema.js";
 import { requireSession } from "../lib/guards.js";
@@ -31,7 +31,7 @@ export async function tvRoutes(fastify: FastifyInstance) {
       orderBy: [asc(entries.createdAt)],
       with: { user: true },
     });
-    const nameOf = (e: (typeof poolEntries)[number]) => e.user?.name ?? e.invitedName ?? "A player";
+    const nameOf = (e: (typeof poolEntries)[number]) => publicName(e.user?.name, e.invitedName);
 
     const weeks = (await loadSeasonWeeks([pool.seasonYear])).get(pool.seasonYear) ?? [];
     const week = currentWeek(weeks);

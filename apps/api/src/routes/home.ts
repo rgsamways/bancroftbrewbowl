@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { and, asc, eq, inArray } from "drizzle-orm";
 import {
+  publicName,
   rankOf,
   type JoinablePool,
   type MeSummary,
@@ -76,7 +77,7 @@ export async function homeRoutes(fastify: FastifyInstance) {
 
     const pickedWeeks = await pickedWeeksByPool(poolIds);
 
-    const nameOf = (e: (typeof poolEntries)[number]) => e.user?.name ?? e.invitedName ?? "A player";
+    const nameOf = (e: (typeof poolEntries)[number]) => publicName(e.user?.name, e.invitedName);
 
     const summaryEntries: SummaryEntry[] = mine.map((entry) => {
       const pool = entry.pool;

@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
-import { createEntrySchema, needsConfirmation, updateEntrySchema, type PickEmRulesConfig, type RequestCreated } from "@bbb/shared";
+import { createEntrySchema, needsConfirmation, publicName, updateEntrySchema, type PickEmRulesConfig, type RequestCreated } from "@bbb/shared";
 import { db } from "../db/client.js";
 import { entries, picks, pools, user } from "../db/schema.js";
 import { requireAdmin, requireSession } from "../lib/guards.js";
@@ -35,7 +35,7 @@ export function resolveEntry(entry: EntryRow, points?: number, options: { includ
   return {
     id: entry.id,
     poolId: entry.poolId,
-    displayName: entry.user?.name ?? entry.invitedName ?? "Unknown",
+    displayName: publicName(entry.user?.name, entry.invitedName),
     email: options.includeEmail ? (entry.user?.email ?? entry.invitedEmail ?? "") : "",
     status: entry.status,
     eliminatedWeek: entry.eliminatedWeek,

@@ -181,3 +181,7 @@ Done 2026-10-04 by Robin from this list: cleared two early picks (his own: DEN w
 - `pnpm check-late-start` (read-only, counts only) showed production with 2 players and one pick each in weeks 3 and 4 (Robin chose to clear them so everyone has a clean bye).
 - `pnpm clear-early-picks --through 4` lists, then with `--apply` deletes, pending picks in locked weeks up to week 4 only. Then `pnpm seed-schedule 2026` fills the results (no scoring), then post the From the brewery announcement. Run each on production with `railway ssh --service api --environment production -- pnpm --filter @bbb/api <script>`.
 
+## Safe display names (safe-display-names, 2026-10-04)
+
+- A new account is named with its email until the player sets a display name, and Standings showed it. `publicName` / `needsDisplayName` (`packages/shared/src/display-name.ts`) now decide what other players see: an empty or "@" name shows as the part before the "@", else "A player". Used by Standings, TV, the Home champion line and `GET /pools/:id/entries` (`resolveEntry`). Admin-only screens that show emails are unchanged. Home shows a "What should we call you?" card until a real name is saved. Tests: `routes/safe-names.test.ts`, `display-name.test.ts`, `e2e/display-name.spec.ts` (season 2968).
+

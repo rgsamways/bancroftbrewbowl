@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { asc, eq } from "drizzle-orm";
-import { rankOf, type PickEmRulesConfig, type PoolStandings, type StandingsRow } from "@bbb/shared";
+import { publicName, rankOf, type PickEmRulesConfig, type PoolStandings, type StandingsRow } from "@bbb/shared";
 import { db } from "../db/client.js";
 import { entries, pools } from "../db/schema.js";
 import { requireSession } from "../lib/guards.js";
@@ -41,7 +41,7 @@ export async function standingsRoutes(fastify: FastifyInstance) {
     const seasonOver = pool.status === "completed" || (weeks.length > 0 && weeks.every((w) => w.gamesPending === 0));
 
     const mine = poolEntries.find((e) => e.userId === session.user.id) ?? null;
-    const nameOf = (e: (typeof poolEntries)[number]) => e.user?.name ?? e.invitedName ?? "A player";
+    const nameOf = (e: (typeof poolEntries)[number]) => publicName(e.user?.name, e.invitedName);
 
     const result: PoolStandings = {
       pool: {
