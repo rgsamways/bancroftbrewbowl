@@ -1,0 +1,188 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bancroft Brew Bowl - all mockups</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e0e0f;--surface:#171718;--surface-2:#202022;--line:#2c2c2f;--accent:#c17a45;--text:#f4f4f2;--muted:#a3a3ab;--faint:#8b8b94}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.role{display:inline-flex;align-items:center;gap:4px;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.role span{padding:0 10px 0 12px;font-size:13px;color:var(--muted)}
+.role button{min-height:40px;padding:0 16px;border-radius:9px;border:0;background:transparent;color:var(--muted);font:500 14px Inter,system-ui,sans-serif;cursor:pointer}
+.role button.on{background:rgba(193,122,69,.16);color:var(--text);box-shadow:inset 0 0 0 1px rgba(193,122,69,.5)}
+
+body{background:#0a0a0b;padding:24px}
+h1{font-size:22px;margin-bottom:4px}p.sub{color:var(--muted);font-size:14px;margin-bottom:14px}
+h2{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:28px 0 12px}
+.grid{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+a.c{display:block;text-decoration:none;width:234px}a.c.wide{width:384px}
+.fr{width:234px;height:506px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--bg);position:relative}
+.fr iframe{width:390px;height:844px;border:0;transform:scale(.6);transform-origin:0 0;pointer-events:none}
+.fr.tv{width:384px;height:216px}.fr.tv iframe{width:1280px;height:720px;transform:scale(.3)}
+a.c span{display:block;margin-top:8px;font-size:13px;font-weight:500}
+.top{position:fixed;right:12px;bottom:12px;background:#2c2c2f;border:1px solid #3d3d41;border-radius:99px;padding:9px 13px;font:600 12px sans-serif;color:var(--text);text-decoration:none}
+.hide{display:none!important}
+</style></head><body>
+<h1>All mockups</h1>
+<p class="sub">Each preview is live. Click one to open it full size.</p>
+<div class="role" id="role"><span>Viewing as</span><button data-r="player">Player</button><button data-r="admin">Admin</button><button data-r="all">All</button></div>
+<section class="gg" data-aud="everyone"><h2>Sign in</h2><div class="grid">
+<a class="c" href="signin.html"><div class="fr"><iframe src="signin.html" loading="lazy" tabindex="-1"></iframe></div><span>Sign in</span></a>
+<a class="c" href="signin-password.html"><div class="fr"><iframe src="signin-password.html" loading="lazy" tabindex="-1"></iframe></div><span>Sign in, Password tab</span></a>
+<a class="c" href="signin-password-error.html"><div class="fr"><iframe src="signin-password-error.html" loading="lazy" tabindex="-1"></iframe></div><span>Sign in, wrong details</span></a>
+<a class="c" href="check-email.html"><div class="fr"><iframe src="check-email.html" loading="lazy" tabindex="-1"></iframe></div><span>Check your email</span></a>
+<a class="c" href="link-problem.html"><div class="fr"><iframe src="link-problem.html" loading="lazy" tabindex="-1"></iframe></div><span>Link problem</span></a>
+</div></section>
+<section class="gg" data-aud="player"><h2>Joining a pool</h2><div class="grid">
+<a class="c" href="first-run.html"><div class="fr"><iframe src="first-run.html" loading="lazy" tabindex="-1"></iframe></div><span>First sign-in</span></a>
+<a class="c" href="join.html"><div class="fr"><iframe src="join.html" loading="lazy" tabindex="-1"></iframe></div><span>Join a pool, survivor</span></a>
+<a class="c" href="join-pickem.html"><div class="fr"><iframe src="join-pickem.html" loading="lazy" tabindex="-1"></iframe></div><span>Join a pool, pick 'em</span></a>
+<a class="c" href="join-closed.html"><div class="fr"><iframe src="join-closed.html" loading="lazy" tabindex="-1"></iframe></div><span>Join, pool finished</span></a>
+<a class="c" href="home-invited.html"><div class="fr"><iframe src="home-invited.html" loading="lazy" tabindex="-1"></iframe></div><span>Added by the brewery</span></a>
+</div></section>
+<section class="gg" data-aud="player"><h2>Home, survivor</h2><div class="grid">
+<a class="c" href="home.html"><div class="fr"><iframe src="home.html" loading="lazy" tabindex="-1"></iframe></div><span>Make your pick</span></a>
+<a class="c" href="home-picked.html"><div class="fr"><iframe src="home-picked.html" loading="lazy" tabindex="-1"></iframe></div><span>All set</span></a>
+<a class="c" href="home-locked.html"><div class="fr"><iframe src="home-locked.html" loading="lazy" tabindex="-1"></iframe></div><span>Games underway</span></a>
+<a class="c" href="home-eliminated.html"><div class="fr"><iframe src="home-eliminated.html" loading="lazy" tabindex="-1"></iframe></div><span>You're out</span></a>
+<a class="c" href="home-offseason.html"><div class="fr"><iframe src="home-offseason.html" loading="lazy" tabindex="-1"></iframe></div><span>Season over</span></a>
+<a class="c" href="home-nopools.html"><div class="fr"><iframe src="home-nopools.html" loading="lazy" tabindex="-1"></iframe></div><span>No pools open</span></a>
+</div></section>
+<section class="gg" data-aud="player"><h2>Home, pick 'em</h2><div class="grid">
+<a class="c" href="home-pickem.html"><div class="fr"><iframe src="home-pickem.html" loading="lazy" tabindex="-1"></iframe></div><span>Finish your picks</span></a>
+<a class="c" href="home-pickem-done.html"><div class="fr"><iframe src="home-pickem-done.html" loading="lazy" tabindex="-1"></iframe></div><span>All picks in</span></a>
+<a class="c" href="home-pickem-locked.html"><div class="fr"><iframe src="home-pickem-locked.html" loading="lazy" tabindex="-1"></iframe></div><span>Games underway</span></a>
+</div></section>
+<section class="gg" data-aud="player"><h2>Pick, survivor</h2><div class="grid">
+<a class="c" href="pick.html"><div class="fr"><iframe src="pick.html" loading="lazy" tabindex="-1"></iframe></div><span>Choose a team</span></a>
+<a class="c" href="pick-selected.html"><div class="fr"><iframe src="pick-selected.html" loading="lazy" tabindex="-1"></iframe></div><span>Team selected</span></a>
+<a class="c" href="pick-double.html"><div class="fr"><iframe src="pick-double.html" loading="lazy" tabindex="-1"></iframe></div><span>Double-pick week</span></a>
+<a class="c" href="pick-locked-in.html"><div class="fr"><iframe src="pick-locked-in.html" loading="lazy" tabindex="-1"></iframe></div><span>Locked in</span></a>
+<a class="c" href="pick-closed.html"><div class="fr"><iframe src="pick-closed.html" loading="lazy" tabindex="-1"></iframe></div><span>Picks locked</span></a>
+<a class="c" href="elimination.html"><div class="fr"><iframe src="elimination.html" loading="lazy" tabindex="-1"></iframe></div><span>Tough break</span></a>
+<a class="c" href="pick-eliminated.html"><div class="fr"><iframe src="pick-eliminated.html" loading="lazy" tabindex="-1"></iframe></div><span>Your season</span></a>
+<a class="c" href="pick-not-yours.html"><div class="fr"><iframe src="pick-not-yours.html" loading="lazy" tabindex="-1"></iframe></div><span>Not your entry</span></a>
+</div></section>
+<section class="gg" data-aud="player"><h2>Pick, pick 'em</h2><div class="grid">
+<a class="c" href="pick-pickem.html"><div class="fr"><iframe src="pick-pickem.html" loading="lazy" tabindex="-1"></iframe></div><span>Pick the winners</span></a>
+<a class="c" href="pick-pickem-done.html"><div class="fr"><iframe src="pick-pickem-done.html" loading="lazy" tabindex="-1"></iframe></div><span>All picks in</span></a>
+<a class="c" href="pick-pickem-locked.html"><div class="fr"><iframe src="pick-pickem-locked.html" loading="lazy" tabindex="-1"></iframe></div><span>Picks locked</span></a>
+</div></section>
+<section class="gg" data-aud="player"><h2>Standings</h2><div class="grid">
+<a class="c" href="standings.html"><div class="fr"><iframe src="standings.html" loading="lazy" tabindex="-1"></iframe></div><span>Standings, survivor</span></a>
+<a class="c" href="standings-pickem.html"><div class="fr"><iframe src="standings-pickem.html" loading="lazy" tabindex="-1"></iframe></div><span>Standings, pick 'em</span></a>
+<a class="c" href="recap.html"><div class="fr"><iframe src="recap.html" loading="lazy" tabindex="-1"></iframe></div><span>Weekly recap</span></a>
+<a class="c" href="pot-options.html"><div class="fr"><iframe src="pot-options.html" loading="lazy" tabindex="-1"></iframe></div><span>Pool total wording</span></a>
+</div></section>
+<section class="gg" data-aud="player"><h2>Menu and music</h2><div class="grid">
+<a class="c" href="menu-drinks.html"><div class="fr"><iframe src="menu-drinks.html" loading="lazy" tabindex="-1"></iframe></div><span>Menu, drinks</span></a>
+<a class="c" href="menu-kitchen.html"><div class="fr"><iframe src="menu-kitchen.html" loading="lazy" tabindex="-1"></iframe></div><span>Menu, kitchen</span></a>
+<a class="c" href="menu-music.html"><div class="fr"><iframe src="menu-music.html" loading="lazy" tabindex="-1"></iframe></div><span>Menu, music</span></a>
+<a class="c" href="menu-public.html"><div class="fr"><iframe src="menu-public.html" loading="lazy" tabindex="-1"></iframe></div><span>Menu, not signed in</span></a>
+</div></section>
+<section class="gg" data-aud="player"><h2>Me and help</h2><div class="grid">
+<a class="c" href="account.html"><div class="fr"><iframe src="account.html" loading="lazy" tabindex="-1"></iframe></div><span>Me</span></a>
+<a class="c" href="set-password.html"><div class="fr"><iframe src="set-password.html" loading="lazy" tabindex="-1"></iframe></div><span>Set a password</span></a>
+<a class="c" href="set-password-error.html"><div class="fr"><iframe src="set-password-error.html" loading="lazy" tabindex="-1"></iframe></div><span>Set a password, a problem</span></a>
+<a class="c" href="change-password.html"><div class="fr"><iframe src="change-password.html" loading="lazy" tabindex="-1"></iframe></div><span>Change your password</span></a>
+<a class="c" href="password-saved.html"><div class="fr"><iframe src="password-saved.html" loading="lazy" tabindex="-1"></iframe></div><span>Password saved</span></a>
+<a class="c" href="help.html"><div class="fr"><iframe src="help.html" loading="lazy" tabindex="-1"></iframe></div><span>How to play</span></a>
+</div></section>
+<section class="gg" data-aud="everyone"><h2>Errors</h2><div class="grid">
+<a class="c" href="not-found.html"><div class="fr"><iframe src="not-found.html" loading="lazy" tabindex="-1"></iframe></div><span>Page not found</span></a>
+<a class="c" href="offline.html"><div class="fr"><iframe src="offline.html" loading="lazy" tabindex="-1"></iframe></div><span>Can't connect</span></a>
+</div></section>
+<section class="gg" data-aud="everyone"><h2>For the bar</h2><div class="grid">
+<a class="c wide" href="tv-standings.html"><div class="fr tv"><iframe src="tv-standings.html" loading="lazy" tabindex="-1"></iframe></div><span>TV standings</span></a>
+<a class="c" href="table-card.html"><div class="fr"><iframe src="table-card.html" loading="lazy" tabindex="-1"></iframe></div><span>Table card</span></a>
+<a class="c" href="install-prompt.html"><div class="fr"><iframe src="install-prompt.html" loading="lazy" tabindex="-1"></iframe></div><span>Add to home screen</span></a>
+</div></section>
+<section class="gg" data-aud="admin"><h2>Admin: your next step</h2><div class="grid">
+<a class="c" href="account-admin.html"><div class="fr"><iframe src="account-admin.html" loading="lazy" tabindex="-1"></iframe></div><span>Me, as an admin</span></a>
+<a class="c" href="admin.html"><div class="fr"><iframe src="admin.html" loading="lazy" tabindex="-1"></iframe></div><span>Your next step</span></a>
+<a class="c" href="admin-caught-up.html"><div class="fr"><iframe src="admin-caught-up.html" loading="lazy" tabindex="-1"></iframe></div><span>All caught up</span></a>
+<a class="c" href="admin-next-approval.html"><div class="fr"><iframe src="admin-next-approval.html" loading="lazy" tabindex="-1"></iframe></div><span>A decision is waiting</span></a>
+<a class="c" href="admin-approval.html"><div class="fr"><iframe src="admin-approval.html" loading="lazy" tabindex="-1"></iframe></div><span>Confirm a decision</span></a>
+<a class="c" href="admin-approval-done.html"><div class="fr"><iframe src="admin-approval-done.html" loading="lazy" tabindex="-1"></iframe></div><span>Confirmed</span></a>
+<a class="c" href="admin-approval-decline.html"><div class="fr"><iframe src="admin-approval-decline.html" loading="lazy" tabindex="-1"></iframe></div><span>Don't confirm: why not?</span></a>
+<a class="c" href="admin-approval-declined.html"><div class="fr"><iframe src="admin-approval-declined.html" loading="lazy" tabindex="-1"></iframe></div><span>Not confirmed</span></a>
+<a class="c" href="admin-next-declined.html"><div class="fr"><iframe src="admin-next-declined.html" loading="lazy" tabindex="-1"></iframe></div><span>Your request was declined</span></a>
+<a class="c" href="admin-wipeout-alert.html"><div class="fr"><iframe src="admin-wipeout-alert.html" loading="lazy" tabindex="-1"></iframe></div><span>Late season, with a wipeout</span></a>
+<a class="c" href="admin-no-schedule.html"><div class="fr"><iframe src="admin-no-schedule.html" loading="lazy" tabindex="-1"></iframe></div><span>No schedule yet</span></a>
+<a class="c" href="admin-more.html"><div class="fr"><iframe src="admin-more.html" loading="lazy" tabindex="-1"></iframe></div><span>More</span></a>
+<a class="c" href="admin-activity.html"><div class="fr"><iframe src="admin-activity.html" loading="lazy" tabindex="-1"></iframe></div><span>Activity</span></a>
+</div></section>
+<section class="gg" data-aud="admin"><h2>Admin: results</h2><div class="grid">
+<a class="c" href="admin-results.html"><div class="fr"><iframe src="admin-results.html" loading="lazy" tabindex="-1"></iframe></div><span>Enter results</span></a>
+<a class="c" href="admin-results-correct.html"><div class="fr"><iframe src="admin-results-correct.html" loading="lazy" tabindex="-1"></iframe></div><span>Correct a result</span></a>
+<a class="c" href="admin-step-results-1.html"><div class="fr"><iframe src="admin-step-results-1.html" loading="lazy" tabindex="-1"></iframe></div><span>Results, game 1</span></a>
+<a class="c" href="admin-step-results-2.html"><div class="fr"><iframe src="admin-step-results-2.html" loading="lazy" tabindex="-1"></iframe></div><span>Results, game 2</span></a>
+<a class="c" href="admin-step-results-done.html"><div class="fr"><iframe src="admin-step-results-done.html" loading="lazy" tabindex="-1"></iframe></div><span>Results, done</span></a>
+<a class="c" href="admin-wipeout.html"><div class="fr"><iframe src="admin-wipeout.html" loading="lazy" tabindex="-1"></iframe></div><span>Wipeout</span></a>
+<a class="c" href="admin-wipeout-self.html"><div class="fr"><iframe src="admin-wipeout-self.html" loading="lazy" tabindex="-1"></iframe></div><span>Wipeout, keeping yourself</span></a>
+<a class="c" href="admin-approval-sent.html"><div class="fr"><iframe src="admin-approval-sent.html" loading="lazy" tabindex="-1"></iframe></div><span>Sent for confirmation</span></a>
+</div></section>
+<section class="gg" data-aud="admin"><h2>Admin: pools and players</h2><div class="grid">
+<a class="c" href="admin-pools.html"><div class="fr"><iframe src="admin-pools.html" loading="lazy" tabindex="-1"></iframe></div><span>Pools</span></a>
+<a class="c" href="admin-pool-new.html"><div class="fr"><iframe src="admin-pool-new.html" loading="lazy" tabindex="-1"></iframe></div><span>New pool (one form)</span></a>
+<a class="c" href="admin-pool.html"><div class="fr"><iframe src="admin-pool.html" loading="lazy" tabindex="-1"></iframe></div><span>Pool settings</span></a>
+<a class="c" href="admin-pool-delete.html"><div class="fr"><iframe src="admin-pool-delete.html" loading="lazy" tabindex="-1"></iframe></div><span>Delete a pool</span></a>
+<a class="c" href="admin-roster.html"><div class="fr"><iframe src="admin-roster.html" loading="lazy" tabindex="-1"></iframe></div><span>Players</span></a>
+<a class="c" href="admin-roster-edit.html"><div class="fr"><iframe src="admin-roster-edit.html" loading="lazy" tabindex="-1"></iframe></div><span>Edit a player</span></a>
+<a class="c" href="admin-roster-add.html"><div class="fr"><iframe src="admin-roster-add.html" loading="lazy" tabindex="-1"></iframe></div><span>Add a player</span></a>
+<a class="c" href="admin-picks.html"><div class="fr"><iframe src="admin-picks.html" loading="lazy" tabindex="-1"></iframe></div><span>Picks, after the lock</span></a>
+<a class="c" href="admin-picks-prelock.html"><div class="fr"><iframe src="admin-picks-prelock.html" loading="lazy" tabindex="-1"></iframe></div><span>Picks, before the lock</span></a>
+<a class="c" href="admin-roster-edit-self.html"><div class="fr"><iframe src="admin-roster-edit-self.html" loading="lazy" tabindex="-1"></iframe></div><span>Edit your own entry</span></a>
+<a class="c" href="admin-step-season-1.html"><div class="fr"><iframe src="admin-step-season-1.html" loading="lazy" tabindex="-1"></iframe></div><span>Open a pool, step 1</span></a>
+<a class="c" href="admin-step-season-2.html"><div class="fr"><iframe src="admin-step-season-2.html" loading="lazy" tabindex="-1"></iframe></div><span>Open a pool, step 2</span></a>
+<a class="c" href="admin-step-season-3.html"><div class="fr"><iframe src="admin-step-season-3.html" loading="lazy" tabindex="-1"></iframe></div><span>Open a pool, step 3</span></a>
+<a class="c" href="admin-step-season-4.html"><div class="fr"><iframe src="admin-step-season-4.html" loading="lazy" tabindex="-1"></iframe></div><span>Open a pool, step 4</span></a>
+<a class="c" href="admin-step-season-done.html"><div class="fr"><iframe src="admin-step-season-done.html" loading="lazy" tabindex="-1"></iframe></div><span>Pool is open</span></a>
+</div></section>
+<section class="gg" data-aud="admin"><h2>Admin: menu</h2><div class="grid">
+<a class="c" href="admin-menu.html"><div class="fr"><iframe src="admin-menu.html" loading="lazy" tabindex="-1"></iframe></div><span>Menu, drinks</span></a>
+<a class="c" href="admin-menu-kitchen.html"><div class="fr"><iframe src="admin-menu-kitchen.html" loading="lazy" tabindex="-1"></iframe></div><span>Menu, kitchen</span></a>
+<a class="c" href="admin-menu-item.html"><div class="fr"><iframe src="admin-menu-item.html" loading="lazy" tabindex="-1"></iframe></div><span>Edit a drink</span></a>
+<a class="c" href="admin-step-item-1.html"><div class="fr"><iframe src="admin-step-item-1.html" loading="lazy" tabindex="-1"></iframe></div><span>Add to the menu, step 1</span></a>
+<a class="c" href="admin-step-item-2.html"><div class="fr"><iframe src="admin-step-item-2.html" loading="lazy" tabindex="-1"></iframe></div><span>Add to the menu, step 2</span></a>
+<a class="c" href="admin-step-item-3.html"><div class="fr"><iframe src="admin-step-item-3.html" loading="lazy" tabindex="-1"></iframe></div><span>Add to the menu, step 3</span></a>
+<a class="c" href="admin-step-item-4.html"><div class="fr"><iframe src="admin-step-item-4.html" loading="lazy" tabindex="-1"></iframe></div><span>Add to the menu, step 4</span></a>
+<a class="c" href="admin-step-item-done.html"><div class="fr"><iframe src="admin-step-item-done.html" loading="lazy" tabindex="-1"></iframe></div><span>Added to the menu</span></a>
+</div></section>
+<section class="gg" data-aud="admin"><h2>Admin: music</h2><div class="grid">
+<a class="c" href="admin-events.html"><div class="fr"><iframe src="admin-events.html" loading="lazy" tabindex="-1"></iframe></div><span>Music</span></a>
+<a class="c" href="admin-step-event-1.html"><div class="fr"><iframe src="admin-step-event-1.html" loading="lazy" tabindex="-1"></iframe></div><span>Add music, step 1</span></a>
+<a class="c" href="admin-step-event-2.html"><div class="fr"><iframe src="admin-step-event-2.html" loading="lazy" tabindex="-1"></iframe></div><span>Add music, step 2</span></a>
+<a class="c" href="admin-step-event-3.html"><div class="fr"><iframe src="admin-step-event-3.html" loading="lazy" tabindex="-1"></iframe></div><span>Add music, step 3</span></a>
+<a class="c" href="admin-step-event-done.html"><div class="fr"><iframe src="admin-step-event-done.html" loading="lazy" tabindex="-1"></iframe></div><span>Music added</span></a>
+</div></section>
+<section class="gg" data-aud="admin"><h2>Admin: from the brewery</h2><div class="grid">
+<a class="c" href="admin-brewery.html"><div class="fr"><iframe src="admin-brewery.html" loading="lazy" tabindex="-1"></iframe></div><span>From the brewery</span></a>
+<a class="c" href="admin-step-feature-1.html"><div class="fr"><iframe src="admin-step-feature-1.html" loading="lazy" tabindex="-1"></iframe></div><span>Feature, step 1</span></a>
+<a class="c" href="admin-step-feature-2.html"><div class="fr"><iframe src="admin-step-feature-2.html" loading="lazy" tabindex="-1"></iframe></div><span>Feature, step 2</span></a>
+<a class="c" href="admin-step-feature-done.html"><div class="fr"><iframe src="admin-step-feature-done.html" loading="lazy" tabindex="-1"></iframe></div><span>Featured</span></a>
+<a class="c" href="admin-step-special-1.html"><div class="fr"><iframe src="admin-step-special-1.html" loading="lazy" tabindex="-1"></iframe></div><span>Special, step 1</span></a>
+<a class="c" href="admin-step-special-2.html"><div class="fr"><iframe src="admin-step-special-2.html" loading="lazy" tabindex="-1"></iframe></div><span>Special, step 2</span></a>
+<a class="c" href="admin-step-special-3.html"><div class="fr"><iframe src="admin-step-special-3.html" loading="lazy" tabindex="-1"></iframe></div><span>Special, step 3</span></a>
+<a class="c" href="admin-step-special-done.html"><div class="fr"><iframe src="admin-step-special-done.html" loading="lazy" tabindex="-1"></iframe></div><span>Special posted</span></a>
+<a class="c" href="admin-announcements.html"><div class="fr"><iframe src="admin-announcements.html" loading="lazy" tabindex="-1"></iframe></div><span>Announcements</span></a>
+<a class="c" href="admin-announcement-new.html"><div class="fr"><iframe src="admin-announcement-new.html" loading="lazy" tabindex="-1"></iframe></div><span>New announcement (one form)</span></a>
+<a class="c" href="admin-step-ann-1.html"><div class="fr"><iframe src="admin-step-ann-1.html" loading="lazy" tabindex="-1"></iframe></div><span>Announcement, step 1</span></a>
+<a class="c" href="admin-step-ann-2.html"><div class="fr"><iframe src="admin-step-ann-2.html" loading="lazy" tabindex="-1"></iframe></div><span>Announcement, step 2</span></a>
+<a class="c" href="admin-step-ann-3.html"><div class="fr"><iframe src="admin-step-ann-3.html" loading="lazy" tabindex="-1"></iframe></div><span>Announcement, step 3</span></a>
+<a class="c" href="admin-step-ann-done.html"><div class="fr"><iframe src="admin-step-ann-done.html" loading="lazy" tabindex="-1"></iframe></div><span>Announcement posted</span></a>
+</div></section>
+<section class="gg" data-aud="admin"><h2>Admin: guide</h2><div class="grid">
+<a class="c" href="admin-guide.html"><div class="fr"><iframe src="admin-guide.html" loading="lazy" tabindex="-1"></iframe></div><span>Admin guide</span></a>
+</div></section>
+<a class="top" href="index.html">Index</a>
+<script>(function(){
+function getRole(){try{var r=localStorage.getItem('bbbRole');return r==='admin'||r==='all'?r:'player'}catch(e){return'player'}}
+function setRole(r){try{localStorage.setItem('bbbRole',r)}catch(e){}}
+function audOk(aud,role){return role==='all'||aud==='everyone'||aud===role}
+
+var box=document.getElementById('role');
+function paint(){var r=getRole();[].forEach.call(box.querySelectorAll('button'),function(b){b.className=b.dataset.r===r?'on':''});[].forEach.call(document.querySelectorAll('.gg'),function(s){s.classList.toggle('hide',!audOk(s.dataset.aud,r))})}
+box.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;setRole(b.dataset.r);location.reload()});
+paint();})();</script>
+</body></html>

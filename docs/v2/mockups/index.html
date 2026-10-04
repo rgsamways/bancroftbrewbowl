@@ -1,0 +1,289 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bancroft Brew Bowl - v2 mockups</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e0e0f;--surface:#171718;--surface-2:#202022;--line:#2c2c2f;--accent:#c17a45;--text:#f4f4f2;--muted:#a3a3ab;--faint:#8b8b94}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.role{display:inline-flex;align-items:center;gap:4px;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.role span{padding:0 10px 0 12px;font-size:13px;color:var(--muted)}
+.role button{min-height:40px;padding:0 16px;border-radius:9px;border:0;background:transparent;color:var(--muted);font:500 14px Inter,system-ui,sans-serif;cursor:pointer}
+.role button.on{background:rgba(193,122,69,.16);color:var(--text);box-shadow:inset 0 0 0 1px rgba(193,122,69,.5)}
+
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+.crumb{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+h1{margin-top:10px;font-size:34px;font-weight:600;letter-spacing:-.015em}
+.lede{margin-top:12px;max-width:640px;font-size:15px;line-height:1.6;color:var(--muted)}
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:26px}
+.search{display:flex;align-items:center;gap:10px;flex:1;min-width:240px;max-width:420px;min-height:48px;padding:0 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);color:var(--faint)}
+.search input{flex:1;border:0;outline:0;background:transparent;color:var(--text);font:400 15px Inter,system-ui,sans-serif}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.chip{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:99px;min-height:34px;padding:0 14px;font:500 13px Inter,system-ui,sans-serif;cursor:pointer}
+.chip.on{border-color:var(--accent);color:var(--accent)}
+.tools{margin-top:18px;display:flex;gap:18px;align-items:center;font-size:13px;color:var(--muted)}
+.tools button,.tools a{background:none;border:0;color:var(--accent);font:600 13px Inter,system-ui,sans-serif;cursor:pointer;text-decoration:none;padding:0}
+#groups{display:flex;flex-direction:column}
+.grp{margin-top:34px}
+.gt{width:100%;display:flex;align-items:center;gap:12px;background:none;border:0;border-bottom:1px solid var(--line);padding:0 0 10px;color:var(--text);cursor:pointer;text-align:left;font-family:inherit}
+.gn{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.gc{font-size:12px;color:var(--faint)}
+.aud{margin-left:auto;font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--surface-2);color:var(--muted)}
+.aud.admin{background:rgba(193,122,69,.16);color:var(--accent)}
+.gt svg{color:var(--faint);transition:transform .15s}
+.grp.closed .gt svg{transform:rotate(-90deg)}
+.grp.closed .cards{display:none}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:16px}
+.card{display:flex;flex-direction:column;gap:6px;padding:16px;border:1px solid var(--line);background:rgba(255,255,255,.015);border-radius:10px;text-decoration:none;transition:border-color .15s}
+.card:hover{border-color:var(--accent)}
+.ct{font-size:15px;font-weight:600}
+.card p{font-size:13px;line-height:1.5;color:var(--muted)}
+.none{margin-top:34px;color:var(--faint);font-size:14px}
+.hide{display:none!important}
+@media(max-width:560px){.wrap{padding:28px 16px 60px}h1{font-size:28px}}
+</style></head><body>
+<div class="wrap">
+  <div class="crumb">Reference</div>
+  <h1>Brew Bowl v2 mockups</h1>
+  <p class="lede">113 pages. These are pictures, not the real app, and every name and number is made up. <b>Player</b> is someone who only plays. <b>Admin</b> shows the admin tools and puts an Admin tab on the player pages, as it would for an admin who also plays. <b>All</b> shows every page, with that Admin tab too. Search, or open and close a group. On a phone, or in a browser window about 390px wide, the pages look the way they will in someone's hand.</p>
+  <div class="controls">
+    <div class="role" id="role"><span>Viewing as</span><button data-r="player">Player</button><button data-r="admin">Admin</button><button data-r="all">All</button></div>
+    <label class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input id="q" type="text" placeholder="Search pages: results, menu, password..." autocomplete="off"></label>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="tools"><button id="expand">Expand all</button><button id="collapse">Collapse all</button><a href="gallery.html">See every page at once</a></div>
+  <div id="groups">
+<section class="grp" data-aud="everyone" data-name="Sign in">
+<button class="gt" aria-expanded="true"><span class="gn">Sign in</span><span class="gc"></span><span class="aud everyone">Everyone</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="cards">
+<a class="card" href="signin.html" data-q="sign in ask for an email link. the default way in, and how accounts are made. sign in"><span class="ct">Sign in</span><p>Ask for an email link. The default way in, and how accounts are made.</p></a>
+<a class="card" href="signin-password.html" data-q="sign in, password tab for people who have set a password. falls back to an email link. sign in"><span class="ct">Sign in, Password tab</span><p>For people who have set a password. Falls back to an email link.</p></a>
+<a class="card" href="signin-password-error.html" data-q="sign in, wrong details one plain-english message for any failed password sign-in. sign in"><span class="ct">Sign in, wrong details</span><p>One plain-English message for any failed password sign-in.</p></a>
+<a class="card" href="check-email.html" data-q="check your email after asking for a link: what to do next, resend, wrong email. sign in"><span class="ct">Check your email</span><p>After asking for a link: what to do next, resend, wrong email.</p></a>
+<a class="card" href="link-problem.html" data-q="link problem an expired or already-used link, with a one-tap way to get a new one. sign in"><span class="ct">Link problem</span><p>An expired or already-used link, with a one-tap way to get a new one.</p></a>
+</div>
+</section>
+<section class="grp" data-aud="player" data-name="Joining a pool">
+<button class="gt" aria-expanded="true"><span class="gn">Joining a pool</span><span class="gc"></span><span class="aud player">Player</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="cards">
+<a class="card" href="first-run.html" data-q="first sign-in a new player with no pool yet: how it works and the pools they can join. joining a pool"><span class="ct">First sign-in</span><p>A new player with no pool yet: how it works and the pools they can join.</p></a>
+<a class="card" href="join.html" data-q="join a pool, survivor review the survivor rules in plain english, then join. joining a pool"><span class="ct">Join a pool, survivor</span><p>Review the survivor rules in plain English, then join.</p></a>
+<a class="card" href="join-pickem.html" data-q="join a pool, pick 'em the same page with the pick 'em rules. joining a pool"><span class="ct">Join a pool, pick 'em</span><p>The same page with the pick 'em rules.</p></a>
+<a class="card" href="join-closed.html" data-q="join, pool finished a pool that is no longer taking players. joining a pool"><span class="ct">Join, pool finished</span><p>A pool that is no longer taking players.</p></a>
+<a class="card" href="home-invited.html" data-q="added by the brewery a player the admin added by email arrives already in a pool. joining a pool"><span class="ct">Added by the brewery</span><p>A player the admin added by email arrives already in a pool.</p></a>
+</div>
+</section>
+<section class="grp" data-aud="player" data-name="Home, survivor">
+<button class="gt" aria-expanded="true"><span class="gn">Home, survivor</span><span class="gc"></span><span class="aud player">Player</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="cards">
+<a class="card" href="home.html" data-q="make your pick still alive with no pick yet: status, lock time and this week's games. home, survivor"><span class="ct">Make your pick</span><p>Still alive with no pick yet: status, lock time and this week's games.</p></a>
+<a class="card" href="home-picked.html" data-q="all set pick locked in, with a way to change it before the lock. home, survivor"><span class="ct">All set</span><p>Pick locked in, with a way to change it before the lock.</p></a>
+<a class="card" href="home-locked.html" data-q="games underway the week has locked and results are on their way. home, survivor"><span class="ct">Games underway</span><p>The week has locked and results are on their way.</p></a>
+<a class="card" href="home-eliminated.html" data-q="you're out eliminated: a spectator view and a way into another pool. home, survivor"><span class="ct">You're out</span><p>Eliminated: a spectator view and a way into another pool.</p></a>
+<a class="card" href="home-offseason.html" data-q="season over the champion and a link to the final standings. home, survivor"><span class="ct">Season over</span><p>The champion and a link to the final standings.</p></a>
+<a class="card" href="home-nopools.html" data-q="no pools open an empty state when there is nothing to join. home, survivor"><span class="ct">No pools open</span><p>An empty state when there is nothing to join.</p></a>
+</div>
+</section>
+<section class="grp" data-aud="player" data-name="Home, pick 'em">
+<button class="gt" aria-expanded="true"><span class="gn">Home, pick 'em</span><span class="gc"></span><span class="aud player">Player</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="cards">
+<a class="card" href="home-pickem.html" data-q="finish your picks points and rank, picks made so far and the lock time. home, pick 'em"><span class="ct">Finish your picks</span><p>Points and rank, picks made so far and the lock time.</p></a>
+<a class="card" href="home-pickem-done.html" data-q="all picks in every game picked, with a way to review or change. home, pick 'em"><span class="ct">All picks in</span><p>Every game picked, with a way to review or change.</p></a>
+<a class="card" href="home-pickem-locked.html" data-q="games underway the week has locked; points so far. home, pick 'em"><span class="ct">Games underway</span><p>The week has locked; points so far.</p></a>
+</div>
+</section>
+<section class="grp" data-aud="player" data-name="Pick, survivor">
+<button class="gt" aria-expanded="true"><span class="gn">Pick, survivor</span><span class="gc"></span><span class="aud player">Player</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="cards">
+<a class="card" href="pick.html" data-q="choose a team tap one team a week. teams already used are dimmed. pick, survivor"><span class="ct">Choose a team</span><p>Tap one team a week. Teams already used are dimmed.</p></a>
+<a class="card" href="pick-selected.html" data-q="team selected a confirm bar appears: lock in the chiefs. pick, survivor"><span class="ct">Team selected</span><p>A confirm bar appears: Lock in the Chiefs.</p></a>
+<a class="card" href="pick-double.html" data-q="double-pick week choose two teams; both must win. pick, survivor"><span class="ct">Double-pick week</span><p>Choose two teams; both must win.</p></a>
+<a class="card" href="pick-locked-in.html" data-q="locked in a static confirmation. still changeable until the lock. pick, survivor"><span class="ct">Locked in</span><p>A static confirmation. Still changeable until the lock.</p></a>
+<a class="card" href="pick-closed.html" data-q="picks locked read-only while the game waits for a result. pick, survivor"><span class="ct">Picks locked</span><p>Read-only while the game waits for a result.</p></a>
+<a class="card" href="elimination.html" data-q="tough break the moment a player is knocked out. pick, survivor"><span class="ct">Tough break</span><p>The moment a player is knocked out.</p></a>
+<a class="card" href="pick-eliminated.html" data-q="your season the pick tab once out, with a history of picks. pick, survivor"><span class="ct">Your season</span><p>The Pick tab once out, with a history of picks.</p></a>
+<a class="card" href="pick-not-yours.html" data-q="not your entry what a player sees if they open someone else's pick screen. pick, survivor"><span class="ct">Not your entry</span><p>What a player sees if they open someone else's pick screen.</p></a>
+</div>
+</section>
+<section class="grp" data-aud="player" data-name="Pick, pick 'em">
+<button class="gt" aria-expanded="true"><span class="gn">Pick, pick 'em</span><span class="gc"></span><span class="aud player">Player</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="cards">
+<a class="card" href="pick-pickem.html" data-q="pick the winners tap a winner for every game. saves as you tap. pick, pick 'em"><span class="ct">Pick the winners</span><p>Tap a winner for every game. Saves as you tap.</p></a>
+<a class="card" href="pick-pickem-done.html" data-q="all picks in every game picked, before the lock. pick, pick 'em"><span class="ct">All picks in</span><p>Every game picked, before the lock.</p></a>
+<a class="card" href="pick-pickem-locked.html" data-q="picks locked correct, wrong and waiting, as results come in. pick, pick 'em"><span class="ct">Picks locked</span><p>Correct, wrong and waiting, as results come in.</p></a>
+</div>
+</section>
+<section class="grp" data-aud="player" data-name="Standings">
+<button class="gt" aria-expanded="true"><span class="gn">Standings</span><span class="gc"></span><span class="aud player">Player</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="cards">
+<a class="card" href="standings.html" data-q="standings, survivor still alive and eliminated, with find a player and the pool total. standings"><span class="ct">Standings, survivor</span><p>Still alive and eliminated, with find a player and the pool total.</p></a>
+<a class="card" href="standings-pickem.html" data-q="standings, pick 'em points leaderboard with tied ranks. standings"><span class="ct">Standings, pick 'em</span><p>Points leaderboard with tied ranks.</p></a>
+<a class="card" href="recap.html" data-q="weekly recap a shareable card for the week. standings"><span class="ct">Weekly recap</span><p>A shareable card for the week.</p></a>
+<a class="card" href="pot-options.html" data-q="pool total wording the three ways to word the pool total. option b was chosen. standings"><span class="ct">Pool total wording</span><p>The three ways to word the pool total. Option B was chosen.</p></a>
+</div>
+</section>
+<section class="grp" data-aud="player" data-name="Menu and music">
+<button class="gt" aria-expanded="true"><span class="gn">Menu and music</span><span class="gc"></span><span class="aud player">Player</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="cards">
+<a class="card" href="menu-drinks.html" data-q="menu, drinks what's on tap, with new and seasonal labels. menu and music"><span class="ct">Menu, drinks</span><p>What's on tap, with New and Seasonal labels.</p></a>
+<a class="card" href="menu-kitchen.html" data-q="menu, kitchen plates, sandwich, salad, nachos, sides and cornbread. menu and music"><span class="ct">Menu, kitchen</span><p>Plates, sandwich, salad, nachos, sides and cornbread.</p></a>
+<a class="card" href="menu-music.html" data-q="menu, music who's playing this weekend and what's coming up. menu and music"><span class="ct">Menu, music</span><p>Who's playing this weekend and what's coming up.</p></a>
+<a class="card" href="menu-public.html" data-q="menu, not signed in what a table qr code opens: the menu, plus a way to play. menu and music"><span class="ct">Menu, not signed in</span><p>What a table QR code opens: the menu, plus a way to play.</p></a>
+</div>
+</section>
+<section class="grp" data-aud="player" data-name="Me and help">
+<button class="gt" aria-expanded="true"><span class="gn">Me and help</span><span class="gc"></span><span class="aud player">Player</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="cards">
+<a class="card" href="account.html" data-q="me pools, name, email, password, help and sign out. me and help"><span class="ct">Me</span><p>Pools, name, email, password, help and sign out.</p></a>
+<a class="card" href="set-password.html" data-q="set a password optional. a first password for someone who signs in by link. me and help"><span class="ct">Set a password</span><p>Optional. A first password for someone who signs in by link.</p></a>
+<a class="card" href="set-password-error.html" data-q="set a password, a problem the two entries don't match. me and help"><span class="ct">Set a password, a problem</span><p>The two entries don't match.</p></a>
+<a class="card" href="change-password.html" data-q="change your password needs the current one. me and help"><span class="ct">Change your password</span><p>Needs the current one.</p></a>
+<a class="card" href="password-saved.html" data-q="password saved confirmation. me and help"><span class="ct">Password saved</span><p>Confirmation.</p></a>
+<a class="card" href="help.html" data-q="how to play short answers to the usual questions. me and help"><span class="ct">How to play</span><p>Short answers to the usual questions.</p></a>
+</div>
+</section>
+<section class="grp" data-aud="everyone" data-name="Errors">
+<button class="gt" aria-expanded="true"><span class="gn">Errors</span><span class="gc"></span><span class="aud everyone">Everyone</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="cards">
+<a class="card" href="not-found.html" data-q="page not found a friendly dead end. also what a non-admin sees at /admin. errors"><span class="ct">Page not found</span><p>A friendly dead end. Also what a non-admin sees at /admin.</p></a>
+<a class="card" href="offline.html" data-q="can't connect bad wi-fi or signal, with a try again button. errors"><span class="ct">Can't connect</span><p>Bad Wi-Fi or signal, with a try again button.</p></a>
+</div>
+</section>
+<section class="grp" data-aud="everyone" data-name="For the bar">
+<button class="gt" aria-expanded="true"><span class="gn">For the bar</span><span class="gc"></span><span class="aud everyone">Everyone</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="cards">
+<a class="card" href="tv-standings.html" data-q="tv standings a 16:9 big-screen view for the bar. for the bar"><span class="ct">TV standings</span><p>A 16:9 big-screen view for the bar.</p></a>
+<a class="card" href="table-card.html" data-q="table card a printable table tent with a qr code. for the bar"><span class="ct">Table card</span><p>A printable table tent with a QR code.</p></a>
+<a class="card" href="install-prompt.html" data-q="add to home screen help installing the app on a phone. for the bar"><span class="ct">Add to home screen</span><p>Help installing the app on a phone.</p></a>
+</div>
+</section>
+<section class="grp" data-aud="admin" data-name="Admin: your next step">
+<button class="gt" aria-expanded="true"><span class="gn">Admin: your next step</span><span class="gc"></span><span class="aud admin">Admin</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="cards">
+<a class="card" href="account-admin.html" data-q="me, as an admin the way in: a run the pools row. admin: your next step"><span class="ct">Me, as an admin</span><p>The way in: a Run the pools row.</p></a>
+<a class="card" href="admin.html" data-q="your next step admin home as one card: what to do next. admin: your next step"><span class="ct">Your next step</span><p>Admin home as one card: what to do next.</p></a>
+<a class="card" href="admin-caught-up.html" data-q="all caught up nothing needs doing. admin: your next step"><span class="ct">All caught up</span><p>Nothing needs doing.</p></a>
+<a class="card" href="admin-next-approval.html" data-q="a decision is waiting another admin's request is your next step. admin: your next step"><span class="ct">A decision is waiting</span><p>Another admin's request is your next step.</p></a>
+<a class="card" href="admin-approval.html" data-q="confirm a decision see what was chosen and confirm or decline. admin: your next step"><span class="ct">Confirm a decision</span><p>See what was chosen and confirm or decline.</p></a>
+<a class="card" href="admin-approval-done.html" data-q="confirmed the decision is applied and recorded. admin: your next step"><span class="ct">Confirmed</span><p>The decision is applied and recorded.</p></a>
+<a class="card" href="admin-approval-decline.html" data-q="don't confirm: why not? an optional reason, with quick choices. admin: your next step"><span class="ct">Don't confirm: why not?</span><p>An optional reason, with quick choices.</p></a>
+<a class="card" href="admin-approval-declined.html" data-q="not confirmed what the person who declined sees. nothing changes. admin: your next step"><span class="ct">Not confirmed</span><p>What the person who declined sees. Nothing changes.</p></a>
+<a class="card" href="admin-next-declined.html" data-q="your request was declined what the person who asked sees, with a way to choose again. admin: your next step"><span class="ct">Your request was declined</span><p>What the person who asked sees, with a way to choose again.</p></a>
+<a class="card" href="admin-wipeout-alert.html" data-q="late season, with a wipeout the next step is a decision about who stays in. admin: your next step"><span class="ct">Late season, with a wipeout</span><p>The next step is a decision about who stays in.</p></a>
+<a class="card" href="admin-no-schedule.html" data-q="no schedule yet an empty state for a season with no games. admin: your next step"><span class="ct">No schedule yet</span><p>An empty state for a season with no games.</p></a>
+<a class="card" href="admin-more.html" data-q="more the menu of every other admin tool. admin: your next step"><span class="ct">More</span><p>The menu of every other admin tool.</p></a>
+<a class="card" href="admin-activity.html" data-q="activity a record of who changed what, with your own entry flagged. admin: your next step"><span class="ct">Activity</span><p>A record of who changed what, with your own entry flagged.</p></a>
+</div>
+</section>
+<section class="grp" data-aud="admin" data-name="Admin: results">
+<button class="gt" aria-expanded="true"><span class="gn">Admin: results</span><span class="gc"></span><span class="aud admin">Admin</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="cards">
+<a class="card" href="admin-results.html" data-q="enter results games waiting first, finished ones below. admin: results"><span class="ct">Enter results</span><p>Games waiting first, finished ones below.</p></a>
+<a class="card" href="admin-results-correct.html" data-q="correct a result a confirm sheet that warns survivor won't bring players back. admin: results"><span class="ct">Correct a result</span><p>A confirm sheet that warns survivor won't bring players back.</p></a>
+<a class="card" href="admin-step-results-1.html" data-q="results, game 1 who won? one game at a time. admin: results"><span class="ct">Results, game 1</span><p>Who won? One game at a time.</p></a>
+<a class="card" href="admin-step-results-2.html" data-q="results, game 2 the next game. admin: results"><span class="ct">Results, game 2</span><p>The next game.</p></a>
+<a class="card" href="admin-step-results-done.html" data-q="results, done all in, with the next step offered. admin: results"><span class="ct">Results, done</span><p>All in, with the next step offered.</p></a>
+<a class="card" href="admin-wipeout.html" data-q="wipeout choose who stays in. the admin is one of the players, and it says so. admin: results"><span class="ct">Wipeout</span><p>Choose who stays in. The admin is one of the players, and it says so.</p></a>
+<a class="card" href="admin-wipeout-self.html" data-q="wipeout, keeping yourself ticking your own name means another admin must confirm. admin: results"><span class="ct">Wipeout, keeping yourself</span><p>Ticking your own name means another admin must confirm.</p></a>
+<a class="card" href="admin-approval-sent.html" data-q="sent for confirmation nothing changes until another admin confirms. admin: results"><span class="ct">Sent for confirmation</span><p>Nothing changes until another admin confirms.</p></a>
+</div>
+</section>
+<section class="grp" data-aud="admin" data-name="Admin: pools and players">
+<button class="gt" aria-expanded="true"><span class="gn">Admin: pools and players</span><span class="gc"></span><span class="aud admin">Admin</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="cards">
+<a class="card" href="admin-pools.html" data-q="pools every pool this season. admin: pools and players"><span class="ct">Pools</span><p>Every pool this season.</p></a>
+<a class="card" href="admin-pool-new.html" data-q="new pool (one form) the all-in-one version of creating a pool. admin: pools and players"><span class="ct">New pool (one form)</span><p>The all-in-one version of creating a pool.</p></a>
+<a class="card" href="admin-pool.html" data-q="pool settings rules, pool total and delete. admin: pools and players"><span class="ct">Pool settings</span><p>Rules, pool total and delete.</p></a>
+<a class="card" href="admin-pool-delete.html" data-q="delete a pool type the name to confirm. admin: pools and players"><span class="ct">Delete a pool</span><p>Type the name to confirm.</p></a>
+<a class="card" href="admin-roster.html" data-q="players the roster, with find a player. admin: pools and players"><span class="ct">Players</span><p>The roster, with find a player.</p></a>
+<a class="card" href="admin-roster-edit.html" data-q="edit a player fix a status. admin: pools and players"><span class="ct">Edit a player</span><p>Fix a status.</p></a>
+<a class="card" href="admin-roster-add.html" data-q="add a player by email. admin: pools and players"><span class="ct">Add a player</span><p>By email.</p></a>
+<a class="card" href="admin-picks.html" data-q="picks, after the lock who picked what, once the week has locked. admin: pools and players"><span class="ct">Picks, after the lock</span><p>Who picked what, once the week has locked.</p></a>
+<a class="card" href="admin-picks-prelock.html" data-q="picks, before the lock admins see who has picked, not what. admin: pools and players"><span class="ct">Picks, before the lock</span><p>Admins see who has picked, not what.</p></a>
+<a class="card" href="admin-roster-edit-self.html" data-q="edit your own entry a notice that the change is recorded. admin: pools and players"><span class="ct">Edit your own entry</span><p>A notice that the change is recorded.</p></a>
+<a class="card" href="admin-step-season-1.html" data-q="open a pool, step 1 name it. admin: pools and players"><span class="ct">Open a pool, step 1</span><p>Name it.</p></a>
+<a class="card" href="admin-step-season-2.html" data-q="open a pool, step 2 survivor or pick 'em. admin: pools and players"><span class="ct">Open a pool, step 2</span><p>Survivor or pick 'em.</p></a>
+<a class="card" href="admin-step-season-3.html" data-q="open a pool, step 3 check the rules. admin: pools and players"><span class="ct">Open a pool, step 3</span><p>Check the rules.</p></a>
+<a class="card" href="admin-step-season-4.html" data-q="open a pool, step 4 ready to open? admin: pools and players"><span class="ct">Open a pool, step 4</span><p>Ready to open?</p></a>
+<a class="card" href="admin-step-season-done.html" data-q="pool is open share the link or print the table card. admin: pools and players"><span class="ct">Pool is open</span><p>Share the link or print the table card.</p></a>
+</div>
+</section>
+<section class="grp" data-aud="admin" data-name="Admin: menu">
+<button class="gt" aria-expanded="true"><span class="gn">Admin: menu</span><span class="gc"></span><span class="aud admin">Admin</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="cards">
+<a class="card" href="admin-menu.html" data-q="menu, drinks switch each beer on tap or out. admin: menu"><span class="ct">Menu, drinks</span><p>Switch each beer on tap or out.</p></a>
+<a class="card" href="admin-menu-kitchen.html" data-q="menu, kitchen dishes, add-ons and sides. admin: menu"><span class="ct">Menu, kitchen</span><p>Dishes, add-ons and sides.</p></a>
+<a class="card" href="admin-menu-item.html" data-q="edit a drink name, strength, labels, remove. admin: menu"><span class="ct">Edit a drink</span><p>Name, strength, labels, remove.</p></a>
+<a class="card" href="admin-step-item-1.html" data-q="add to the menu, step 1 what are you adding? admin: menu"><span class="ct">Add to the menu, step 1</span><p>What are you adding?</p></a>
+<a class="card" href="admin-step-item-2.html" data-q="add to the menu, step 2 what's it called? admin: menu"><span class="ct">Add to the menu, step 2</span><p>What's it called?</p></a>
+<a class="card" href="admin-step-item-3.html" data-q="add to the menu, step 3 optional details. admin: menu"><span class="ct">Add to the menu, step 3</span><p>Optional details.</p></a>
+<a class="card" href="admin-step-item-4.html" data-q="add to the menu, step 4 review. admin: menu"><span class="ct">Add to the menu, step 4</span><p>Review.</p></a>
+<a class="card" href="admin-step-item-done.html" data-q="added to the menu confirmation. admin: menu"><span class="ct">Added to the menu</span><p>Confirmation.</p></a>
+</div>
+</section>
+<section class="grp" data-aud="admin" data-name="Admin: music">
+<button class="gt" aria-expanded="true"><span class="gn">Admin: music</span><span class="gc"></span><span class="aud admin">Admin</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="cards">
+<a class="card" href="admin-events.html" data-q="music what's coming up and what's past. admin: music"><span class="ct">Music</span><p>What's coming up and what's past.</p></a>
+<a class="card" href="admin-step-event-1.html" data-q="add music, step 1 who's playing? admin: music"><span class="ct">Add music, step 1</span><p>Who's playing?</p></a>
+<a class="card" href="admin-step-event-2.html" data-q="add music, step 2 when? admin: music"><span class="ct">Add music, step 2</span><p>When?</p></a>
+<a class="card" href="admin-step-event-3.html" data-q="add music, step 3 review. admin: music"><span class="ct">Add music, step 3</span><p>Review.</p></a>
+<a class="card" href="admin-step-event-done.html" data-q="music added confirmation. admin: music"><span class="ct">Music added</span><p>Confirmation.</p></a>
+</div>
+</section>
+<section class="grp" data-aud="admin" data-name="Admin: from the brewery">
+<button class="gt" aria-expanded="true"><span class="gn">Admin: from the brewery</span><span class="gc"></span><span class="aud admin">Admin</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="cards">
+<a class="card" href="admin-brewery.html" data-q="from the brewery feature, special, music or announcement, plus what's showing. admin: from the brewery"><span class="ct">From the brewery</span><p>Feature, special, music or announcement, plus what's showing.</p></a>
+<a class="card" href="admin-step-feature-1.html" data-q="feature, step 1 pick something from the menu. admin: from the brewery"><span class="ct">Feature, step 1</span><p>Pick something from the menu.</p></a>
+<a class="card" href="admin-step-feature-2.html" data-q="feature, step 2 how long? admin: from the brewery"><span class="ct">Feature, step 2</span><p>How long?</p></a>
+<a class="card" href="admin-step-feature-done.html" data-q="featured confirmation. admin: from the brewery"><span class="ct">Featured</span><p>Confirmation.</p></a>
+<a class="card" href="admin-step-special-1.html" data-q="special, step 1 what's the special? admin: from the brewery"><span class="ct">Special, step 1</span><p>What's the special?</p></a>
+<a class="card" href="admin-step-special-2.html" data-q="special, step 2 when is it on? admin: from the brewery"><span class="ct">Special, step 2</span><p>When is it on?</p></a>
+<a class="card" href="admin-step-special-3.html" data-q="special, step 3 review. admin: from the brewery"><span class="ct">Special, step 3</span><p>Review.</p></a>
+<a class="card" href="admin-step-special-done.html" data-q="special posted confirmation. admin: from the brewery"><span class="ct">Special posted</span><p>Confirmation.</p></a>
+<a class="card" href="admin-announcements.html" data-q="announcements what's showing in watch with us. admin: from the brewery"><span class="ct">Announcements</span><p>What's showing in Watch with us.</p></a>
+<a class="card" href="admin-announcement-new.html" data-q="new announcement (one form) the all-in-one version. admin: from the brewery"><span class="ct">New announcement (one form)</span><p>The all-in-one version.</p></a>
+<a class="card" href="admin-step-ann-1.html" data-q="announcement, step 1 what's it about? admin: from the brewery"><span class="ct">Announcement, step 1</span><p>What's it about?</p></a>
+<a class="card" href="admin-step-ann-2.html" data-q="announcement, step 2 message and a preview. admin: from the brewery"><span class="ct">Announcement, step 2</span><p>Message and a preview.</p></a>
+<a class="card" href="admin-step-ann-3.html" data-q="announcement, step 3 when should it show? admin: from the brewery"><span class="ct">Announcement, step 3</span><p>When should it show?</p></a>
+<a class="card" href="admin-step-ann-done.html" data-q="announcement posted confirmation. admin: from the brewery"><span class="ct">Announcement posted</span><p>Confirmation.</p></a>
+</div>
+</section>
+<section class="grp" data-aud="admin" data-name="Admin: guide">
+<button class="gt" aria-expanded="true"><span class="gn">Admin: guide</span><span class="gc"></span><span class="aud admin">Admin</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+<div class="cards">
+<a class="card" href="admin-guide.html" data-q="admin guide everything she needs, in plain english. admin: guide"><span class="ct">Admin guide</span><p>Everything she needs, in plain English.</p></a>
+</div>
+</section>
+  </div>
+  <p class="none hide" id="none">No pages match.</p>
+</div>
+<script>(function(){
+function getRole(){try{var r=localStorage.getItem('bbbRole');return r==='admin'||r==='all'?r:'player'}catch(e){return'player'}}
+function setRole(r){try{localStorage.setItem('bbbRole',r)}catch(e){}}
+function audOk(aud,role){return role==='all'||aud==='everyone'||aud===role}
+
+var groups=[].slice.call(document.querySelectorAll('.grp')),chips=document.getElementById('chips'),q=document.getElementById('q'),none=document.getElementById('none'),box=document.getElementById('role');
+var cat=null;
+function paintRole(){var r=getRole();[].forEach.call(box.querySelectorAll('button'),function(b){b.className=b.dataset.r===r?'on':''})}
+function build(){var r=getRole();chips.innerHTML='';var all=document.createElement('button');all.className='chip'+(cat===null?' on':'');all.textContent='All';all.onclick=function(){cat=null;render()};chips.appendChild(all);
+ groups.forEach(function(g){if(!audOk(g.dataset.aud,r))return;var c=document.createElement('button');c.className='chip'+(cat===g.dataset.name?' on':'');c.textContent=g.dataset.name;c.onclick=function(){cat=cat===g.dataset.name?null:g.dataset.name;render()};chips.appendChild(c)})}
+function render(){var r=getRole(),term=q.value.trim().toLowerCase(),shown=0;
+ if(cat){var ok=groups.some(function(g){return g.dataset.name===cat&&audOk(g.dataset.aud,r)});if(!ok)cat=null}
+ build();
+ groups.forEach(function(g){var vis=audOk(g.dataset.aud,r)&&(!cat||g.dataset.name===cat),n=0;
+  [].forEach.call(g.querySelectorAll('.card'),function(c){var m=!term||c.dataset.q.indexOf(term)>-1;c.classList.toggle('hide',!m);if(m)n++});
+  g.style.order=(r==='admin'&&g.dataset.aud==='admin')?-1:0;
+  g.classList.toggle('hide',!vis||n===0);if(vis&&n>0)shown+=n;
+  g.querySelector('.gc').textContent=n+(n===1?' page':' pages');
+  if(term&&vis&&n>0)g.classList.remove('closed')});
+ none.classList.toggle('hide',shown>0)}
+box.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;setRole(b.dataset.r);paintRole();render()});
+q.addEventListener('input',render);
+groups.forEach(function(g){g.querySelector('.gt').addEventListener('click',function(){var c=g.classList.toggle('closed');this.setAttribute('aria-expanded',String(!c))})});
+document.getElementById('expand').onclick=function(){groups.forEach(function(g){g.classList.remove('closed')})};
+document.getElementById('collapse').onclick=function(){groups.forEach(function(g){g.classList.add('closed')})};
+paintRole();render();
+})();</script>
+</body></html>

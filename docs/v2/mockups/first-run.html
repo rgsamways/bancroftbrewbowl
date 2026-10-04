@@ -1,8 +1,8 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Bancroft Brew Bowl - home mockup (v2, polished)</title>
+<title>Bancroft Brew Bowl - first sign-in home mockup</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* Design tokens. Colours are variables so a future bar can reskin without touching markup. */
+/* Same tokens as home.html. */
 :root{
   --bg:#0e0e0f;--surface:#171718;--surface-2:#202022;--line:#2c2c2f;
   --accent:#c17a45;--accent-ink:#1a0f06;--accent-soft:rgba(193,122,69,.16);
@@ -19,31 +19,27 @@ header{display:flex;align-items:center;justify-content:space-between;padding:16p
 .brand b{display:block;font-size:16px;font-weight:600;line-height:1.1}
 .brand small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
 .avatar{width:34px;height:34px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;font-size:12px;font-weight:600}
-.hero{margin:4px 16px 0;border-radius:20px;padding:20px;background:var(--surface);border:1px solid var(--line)}
-.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px;background:rgba(74,222,128,.1);color:var(--alive)}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--alive)}
-.hero h1{font-size:28px;line-height:1.15;font-weight:600;margin:14px 0 6px;letter-spacing:-.01em}
-.sub{color:var(--muted);font-size:14px}
-.meta{display:flex;align-items:center;justify-content:space-between;margin:18px 0 16px;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.locks{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--text);font-weight:500;font-variant-numeric:tabular-nums}
-.locks .i{color:var(--muted)}
-.cta{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border-radius:12px;background:var(--accent);color:var(--accent-ink);font:600 16px Inter,sans-serif;border:0}
-h2{font-size:16px;font-weight:600;margin:28px 18px 12px;display:flex;justify-content:space-between;align-items:baseline}
-h2 a{text-decoration:none;font-size:13px;font-weight:500;color:var(--accent)}
-.games{display:grid;gap:12px;padding:0 16px}
-.game{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-.when{display:flex;align-items:center;gap:6px;padding:10px 14px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line)}
-.team{display:flex;align-items:center;gap:12px;min-height:56px;padding:0 14px;font-size:15px;font-weight:500;border-bottom:1px solid var(--line)}
-.team:last-child{border-bottom:0}
-.team .c{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;flex:none}
-.team .n{flex:1}
-.team .tag{font-size:12px;color:var(--muted);font-weight:400}
-.team.pick{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
-.team.pick .tag{color:var(--accent);font-weight:600;display:flex;align-items:center;gap:4px}
-.team.used .n{color:var(--faint)}.team.used .c{filter:saturate(.4)}.team.used .tag{color:var(--faint)}
-.promo{margin:0 16px;border-radius:var(--r);padding:16px;background:var(--surface);border:1px solid var(--line);display:flex;gap:14px;align-items:flex-start}
-.promo .ico{width:40px;height:40px;border-radius:10px;background:var(--surface-2);display:grid;place-items:center;color:var(--accent);flex:none}
-.promo b{display:block;font-size:15px;font-weight:600;margin-bottom:2px}.promo span{font-size:14px;color:var(--muted);line-height:1.45}
+.welcome{margin:4px 16px 0;border-radius:20px;padding:22px 20px;background:var(--surface);border:1px solid var(--line)}
+.welcome h1{font-size:28px;line-height:1.15;font-weight:600;letter-spacing:-.01em}
+.welcome p{color:var(--muted);font-size:15px;line-height:1.5;margin-top:8px}
+h2{font-size:16px;font-weight:600;margin:28px 18px 12px}
+.steps{margin:0 16px;display:grid;gap:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.step{display:flex;gap:14px;align-items:flex-start;padding:14px;border-bottom:1px solid var(--line)}
+.step:last-child{border-bottom:0}
+.num{width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:13px;font-weight:700;flex:none}
+.step b{display:block;font-size:15px;font-weight:600}
+.step span{display:block;font-size:14px;color:var(--muted);line-height:1.45;margin-top:2px}
+.pools{display:grid;gap:12px;padding:0 16px}
+.pool{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.top{display:flex;align-items:center;gap:12px}
+.ico{width:40px;height:40px;border-radius:10px;background:var(--surface-2);display:grid;place-items:center;color:var(--accent);flex:none}
+.top b{display:block;font-size:16px;font-weight:600}
+.top small{display:block;font-size:12px;color:var(--muted);margin-top:1px}
+.pool p{font-size:14px;color:var(--muted);line-height:1.5;margin-top:12px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;border-radius:12px;background:var(--accent);color:var(--accent-ink);font:600 15px Inter,sans-serif;border:0;margin-top:14px}
+.name{margin:0 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);display:flex;align-items:center;gap:12px;min-height:60px;padding:0 14px}
+.name .n{flex:1;font-size:15px}.name small{display:block;font-size:12px;color:var(--muted);margin-bottom:1px}
+.name a{text-decoration:none;font-size:14px;font-weight:500;color:var(--accent)}
 nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(14,14,15,.94);backdrop-filter:blur(8px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:8px 0 14px}
 nav a{text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:500;color:var(--muted);min-height:44px;justify-content:center}
 nav a.on{color:var(--accent)}
@@ -59,50 +55,41 @@ nav a.on{color:var(--accent)}
     <symbol id="target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
     <symbol id="trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></symbol>
     <symbol id="user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
-    <symbol id="tv" viewBox="0 0 24 24"><rect width="20" height="15" x="2" y="7" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></symbol>
-    <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
-    <symbol id="check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
-    <symbol id="arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
       <symbol id="utensils" viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></symbol>
-      <symbol id="music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
   </defs>
 </svg>
 <div class="mock">MOCKUP</div>
 <a class="mockidx" href="index.html">All mockups</a>
 <header><a class="brand" href="home.html" aria-label="Brew Bowl home"><div class="logo">B</div><div><b>Brew Bowl</b><small>Bancroft Brewing Co.</small></div></a><a class="avatar" href="account.html" style="color:inherit;text-decoration:none">RS</a></header>
 
-<section class="hero">
-  <span class="pill"><i class="dot"></i> You're still alive</span>
-  <h1>Week 5: make your pick</h1>
-  <p class="sub">Sunday Survivor &middot; 38 of 64 players left</p>
-  <div class="meta">
-    <div class="locks"><svg class="i sm"><use href="#clock"/></svg>Locks in 2d 14h 37m</div>
-  </div>
-  <a class="cta" href="pick.html">Make my pick <svg class="i"><use href="#arrow-right"/></svg></a>
+<section class="welcome">
+  <h1>Welcome, Robin</h1>
+  <p>You're signed in. Join a pool below to start playing. It takes one tap.</p>
 </section>
 
-<h2>This week <a href="pick.html">See all 14</a></h2>
-<div class="games">
-  <div class="game">
-    <div class="when"><svg class="i sm"><use href="#clock"/></svg>Sun 1:00</div>
-    <div class="team pick"><div class="c" style="background:#c60c30">KC</div><span class="n">Chiefs</span><span class="tag"><svg class="i sm"><use href="#check"/></svg>Your pick</span></div>
-    <div class="team"><div class="c" style="background:#00338d">BUF</div><span class="n">Bills</span></div>
+<h2>How it works</h2>
+<div class="steps">
+  <div class="step"><div class="num">1</div><div><b>Join a pool</b><span>Pick the kind of game you want to play.</span></div></div>
+  <div class="step"><div class="num">2</div><div><b>Make your picks</b><span>Choose before the first game of the week kicks off.</span></div></div>
+  <div class="step"><div class="num">3</div><div><b>Watch it play out</b><span>Check the standings and come back next week.</span></div></div>
+</div>
+
+<h2>Pools you can join</h2>
+<div class="pools">
+  <div class="pool">
+    <div class="top"><div class="ico"><svg class="i"><use href="#target"/></svg></div><div><b>Sunday Survivor</b><small>Survivor &middot; 2026 season</small></div></div>
+    <p>Pick one team to win each week, and you can only use each team once. If your team loses, you're out. Last one standing wins.</p>
+    <a class="btn" href="join.html">Join Sunday Survivor</a>
   </div>
-  <div class="game">
-    <div class="when"><svg class="i sm"><use href="#clock"/></svg>Sun 4:25</div>
-    <div class="team"><div class="c" style="background:#046a38">PHI</div><span class="n">Eagles</span></div>
-    <div class="team used"><div class="c" style="background:#0b2265">DAL</div><span class="n">Cowboys</span><span class="tag">Used week 2</span></div>
-  </div>
-  <div class="game">
-    <div class="when"><svg class="i sm"><use href="#clock"/></svg>Mon 8:15</div>
-    <div class="team"><div class="c" style="background:#0076b6">DET</div><span class="n">Lions</span></div>
-    <div class="team"><div class="c" style="background:#003594">LAR</div><span class="n">Rams</span></div>
+  <div class="pool">
+    <div class="top"><div class="ico"><svg class="i"><use href="#trophy"/></svg></div><div><b>Brew Bowl Pick 'Em</b><small>Pick 'em &middot; 2026 season</small></div></div>
+    <p>Pick the winner of every game each week. Every correct pick scores a point, and the most points wins.</p>
+    <a class="btn" href="join-pickem.html">Join Brew Bowl Pick 'Em</a>
   </div>
 </div>
 
-<h2>At the brewery</h2>
-<div class="promo" style="margin-bottom:12px"><div class="ico"><svg class="i"><use href="#music"/></svg></div><div><b>Live this weekend</b><span>Sat, Bradley McAree, 1 &ndash; 4 PM. <a href="menu-music.html" style="color:var(--accent);text-decoration:none;font-weight:600">See the music</a></span></div></div>
-<div class="promo"><div class="ico"><svg class="i"><use href="#tv"/></svg></div><div><b>Watch with us</b><span>Sunday games on the big screen. Make your pick before kickoff, then cheer them on together.</span></div></div>
+<h2>Your name in pools</h2>
+<div class="name"><div class="n"><small>Shown to other players</small>Robin S.</div><a href="account.html">Change</a></div>
 
 <p class="resp">Please drink responsibly.</p>
 
