@@ -52,3 +52,10 @@ The TV data SHALL include the most picked teams only once the pool's `reveal_pic
 #### Scenario: Later reveal on the TV
 - **WHEN** a pool uses `after_final_game` and the week has locked but a game is still undecided
 - **THEN** the TV shows no most-picked list and says it shows when the week's games are final
+
+### Requirement: The TV page uses the same safe names
+The alive names and the leaderboard names on the TV data SHALL follow the same rule as Standings: a name that is empty or contains an "@" is shown as the part before the "@", or "A player".
+
+#### Scenario: Unnamed player on the TV
+- **WHEN** a player's account name is an email address
+- **THEN** the TV data lists only the part before the "@"
