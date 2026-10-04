@@ -1,0 +1,187 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bancroft Brew Bowl - standings (survivor)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Design tokens. Colours are variables so a future bar can reskin without touching markup. */
+:root{
+  --bg:#0e0e0f;--surface:#171718;--surface-2:#202022;--line:#2c2c2f;
+  --accent:#c17a45;--accent-ink:#1a0f06;--accent-soft:rgba(193,122,69,.16);
+  --text:#f4f4f2;--muted:#a3a3ab;--faint:#8b8b94;
+  --alive:#4ade80;--r:14px
+}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;max-width:430px;margin:0 auto;padding-bottom:92px;min-height:100vh;-webkit-font-smoothing:antialiased}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+svg.i.sm{width:16px;height:16px}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px}
+.brand{text-decoration:none;color:inherit;display:flex;align-items:center;gap:10px}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--accent);display:grid;place-items:center;color:var(--accent-ink);font-weight:700;font-size:17px}
+.brand b{display:block;font-size:16px;font-weight:600;line-height:1.1}
+.brand small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;font-size:12px;font-weight:600}
+.hero{margin:4px 16px 0;border-radius:20px;padding:20px;background:var(--surface);border:1px solid var(--line)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px;background:rgba(74,222,128,.1);color:var(--alive)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--alive)}
+.hero h1{font-size:28px;line-height:1.15;font-weight:600;margin:14px 0 6px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:14px}
+.meta{display:flex;align-items:center;justify-content:space-between;margin:18px 0 16px;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.locks{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--text);font-weight:500;font-variant-numeric:tabular-nums}
+.locks .i{color:var(--muted)}
+.cta{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border-radius:12px;background:var(--accent);color:var(--accent-ink);font:600 16px Inter,sans-serif;border:0}
+h2{font-size:16px;font-weight:600;margin:28px 18px 12px;display:flex;justify-content:space-between;align-items:baseline}
+h2 a{font-size:13px;font-weight:500;color:var(--accent)}
+.games{display:grid;gap:12px;padding:0 16px}
+.game{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.when{display:flex;align-items:center;gap:6px;padding:10px 14px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line)}
+.team{display:flex;align-items:center;gap:12px;min-height:56px;padding:0 14px;font-size:15px;font-weight:500;border-bottom:1px solid var(--line)}
+.team:last-child{border-bottom:0}
+.team .c{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;flex:none}
+.team .n{flex:1}
+.team .tag{font-size:12px;color:var(--muted);font-weight:400}
+.team.pick{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.team.pick .tag{color:var(--accent);font-weight:600;display:flex;align-items:center;gap:4px}
+.team.used .n{color:var(--faint)}.team.used .c{filter:saturate(.4)}.team.used .tag{color:var(--faint)}
+.promo{margin:0 16px;border-radius:var(--r);padding:16px;background:var(--surface);border:1px solid var(--line);display:flex;gap:14px;align-items:flex-start}
+.promo .ico{width:40px;height:40px;border-radius:10px;background:var(--surface-2);display:grid;place-items:center;color:var(--accent);flex:none}
+.promo b{display:block;font-size:15px;font-weight:600;margin-bottom:2px}.promo span{font-size:14px;color:var(--muted);line-height:1.45}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(14,14,15,.94);backdrop-filter:blur(8px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:8px 0 14px}
+nav a{text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:500;color:var(--muted);min-height:44px;justify-content:center}
+nav a.on{color:var(--accent)}
+.mock{pointer-events:none;position:fixed;top:8px;right:8px;background:#fff;color:#000;font:10px sans-serif;padding:3px 6px;border-radius:4px;z-index:9}
+.cta,.btn{text-decoration:none}a{-webkit-tap-highlight-color:transparent}
+
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 0}
+.stat{background:var(--surface-2);border-radius:12px;padding:12px 14px}
+.stat small{display:block;font-size:12px;color:var(--muted)}
+.stat b{display:block;font-size:26px;font-weight:600;letter-spacing:-.01em;margin-top:2px;font-variant-numeric:tabular-nums}
+.stat b span{font-size:14px;font-weight:500;color:var(--muted);margin-left:4px}
+.prog{margin:18px 0 16px}
+.prog .t{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;margin-bottom:8px}
+.prog .t b{font-weight:600}.prog .t span{color:var(--muted);font-size:13px;display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+.bar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%;width:64%;background:var(--accent);border-radius:99px}
+.hero .sub{margin-top:0}
+.rankpill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.when .need{margin-left:auto;color:var(--accent);font-weight:600}
+.when .done{margin-left:auto;color:var(--muted)}
+.day{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:20px 18px 8px}
+.day:first-of-type{margin-top:4px}
+.team .pickmark{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--faint);font-weight:500}
+.team.pick .pickmark{color:var(--accent);font-weight:600}
+.team .pickmark .i{width:24px;height:24px}
+.note{margin:18px 18px 0;font-size:13px;color:var(--muted);line-height:1.5;display:flex;gap:8px;align-items:flex-start}
+.note .i{margin-top:1px;color:var(--faint)}
+a.cta{text-decoration:none}
+a.team{color:inherit;text-decoration:none}
+a.avatar{color:inherit;text-decoration:none}
+.mockidx{position:fixed;right:10px;bottom:76px;z-index:10;background:#2c2c2f;color:#f4f4f2;font:600 12px Inter,sans-serif;padding:9px 13px;border-radius:99px;text-decoration:none;border:1px solid #3d3d41;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 16px 16px;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.seg a{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:9px;font-size:14px;font-weight:500;color:var(--muted);text-decoration:none;text-align:center;padding:0 8px}
+.seg a.on{background:var(--accent-soft);color:var(--text);box-shadow:inset 0 0 0 1px rgba(193,122,69,.5)}
+.big{font-size:40px;font-weight:600;letter-spacing:-.02em;line-height:1.05;font-variant-numeric:tabular-nums}
+.big span{font-size:18px;font-weight:500;color:var(--muted);margin-left:6px;letter-spacing:0}
+.hero .sub{margin-top:6px}
+.bar i.s{width:59%}
+.list{margin:0 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.p{display:flex;align-items:center;gap:12px;min-height:52px;padding:0 14px;border-bottom:1px solid var(--line);font-size:15px}
+.p:last-child{border-bottom:0}
+.p .ini{width:32px;height:32px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--muted);flex:none}
+.p .n{flex:1}
+.p .r{color:var(--muted);font-size:13px}
+.p.me{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.p.me .ini{background:var(--accent);color:var(--accent-ink)}
+.p .you{font-size:12px;font-weight:600;color:var(--accent)}
+.rank{width:28px;font-size:15px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
+.p.me .rank{color:var(--accent)}
+.pts{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.pts small{font-size:12px;font-weight:400;color:var(--muted);margin-left:3px}
+.more{display:flex;align-items:center;justify-content:center;gap:6px;width:calc(100% - 32px);margin:10px 16px 0;min-height:48px;border-radius:12px;background:transparent;border:1px solid var(--line);color:var(--text);font:500 14px Inter,sans-serif}
+h2 .cnt{color:var(--muted);font-weight:500;margin-left:6px}
+.tone-alive{color:var(--alive)}
+.resp{margin:30px 18px 0;text-align:center;font-size:12px;color:var(--faint);line-height:1.5}
+.search{margin:22px 16px 0;display:flex;align-items:center;gap:10px;min-height:48px;padding:0 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);color:var(--faint);font-size:15px}.search .i{color:var(--faint)}
+.potrow{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-size:15px;color:var(--muted)}.potrow b{color:var(--text);font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}.potcap{font-size:12px;color:var(--faint);margin-top:6px;line-height:1.45}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- Lucide icons (lucide-react 0.468.0, ISC licence), inlined for the static mockup -->
+  <defs>
+    <symbol id="house" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+    <symbol id="trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></symbol>
+    <symbol id="user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="tv" viewBox="0 0 24 24"><rect width="20" height="15" x="2" y="7" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></symbol>
+    <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+    <symbol id="circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></symbol>
+    <symbol id="circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+    <symbol id="chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+      <symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+      <symbol id="utensils" viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></symbol>
+  </defs>
+</svg>
+<div class="mock">MOCKUP</div>
+<a class="mockidx" href="index.html">All mockups</a>
+<header><a class="brand" href="home.html" aria-label="Brew Bowl home"><div class="logo">B</div><div><b>Brew Bowl</b><small>Bancroft Brewing Co.</small></div></a><a class="avatar" href="account.html" style="color:inherit;text-decoration:none">RS</a></header>
+
+<h1 style="font-size:24px;font-weight:600;letter-spacing:-.01em;margin:8px 18px 14px">Standings</h1>
+<div class="seg"><a href="standings.html" class="on">Sunday Survivor</a><a href="standings-pickem.html">Pick 'Em</a></div>
+
+<section class="hero" style="padding:18px">
+  <span class="pill"><i class="dot"></i> You're still alive</span>
+  <div class="big" style="margin-top:14px">38<span>of 64 still alive</span></div>
+  <p class="sub">After week 4 &middot; 26 players out so far</p>
+  <div class="bar" style="margin-top:14px"><i class="s"></i></div>
+  <div class="potrow"><span>Pool total</span><b>$320</b></div>
+  <p class="potcap">Cash handled at the bar, not in this app.</p>
+</section>
+
+<div class="search"><svg class="i"><use href="#search"/></svg>Find a player</div>
+
+<h2>Still alive <span class="cnt">38</span></h2>
+<div class="list">
+  <div class="p me"><span class="ini">RS</span><span class="n"><b>Robin S.</b></span><span class="you">You</span></div>
+  <div class="p"><span class="ini">AP</span><span class="n">Aaron P.</span></div>
+  <div class="p"><span class="ini">BC</span><span class="n">Beth C.</span></div>
+  <div class="p"><span class="ini">BM</span><span class="n">Big Mike</span></div>
+  <div class="p"><span class="ini">CL</span><span class="n">Chris L.</span></div>
+  <div class="p"><span class="ini">DW</span><span class="n">Dana W.</span></div>
+  <div class="p"><span class="ini">DM</span><span class="n">Dave M.</span></div>
+  <div class="p"><span class="ini">ER</span><span class="n">Elena R.</span></div>
+</div>
+<button class="more">Show all 38 <svg class="i sm"><use href="#chevron-down"/></svg></button>
+
+<h2>Eliminated <span class="cnt">26</span></h2>
+<div class="list">
+  <div class="p"><span class="ini">TH</span><span class="n" style="color:var(--muted)">Tom H.</span><span class="r">Out in week 4</span></div>
+  <div class="p"><span class="ini">PN</span><span class="n" style="color:var(--muted)">Priya N.</span><span class="r">Out in week 4</span></div>
+  <div class="p"><span class="ini">SK</span><span class="n" style="color:var(--muted)">Sandra K.</span><span class="r">Out in week 3</span></div>
+  <div class="p"><span class="ini">MA</span><span class="n" style="color:var(--muted)">Mo A.</span><span class="r">Out in week 3</span></div>
+  <div class="p"><span class="ini">JB</span><span class="n" style="color:var(--muted)">Jess B.</span><span class="r">Out in week 2</span></div>
+</div>
+<button class="more">Show all 26 <svg class="i sm"><use href="#chevron-down"/></svg></button>
+
+<p class="resp">Please drink responsibly.</p>
+
+<nav>
+  <a href="home.html"><svg class="i"><use href="#house"/></svg>Home</a>
+  <a href="pick.html"><svg class="i"><use href="#target"/></svg>Pick</a>
+  <a href="standings.html" class="on"><svg class="i"><use href="#trophy"/></svg>Standings</a>
+  <a href="menu-drinks.html"><svg class="i"><use href="#utensils"/></svg>Menu</a>
+</nav>
+<!-- role: admin tab -->
+<script>(function(){
+  var admin=false; try{var r=localStorage.getItem('bbbRole');admin=(r==='admin'||r==='all');}catch(e){}
+  if(!admin) return;
+  var nav=document.querySelector('nav'); if(!nav) return;
+  if(nav.querySelector('a[href="admin.html"]')) return;
+  if(nav.querySelectorAll('a').length!==4) return;
+  if(location.pathname.split('/').pop()==='account.html'){ location.replace('account-admin.html'); return; }
+  var a=document.createElement('a'); a.href='admin.html';
+  a.innerHTML='<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>Admin';
+  nav.appendChild(a); nav.style.gridTemplateColumns='repeat(5,1fr)';
+})();</script>
+</body></html>

@@ -17,11 +17,15 @@ export function PoolStandings() {
   const [pool, setPool] = useState<Pool | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [error, setError] = useState<string | null>(null);
+  // Only your own name links to a pick screen. Other players' names are plain text,
+  // because the server won't let you change their picks.
+  const [myEntryIds, setMyEntryIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!poolId) return;
     api<Pool>(`/pools/${poolId}`).then(setPool).catch((e) => setError(e.message));
     api<Entry[]>(`/pools/${poolId}/entries`).then(setEntries).catch((e) => setError(e.message));
+    api<{ id: string }[]>("/me/entries").then((mine) => setMyEntryIds(new Set(mine.map((e) => e.id))));
   }, [poolId]);
 
   if (error) return <p className="p-6 text-red-400">{error}</p>;
@@ -62,9 +66,13 @@ export function PoolStandings() {
         <ul className="divide-y divide-brand-border rounded border border-brand-border bg-brand-surface">
           {alive.map((entry) => (
             <li key={entry.id} className="px-3 py-2">
-              <Link to={`/pool/${poolId}/entry/${entry.id}/pick`} className="hover:text-brand-accent">
-                {entry.displayName}
-              </Link>
+              {myEntryIds.has(entry.id) ? (
+                <Link to={`/pool/${poolId}/entry/${entry.id}/pick`} className="hover:text-brand-accent">
+                  {entry.displayName}
+                </Link>
+              ) : (
+                <span>{entry.displayName}</span>
+              )}
             </li>
           ))}
           {alive.length === 0 && <li className="px-3 py-2 text-brand-muted">Nobody yet</li>}

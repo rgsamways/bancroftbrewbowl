@@ -1,64 +1,56 @@
 # Session Handoff
 
-_Written 2026-09-27. If you're reading this significantly later, treat the specifics below as a snapshot, not live truth — check git log and the live site first._
+_Written 2026-10-04, end of the long mockup-and-planning session. If you're reading this significantly later, treat the specifics below as a snapshot, not live truth: check `git log`, `openspec list` and the live site first._
 
-## Where things actually stand right now
+## Start here
 
-- Working tree is **clean**, `main` is at `dacd1e7` ("Build straight-up pick 'em: creation, picks, scoring, standings"), and it's already pushed and deployed.
-- **Production is live and healthy**: `https://api.bancroftbrewbowl.ca/health` and `https://bancroftbrewbowl.ca` both returned HTTP 200 as of this session. Nothing is broken or half-deployed.
-- No uncommitted work, no open branches, no pending migration. There is genuinely nothing "in flight" from the last working session — it ended cleanly after the pick 'em feature shipped.
-- It's been about 7 weeks of real-world time since the last session touched this (per the user). Nothing in the repo suggests anyone else touched it in the meantime — verify that assumption is still true before trusting it blindly.
+The state in one line: **v2 is fully designed and planned, and no app code has been written.** The next job is to start building, one slice at a time, in the order in `docs/v2/V2_BUILD_PLAN.md`, starting with `secure-pick-access`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
 
-## Read this first
+Read, in order:
 
-**`docs/BUILD_PLAN.md`** (written alongside this file) is the comprehensive reference — full feature inventory, data model, deployment setup, and known gaps. Read it before making changes; don't rediscover the architecture from scratch.
+1. This file.
+2. `docs/v2/V2_BUILD_PLAN.md`: the order of work, what each slice contains, which ones change the database, and how releases work.
+3. `docs/v2/mockups/index.html` (open in a browser; `gallery.html` shows thumbnails). About 115 clickable pages for every player screen, the step-by-step admin, sign-in and password, the menu and music, and the fairness safeguards. The "Viewing as" switch (Player / Admin / All) filters the index and shows or hides the Admin tab. The pages are generated static HTML; edit the HTML directly.
+4. `docs/ROLES_AND_RULES.md`: who can do what, the rules the app must always keep, and the "another admin confirms" rule.
+5. `docs/v2/V2_PLAN.md`: the original why and the legal guardrails.
+6. `docs/BUILD_PLAN.md`: the architecture of the app that already exists (still accurate).
+7. The project memory at `C:\Users\rgsam\.claude\projects\c--dev-bancroftbrewbowl\memory\`, especially `project_v2_gamelike_frontend.md`, which records every design decision made so you don't ask again.
+8. `docs/IDEAS.md`: parked ideas (in-brewery games). Don't start them unprompted.
 
-Also check the persistent memory at `C:\Users\rgsam\.claude\projects\c--dev-bancroftbrewbowl\memory\` (if you're Claude Code resuming this project) — `project_product_direction.md` and `project_scoring_scope.md` carry decisions and reasoning that aren't fully duplicated in the build plan.
+## Where things stand
 
-## Getting oriented fast
+- `main` is at the docs-and-mockups commits made at the end of this session; production (`bancroftbrewbowl.ca`) is the old app and unchanged. A `staging` branch and environment exist (see `CLAUDE.md`).
+- **Two OpenSpec changes are written, valid and not started:** `secure-pick-access` (do first) and `password-sign-in` (part of slice 4). `openspec list` will show them as in progress with 0 tasks done; that is accurate.
+- **Robin's release rule:** each slice goes live as soon as it is verified. No private review gate; he decides. Staging is a quick self-check.
 
-1. `git log --oneline` — 16 commits total, each one is a complete, working, deployed feature (this project was built and shipped incrementally, not in one big batch).
-2. The repo is a pnpm workspace: `apps/api` (Fastify), `apps/dashboard` (React/Vite), `packages/shared` (Zod schemas/types shared between them).
-3. `apps/api/src/db/schema.ts` is the single source of truth for the data model — read it before touching anything data-related.
-4. `apps/api/src/routes/*.ts` — one file per resource area (pools, entries, picks, nfl, promotions, canned-promotions, wipeouts). The endpoint list is in `BUILD_PLAN.md`.
+## Things found this session that matter
 
-## Local dev setup (if you need to run this locally)
+- **Three real holes in the existing API** (see `secure-pick-access`): any signed-in player can read everyone's picks before the lock, change or delete another player's pick, and read every player's email.
+- **better-auth is pinned at 1.1.9** and differs from Tobi's (^1.7). It has no switch to turn off password sign-up, so `password-sign-in` closes those endpoints with `disabledPaths` and proves it in a test first.
+- **The `per_game_kickoff` deadline rule exists in pool settings but no server code reads it.** Locking is the first kickoff of the week.
+- **The schedule import is a script** (`apps/api/scripts/seed-schedule.ts`), not a screen. `apps/api/scripts/make-admin.ts` makes an admin.
+- Adding a player by email and editing a player's status exist in the API but are not in today's admin screens.
 
-```bash
-pnpm install
-pnpm docker:up          # starts local Postgres on port 5437 (see docker-compose.yml)
-cp .env.example apps/api/.env   # fill in DATABASE_URL etc. per .env.example
-pnpm db:migrate          # apply committed migrations to local DB
-pnpm dev:api             # http://localhost:3001
-pnpm dev:dashboard       # http://localhost:5173
-```
+## Decisions already made (don't re-ask; details in memory)
 
-Magic-link sign-in works locally without Resend configured — the link just gets printed to the API's console log instead of emailed. To sign in via curl instead of clicking through a real inbox, the token used in the confirmation URL is readable straight out of the `verification` table (`SELECT identifier FROM verification WHERE value = '<email>' ORDER BY created_at DESC LIMIT 1`).
+- Look: polished, modern, flat dark surfaces, copper `#c17a45`, Inter, Lucide icons, no motion or sound for now.
+- Lives are hidden this season (the `mulligans_allowed` setting stays). No streaks or rank arrows in the first build. "% picked" shows only after the lock.
+- No money in the product. The pool total is a display-only number ("Cash handled at the bar, not in this app."). No Stripe. No game-linked drink offers until the owner and AGCO weigh in. "Please drink responsibly." and "You must be 19 or older to play." are in the copy.
+- Password sign-in for everyone, link stays the default, no forgot-password flow.
+- The owner's wife will control everything and also play. Three admins are expected (her, Robin, the owner). A decision that changes an admin's own standing needs another admin to confirm.
+- The menu is public (QR on tables). Drinks, kitchen and live music are first-class. Promotions become "From the brewery" (features, specials, music, announcements).
 
-To promote an account to admin locally or in production: `pnpm --filter @bbb/api make-admin <email>` (or `railway ssh --service api -- pnpm --filter @bbb/api make-admin <email>` for production).
+## Still open
 
-## Deploying, if you make changes
+- Real beer styles and strengths, which beers are seasonal, and the wine and other-drinks list. These can be entered through the admin screens once they exist.
+- Whether to build the Admins screen (slice 14).
+- Legal check of the menu and promotion wording with the owner and AGCO.
+- The pick 'em versions of some admin screens (settings and picks) aren't mocked; only survivor is.
 
-- **Both dashboard (Vercel) and API (Railway) are git-connected as of 2026-09-27** — just push to `main`, both auto-deploy. No manual `railway up` step anymore.
-- **Schema changes**: `pnpm db:generate` → commit the generated migration file → push. The API's `preDeploy` command applies it automatically before the new code starts serving traffic — no more manual `railway ssh ... db:migrate` step. Still worth calling out a schema-changing push explicitly before doing it, since the migration now runs unattended once pushed.
-- Full Railway/Vercel project IDs, service names, and the exact CLI incantations used throughout this build are in the conversation history if you need to re-derive them, but `railway status`/`vercel project ls` from within the repo should relink you to the right linked project quickly since both CLIs were already authenticated and linked here.
+## Practical reminders (unchanged)
 
-## Things that will bite you if you forget them
-
-- **`packages/shared` needs a real build** (`pnpm --filter @bbb/shared build`) before the API or dashboard will run correctly against compiled output — raw TypeScript source is not valid input to plain `node` in production. If a Railway deploy mysteriously can't resolve a `@bbb/shared` import, this is almost certainly why.
-- **Don't add a stored "current season" setting.** This was deliberately rejected — see `BUILD_PLAN.md`'s History section. Derive it from actual data every time.
-- **`pools.type` is immutable.** Don't add an UPDATE path for it — survivor and pick 'em have incompatible in-flight state (elimination status vs. points) that would corrupt if a pool switched type mid-season.
-- **Games are season-scoped, not pool-scoped.** If you're touching anything score-related, remember one `games` row is shared by every pool running that season — don't accidentally scope a query to a single pool where it should span all of them.
-- Pin `packageManager` in root `package.json` to a **stable, non-bleeding-edge** pnpm version. Both Railway and Vercel had real build failures earlier in this project tied to pnpm version freshness.
-
-## Plausible next steps (nothing is currently requested — these are just the logical open threads)
-
-None of these are in progress; they're candidates if the user wants to keep building:
-
-1. **Verify the live site still works end-to-end** after the 7-week gap — sign in, check whatever real pools/entries exist in production (this session didn't check, since that needs an authenticated admin session), confirm Resend/domain/DNS are all still in good standing.
-2. **Seed/refresh the current NFL season's schedule** if it's stale (`seed-schedule.ts` is safe to re-run any time — it upserts).
-3. Close the two dead rules fields (`tiebreaker`, `pick_deadline_rule`) — either implement them for real or consider removing them from the schema if they'll never be used.
-4. Any of the explicitly-deferred items in `BUILD_PLAN.md`'s "Known gaps" section, if the user wants them: against-the-spread/confidence pick 'em, referral-bonus promotion, a big-screen standings display.
-5. A real test suite — `vitest` is configured but nothing uses it yet.
-
-Don't start any of these unprompted — confirm with the user first, same as every feature in this project so far went through an explicit ask (often with a plan-mode design pass for anything schema-touching) before implementation.
+- Local dev: `pnpm install && pnpm docker:up && cp .env.example apps/api/.env && pnpm db:migrate && pnpm dev:api && pnpm dev:dashboard` (API :3001, dashboard :5173, Postgres :5437).
+- Both Vercel and Railway are git-connected: push to `main` deploys both, and migrations run automatically in Railway's `preDeploy`. No manual `railway up`.
+- `packages/shared` must be built before the apps resolve it; `pnpm typecheck` and `pnpm test` do that for you.
+- Don't store "current season". `pools.type` is immutable. `games` are season-scoped. See `BUILD_PLAN.md`'s History section.
+- OpenSpec is mandatory for non-trivial changes: propose, design, tasks, apply, archive, with real verification per task.

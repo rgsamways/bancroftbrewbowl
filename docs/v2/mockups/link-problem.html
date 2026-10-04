@@ -1,0 +1,64 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bancroft Brew Bowl - link problem</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Same tokens as home.html. These pages show before sign-in, so there is no tab bar. */
+:root{
+  --bg:#0e0e0f;--surface:#171718;--surface-2:#202022;--line:#2c2c2f;
+  --accent:#c17a45;--accent-ink:#1a0f06;--accent-soft:rgba(193,122,69,.16);
+  --text:#f4f4f2;--muted:#a3a3ab;--faint:#8b8b94;--r:14px
+}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;max-width:430px;margin:0 auto;min-height:100vh;padding:0 20px 40px;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+svg.i.sm{width:16px;height:16px}
+a{color:inherit}
+.top{padding:22px 0 0}
+.brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--accent);display:grid;place-items:center;color:var(--accent-ink);font-weight:700;font-size:17px}
+.brand b{display:block;font-size:16px;font-weight:600;line-height:1.1}
+.brand small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+main{flex:1;display:flex;flex-direction:column;justify-content:flex-start;padding:56px 0 24px}
+.badge{width:56px;height:56px;border-radius:16px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;margin-bottom:20px}
+h1{font-size:30px;line-height:1.15;font-weight:600;letter-spacing:-.01em}
+.lead{color:var(--muted);font-size:16px;line-height:1.5;margin-top:10px}
+.lead b{color:var(--text);font-weight:600;word-break:break-all}
+label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin:26px 0 6px}
+.field{width:100%;min-height:52px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);font:400 16px Inter,sans-serif;padding:0 14px;display:flex;align-items:center}
+.field.ph{color:var(--faint)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border-radius:12px;background:var(--accent);color:var(--accent-ink);font:600 16px Inter,sans-serif;border:0;margin-top:14px;text-decoration:none}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.hint{font-size:13px;color:var(--muted);line-height:1.5;margin-top:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-top:24px;overflow:hidden}
+.step{display:flex;gap:14px;align-items:flex-start;padding:14px;border-bottom:1px solid var(--line)}
+.step:last-child{border-bottom:0}
+.num{width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:13px;font-weight:700;flex:none}
+.step b{display:block;font-size:15px;font-weight:600}
+.step span{display:block;font-size:14px;color:var(--muted);line-height:1.45;margin-top:2px}
+.links{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:22px;font-size:14px;color:var(--muted)}
+.links a{color:var(--accent);font-weight:500;text-decoration:none;min-height:44px;display:inline-flex;align-items:center}
+.pretend{margin-top:26px;border:1px dashed var(--line);border-radius:12px;padding:12px 14px;font-size:12px;color:var(--faint);line-height:1.5}
+.pretend a{color:var(--muted)}
+.mock{pointer-events:none;position:fixed;top:8px;right:8px;background:#fff;color:#000;font:10px sans-serif;padding:3px 6px;border-radius:4px;z-index:9}
+.mockidx{position:fixed;right:10px;bottom:76px;z-index:10;background:#2c2c2f;color:#f4f4f2;font:600 12px Inter,sans-serif;padding:9px 13px;border-radius:99px;text-decoration:none;border:1px solid #3d3d41;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- Lucide icons (lucide-react 0.468.0, ISC licence), inlined for the static mockup -->
+  <defs>
+    <symbol id="mail" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+    <symbol id="circle-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></symbol>
+    <symbol id="arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+    <symbol id="inbox" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+  </defs>
+</svg>
+<div class="mock">MOCKUP</div>
+<a class="mockidx" href="index.html">All mockups</a>
+<div class="top"><a class="brand" href="signin.html" aria-label="Brew Bowl"><div class="logo">B</div><div><b>Brew Bowl</b><small>Bancroft Brewing Co.</small></div></a></div>
+<main>
+  <div class="badge"><svg class="i"><use href="#circle-alert"/></svg></div>
+  <h1>That link didn't work</h1>
+  <p class="lead">Sign-in links only work once, and only for a short while. It may have expired, or already been used.</p>
+  <a class="btn" href="signin.html"><svg class="i"><use href="#mail"/></svg> Email me a new link</a>
+  <p class="hint">Tip: open the new link on the same phone you asked for it on.</p>
+</main>
+</body></html>

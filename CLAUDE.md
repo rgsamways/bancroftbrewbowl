@@ -51,8 +51,11 @@ scratch. Persistent cross-session memory also exists at
 
 ## Deploy pipeline (automatic, not a per-change ask)
 
-There is no staging environment for this project — it's local → production
-directly. Once a change's tasks are implemented and verified (typecheck/
+**Local → staging → production** (staging added 2026-09-27; see
+`openspec/changes/archive/2026-09-27-staging-environment`). Push to
+`staging` first to verify a change on its own isolated API service +
+Postgres + a Vercel preview deployment, then merge `staging` → `main` to
+promote it. Once a change's tasks are implemented and verified (typecheck/
 build passes, and manually confirmed where practical), **archive it, commit,
 push, and deploy as the normal last step — don't stop to ask permission for
 commit/push/deploy on this repo specifically; that's pre-authorized here.**
@@ -60,6 +63,24 @@ Still surface what you're about to do before doing it, and stop and ask
 first for anything actually destructive (force-push, `railway`/`vercel`
 resource deletion, schema rollback) — the pre-authorization covers the
 routine finish-a-change sequence only, not those.
+
+- **Staging**: Railway environment `staging`, service `api-staging`
+  (deploys from the `staging` branch, generated domain
+  `api-staging-staging-05ff.up.railway.app`), its own Postgres (`Postgres-
+  sjmD` in that environment — a genuinely separate database/volume from
+  production's, not a copy), and Vercel's automatic Preview deployment for
+  the `staging` branch (URL changes per-commit; check `vercel ls
+  bancroftbrewbowl --meta gitBranch=staging` for the current one).
+  `RESEND_API_KEY`/`RESEND_FROM_EMAIL` are deliberately unset there, so
+  magic-link/change-email links console-log instead of sending real mail.
+  **Do not use `railway environment create --duplicate` to touch this
+  again** — tried it once, it aliased the new environment's services to
+  production's exact service/volume IDs instead of isolating them; see
+  `project_railway_duplicate_environment_unsafe` in this project's Claude
+  memory. Rebuild by hand (empty environment → `railway add --database
+  postgres` → `create-deployment` from the repo/branch → `update-service`/
+  `set-variables`) and verify IDs differ from production before trusting
+  it, if this needs to be recreated.
 
 - **Both dashboard (Vercel) and API (Railway) are git-connected** — pushing
   to `main` deploys both automatically. `railway up`/`railway ssh ...

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import { NFL_TEAMS, type PoolType, type SurvivorRulesConfig } from "@bbb/shared";
 import { api } from "../lib/api";
 
@@ -12,6 +12,9 @@ export function PickScreen() {
   const { poolId, entryId } = useParams();
   const [pool, setPool] = useState<Pool | null>(null);
   const [weeks, setWeeks] = useState<Week[]>([]);
+  // null while we find out; the server refuses changes to anyone else's entry, so
+  // this screen doesn't offer them.
+  const [isMine, setIsMine] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!poolId) return;
@@ -21,12 +24,30 @@ export function PickScreen() {
     });
   }, [poolId]);
 
+  useEffect(() => {
+    api<{ id: string }[]>("/me/entries").then((mine) => setIsMine(mine.some((e) => e.id === entryId)));
+  }, [entryId]);
+
   const currentWeek = useMemo(
     () => weeks.filter((w) => !w.locked).sort((a, b) => a.weekNumber - b.weekNumber)[0],
     [weeks]
   );
 
-  if (!pool || !entryId) return null;
+  if (isMine === false) {
+    return (
+      <div className="mx-auto max-w-lg px-6 py-10 text-center">
+        <h1 className="font-display text-xl font-semibold text-brand-text">That isn't your entry</h1>
+        <p className="mt-2 text-sm text-brand-muted">You can only make picks for your own entry.</p>
+        <Link
+          to="/"
+          className="mt-6 inline-block rounded bg-brand-accent px-4 py-2 font-display font-semibold text-white hover:bg-brand-accent-hover"
+        >
+          Back to my pools
+        </Link>
+      </div>
+    );
+  }
+  if (!pool || !entryId || isMine === null) return null;
   if (!currentWeek) return <p className="p-6 text-brand-muted">No open week right now.</p>;
 
   return pool.type === "pick_em" ? (

@@ -669,13 +669,16 @@ function EntriesTab({ poolId }: { poolId: string }) {
   );
 }
 
-type PoolPick = { entryId: string; weekNumber: number; teamCode: string; result: string };
+// Before a week locks the server sends other players' picks as a marker only:
+// no team and no result, `submitted: true`. After the lock they arrive in full.
+type PoolPick = { entryId: string; weekNumber: number; teamCode: string | null; result: string | null; submitted?: true };
 type PickSortKey = "name" | number;
 
 // Rank used when sorting by a week column: winning first, then still-pending
 // (game not decided yet), then tied, then losing, then no pick at all.
 function pickRank(pick: PoolPick | undefined): number {
   if (!pick) return 4;
+  if (pick.teamCode === null) return 1; // picked, team hidden until the lock: sorts with the still-pending
   if (pick.result === "win") return 0;
   if (pick.result === "pending") return 1;
   if (pick.result === "tie") return 2;
@@ -783,7 +786,7 @@ function PicksTab({ poolId }: { poolId: string }) {
                               : "bg-brand-surface-raised text-brand-muted"
                         }`}
                       >
-                        {pick.teamCode}
+                        {pick.teamCode ?? "Picked"}
                       </span>
                     ) : (
                       <span className="text-brand-muted">—</span>
