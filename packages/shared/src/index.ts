@@ -10,3 +10,4 @@ export * from "./pool-total.js";
 export * from "./game-time.js";
 export * from "./rank.js";
 export * from "./entry-summary.js";
+export * from "./standings.js";

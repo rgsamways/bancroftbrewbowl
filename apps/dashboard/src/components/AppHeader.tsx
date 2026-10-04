@@ -1,13 +1,6 @@
 import { Link } from "react-router";
+import { initials } from "@bbb/shared";
 import { useSession } from "../lib/auth-client";
-
-/** Up to two letters for the avatar: "Robin Samways" gives RS, "robin@example.com" gives R. */
-export function initials(name?: string | null, email?: string | null): string {
-  const words = (name ?? "").trim().split(/\s+/).filter(Boolean);
-  if (words.length >= 2) return (words[0]![0]! + words[1]![0]!).toUpperCase();
-  if (words.length === 1) return words[0]!.slice(0, 2).toUpperCase();
-  return (email ?? "?").trim().charAt(0).toUpperCase() || "?";
-}
 
 // The slim top bar of the v2 frame: the logo and name lead home, the avatar opens
 // the Me page. Sizes follow the mockups; the avatar is a 44 pixel tap target.

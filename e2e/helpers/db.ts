@@ -41,6 +41,14 @@ export class TestDb {
     return email;
   }
 
+  /** A player who never signs in: just a user row (deleted in cleanup), for filling a pool. */
+  async createPlayer(label: string, name: string) {
+    const email = this.email(label);
+    const id = crypto.randomUUID();
+    await this.client.query(`insert into "user" (id, name, email, email_verified) values ($1, $2, $3, true)`, [id, name, email]);
+    return id;
+  }
+
   /** Name a user (and optionally make them an admin) after they have signed in once. */
   async setUser(email: string, name: string, isAdmin = false) {
     await this.client.query(`update "user" set name = $2, is_admin = $3 where email = $1`, [email, name, isAdmin]);

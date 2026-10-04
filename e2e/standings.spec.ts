@@ -30,15 +30,20 @@ test("standings show alive and eliminated players, with the player's own name as
     await db.query(`update entries set eliminated_week = 1 where id = $1`, [goneEntry]);
 
     await page.goto(`/pool/${poolId}`);
-    await expect(page.getByRole("heading", { name: poolName })).toBeVisible();
-    await expect(page.getByText("Still alive (2)")).toBeVisible();
-    await expect(page.getByText("Eliminated (1)")).toBeVisible();
+    await expect(page.getByText(poolName, { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "You're still alive" })).toBeVisible();
+    await expect(page.getByText("2 of 3 still alive")).toBeVisible();
+    await expect(page.getByText("Still alive 2")).toBeVisible();
+    await expect(page.getByText("Eliminated 1")).toBeVisible();
     await expect(page.getByText("Alive Them")).toBeVisible();
     await expect(page.getByText("Gone Gary")).toBeVisible();
-    await expect(page.getByText("week 1")).toBeVisible();
+    await expect(page.getByText("Out in week 1")).toBeVisible();
+    await expect(page.getByText("Please drink responsibly.")).toBeVisible();
 
-    const links = await page.$$eval('section a[href*="/entry/"]', (as) => as.map((a) => a.textContent!.trim()));
-    expect(links).toEqual(["Alive Me"]);
+    const links = await page.$$eval('main a[href*="/entry/"]', (as) => as.map((a) => a.textContent!.trim()));
+    expect(links).toHaveLength(1);
+    expect(links[0]).toContain("Alive Me");
+    expect(links[0]).toContain("You");
 
     await other.context().close();
     await gone.context().close();

@@ -23,7 +23,7 @@ test("an admin sets the pool total, players see it on Standings, and clearing hi
 
     // No total yet: no card.
     await player.goto(`/pool/${poolId}`);
-    await expect(player.getByText("Still alive (2)")).toBeVisible();
+    await expect(player.getByText("Still alive 2")).toBeVisible();
     await expect(player.getByText("Pool total")).toHaveCount(0);
 
     // The admin opens the pool's settings. The pool is locked (active), and the field still works.
@@ -61,7 +61,7 @@ test("an admin sets the pool total, players see it on Standings, and clearing hi
     await admin.getByRole("button", { name: "Save pool total" }).click();
     await expect(admin.getByText("Saved.")).toBeVisible();
     await player.reload();
-    await expect(player.getByText("Still alive (2)")).toBeVisible();
+    await expect(player.getByText("Still alive 2")).toBeVisible();
     await expect(player.getByText("Pool total")).toHaveCount(0);
 
     await admin.context().close();

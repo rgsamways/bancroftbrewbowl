@@ -1,101 +1,268 @@
-import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router";
-import type { PoolType } from "@bbb/shared";
-import { api } from "../lib/api";
+import { useState } from "react";
+import { Link, useParams } from "react-router";
+import {
+  formatRank,
+  initials,
+  type MeSummary,
+  type PoolStandings as PoolStandingsData,
+  type StandingsRow,
+} from "@bbb/shared";
+import { useApi } from "../lib/useApi";
 import { PoolTotalCard } from "../components/PoolTotalCard";
 
-type Pool = { id: string; name: string; seasonYear: number; status: string; type: PoolType; poolTotalCents: number | null };
-type Entry = {
-  id: string;
-  displayName: string;
-  status: "alive" | "eliminated";
-  eliminatedWeek: number | null;
-  points?: number;
-};
+const ALIVE_SHORT = 8;
+const ELIMINATED_SHORT = 5;
+const LEADERBOARD_SHORT = 8;
 
-export function PoolStandings() {
-  const { poolId } = useParams();
-  const [pool, setPool] = useState<Pool | null>(null);
-  const [entries, setEntries] = useState<Entry[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  // Only your own name links to a pick screen. Other players' names are plain text,
-  // because the server won't let you change their picks.
-  const [myEntryIds, setMyEntryIds] = useState<Set<string>>(new Set());
+const cardClass = "mb-4 rounded-[14px] border border-brand-border bg-brand-surface p-4";
 
-  useEffect(() => {
-    if (!poolId) return;
-    api<Pool>(`/pools/${poolId}`).then(setPool).catch((e) => setError(e.message));
-    api<Entry[]>(`/pools/${poolId}/entries`).then(setEntries).catch((e) => setError(e.message));
-    api<{ id: string }[]>("/me/entries").then((mine) => setMyEntryIds(new Set(mine.map((e) => e.id))));
-  }, [poolId]);
+function Avatar({ name }: { name: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="grid h-9 w-9 flex-none place-items-center rounded-full border border-brand-border bg-brand-surface-raised text-xs font-semibold text-brand-text"
+    >
+      {initials(name)}
+    </span>
+  );
+}
 
-  if (error) return <p className="p-6 text-red-400">{error}</p>;
-  if (!pool) return <p className="p-6 text-brand-muted">Loading…</p>;
+function Row({
+  row,
+  poolId,
+  lead,
+  trail,
+}: {
+  row: StandingsRow;
+  poolId: string;
+  lead?: string;
+  trail?: string;
+}) {
+  const content = (
+    <>
+      {lead !== undefined && <span className="w-8 flex-none text-sm font-semibold text-brand-muted">{lead}</span>}
+      <Avatar name={row.name} />
+      <span className="min-w-0 flex-1 truncate text-brand-text">{row.name}</span>
+      {row.isYou && (
+        <span className="rounded-full bg-brand-accent-soft px-2 py-0.5 text-xs font-semibold text-brand-accent">You</span>
+      )}
+      {trail && <span className="flex-none text-sm text-brand-muted">{trail}</span>}
+    </>
+  );
+  const base = "flex min-h-12 items-center gap-3 px-4 py-2";
+  // Only your own row leads anywhere: the server would refuse anyone else's pick screen.
+  return (
+    <li className="border-b border-brand-border last:border-b-0">
+      {row.isYou ? (
+        <Link to={`/pool/${poolId}/entry/${row.entryId}/pick`} className={`${base} hover:bg-brand-surface-raised`}>
+          {content}
+        </Link>
+      ) : (
+        <div className={base}>{content}</div>
+      )}
+    </li>
+  );
+}
 
-  if (pool.type === "pick_em") {
-    const standings = [...entries].sort((a, b) => (b.points ?? 0) - (a.points ?? 0));
+function RowList({
+  rows,
+  short,
+  searching,
+  render,
+  empty = "Nobody yet",
+}: {
+  rows: StandingsRow[];
+  short: number;
+  searching: boolean;
+  render: (row: StandingsRow) => React.ReactNode;
+  empty?: string;
+}) {
+  const [showAll, setShowAll] = useState(false);
+  const visible = searching || showAll ? rows : rows.slice(0, short);
+  return (
+    <>
+      <ul className="overflow-hidden rounded-[14px] border border-brand-border bg-brand-surface">
+        {visible.map(render)}
+        {rows.length === 0 && <li className="px-4 py-3 text-sm text-brand-muted">{empty}</li>}
+      </ul>
+      {!searching && !showAll && rows.length > short && (
+        <button
+          type="button"
+          onClick={() => setShowAll(true)}
+          className="mt-2 flex min-h-11 w-full items-center justify-center rounded-[12px] border border-brand-border text-sm font-semibold text-brand-text hover:border-brand-accent"
+        >
+          Show all {rows.length}
+        </button>
+      )}
+    </>
+  );
+}
+
+function PoolTabs({ poolId, summary }: { poolId: string; summary: MeSummary | null }) {
+  if (!summary || summary.entries.length < 2) return null;
+  return (
+    <nav aria-label="Your pools" className="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1">
+      {summary.entries.map((e) => (
+        <Link
+          key={e.entryId}
+          to={`/pool/${e.poolId}`}
+          aria-current={e.poolId === poolId ? "page" : undefined}
+          className={`flex min-h-11 shrink-0 items-center rounded-full border px-4 text-sm font-semibold ${
+            e.poolId === poolId
+              ? "border-brand-accent bg-brand-accent-soft text-brand-text"
+              : "border-brand-border bg-brand-surface text-brand-muted"
+          }`}
+        >
+          {e.poolName}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+function SurvivorSummary({ data }: { data: PoolStandingsData }) {
+  const aliveCount = data.alive.length;
+  const out = data.eliminated.length;
+  const headline = data.me ? (data.me.status === "alive" ? "You're still alive" : "You're out") : data.pool.name;
+  const week = data.seasonOver ? "Final" : data.lastDecidedWeek ? `After week ${data.lastDecidedWeek}` : "Before week 1";
+  return (
+    <section className={cardClass}>
+      <p className="mb-1 text-sm text-brand-muted">{data.pool.name}</p>
+      <h1 className="text-3xl font-semibold leading-tight text-brand-text">{headline}</h1>
+      <p className="mt-1 text-lg text-brand-text">
+        {aliveCount} of {data.playersTotal} still alive
+      </p>
+      <p className="mt-1 text-sm text-brand-muted">
+        {week} &middot; {out} {out === 1 ? "player" : "players"} out so far
+      </p>
+    </section>
+  );
+}
+
+function PickEmSummary({ data }: { data: PoolStandingsData }) {
+  const me = data.me;
+  if (!me || me.rank === undefined) {
     return (
-      <div className="mx-auto max-w-2xl p-6">
-        <h1 className="mb-6 font-display text-2xl font-bold text-brand-text">{pool.name}</h1>
-        <PoolTotalCard cents={pool.poolTotalCents} />
-        <ul className="divide-y divide-brand-border rounded border border-brand-border bg-brand-surface">
-          {standings.map((entry, index) => (
-            <li key={entry.id} className="flex items-center justify-between px-3 py-2">
-              <span className="text-brand-text">
-                <span className="mr-2 text-brand-muted">#{index + 1}</span>
-                {entry.displayName}
-              </span>
-              <span className="text-brand-muted">{entry.points ?? 0} pts</span>
-            </li>
-          ))}
-          {standings.length === 0 && <li className="px-3 py-2 text-brand-muted">Nobody yet</li>}
-        </ul>
-      </div>
+      <section className={cardClass}>
+        <h1 className="text-3xl font-semibold leading-tight text-brand-text">{data.pool.name}</h1>
+        <p className="mt-1 text-sm text-brand-muted">{data.playersTotal} players</p>
+      </section>
     );
   }
+  const tied = Boolean(me.tied);
+  const ordinal = formatRank({ rank: me.rank, tied: false }, "ordinal");
+  const behind = (data.leaderPoints ?? 0) - (me.points ?? 0);
+  return (
+    <section className={cardClass}>
+      <p className="mb-1 text-sm text-brand-muted">{data.pool.name}</p>
+      <h1 className="text-3xl font-semibold leading-tight text-brand-text">{formatRank({ rank: me.rank, tied })}</h1>
+      <p className="mt-1 text-lg text-brand-text">
+        {tied ? `tied for ${ordinal}` : ordinal} of {data.playersTotal} players
+      </p>
+      <p className="mt-1 text-sm text-brand-muted">
+        {me.points ?? 0} {(me.points ?? 0) === 1 ? "point" : "points"} &middot; {behind > 0 ? `${behind} behind the leader` : "Leading the pool"}
+      </p>
+    </section>
+  );
+}
 
-  const alive = entries.filter((e) => e.status === "alive");
-  const eliminated = entries.filter((e) => e.status === "eliminated");
+export function PoolStandings() {
+  const { poolId = "" } = useParams();
+  const { data, error } = useApi<PoolStandingsData>(`/pools/${poolId}/standings`);
+  const { data: summary } = useApi<MeSummary>("/me/summary");
+  const [query, setQuery] = useState("");
+
+  if (error && !data) {
+    return (
+      <p className="px-6 pt-6 text-sm text-brand-muted">
+        {error.status === 404 ? "We couldn't find that pool." : "We couldn't load the standings. Check your connection and try again."}
+      </p>
+    );
+  }
+  if (!data) return null;
+
+  const needle = query.trim().toLowerCase();
+  const searching = needle.length > 0;
+  const matches = (rows: StandingsRow[]) => (searching ? rows.filter((r) => r.name.toLowerCase().includes(needle)) : rows);
+  const alive = matches(data.alive);
+  const eliminated = matches(data.eliminated);
+  const leaderboard = matches(data.leaderboard);
+  const nothingFound =
+    searching && (data.pool.type === "survivor" ? alive.length + eliminated.length === 0 : leaderboard.length === 0);
+
+  const boardHeading = data.seasonOver
+    ? "Final standings"
+    : data.lastDecidedWeek
+      ? `Leaderboard after week ${data.lastDecidedWeek}`
+      : "Leaderboard";
 
   return (
-    <div className="mx-auto max-w-2xl p-6">
-      <h1 className="mb-6 font-display text-2xl font-bold text-brand-text">{pool.name}</h1>
-      <PoolTotalCard cents={pool.poolTotalCents} />
+    <div className="mx-auto max-w-lg px-6 pb-6 pt-4">
+      <PoolTabs poolId={poolId} summary={summary} />
+      {data.pool.type === "survivor" ? <SurvivorSummary data={data} /> : <PickEmSummary data={data} />}
+      <PoolTotalCard cents={data.pool.poolTotalCents} />
 
-      <section>
-        <h2 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-emerald-400">
-          Still alive ({alive.length})
-        </h2>
-        <ul className="divide-y divide-brand-border rounded border border-brand-border bg-brand-surface">
-          {alive.map((entry) => (
-            <li key={entry.id} className="px-3 py-2">
-              {myEntryIds.has(entry.id) ? (
-                <Link to={`/pool/${poolId}/entry/${entry.id}/pick`} className="hover:text-brand-accent">
-                  {entry.displayName}
-                </Link>
-              ) : (
-                <span>{entry.displayName}</span>
-              )}
-            </li>
-          ))}
-          {alive.length === 0 && <li className="px-3 py-2 text-brand-muted">Nobody yet</li>}
-        </ul>
-      </section>
+      <label className="mb-1 block text-sm font-semibold text-brand-muted" htmlFor="find-player">
+        Find a player
+      </label>
+      <input
+        id="find-player"
+        type="search"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="Type a name"
+        autoComplete="off"
+        className="mb-5 min-h-11 w-full rounded-[12px] border border-brand-border bg-brand-surface px-3 text-brand-text placeholder:text-brand-muted focus:border-brand-accent focus:outline-none"
+      />
+      {nothingFound && <p className="mb-4 text-sm text-brand-muted">No players match</p>}
 
-      <section className="mt-6">
-        <h2 className="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-brand-muted">
-          Eliminated ({eliminated.length})
-        </h2>
-        <ul className="divide-y divide-brand-border rounded border border-brand-border bg-brand-surface">
-          {eliminated.map((entry) => (
-            <li key={entry.id} className="flex justify-between px-3 py-2 text-brand-muted">
-              <span>{entry.displayName}</span>
-              <span>week {entry.eliminatedWeek}</span>
-            </li>
-          ))}
-          {eliminated.length === 0 && <li className="px-3 py-2 text-brand-muted">Nobody yet</li>}
-        </ul>
-      </section>
+      {data.pool.type === "survivor" ? (
+        <>
+          {!(searching && alive.length === 0) && (
+            <section className="mb-6">
+              <h2 className="mb-2 text-sm font-semibold text-brand-success">Still alive {alive.length}</h2>
+              <RowList
+                rows={alive}
+                short={ALIVE_SHORT}
+                searching={searching}
+                render={(row) => <Row key={row.entryId} row={row} poolId={poolId} />}
+              />
+            </section>
+          )}
+          {!(searching && eliminated.length === 0) && (
+            <section className="mb-6">
+              <h2 className="mb-2 text-sm font-semibold text-brand-muted">Eliminated {eliminated.length}</h2>
+              <RowList
+                rows={eliminated}
+                short={ELIMINATED_SHORT}
+                searching={searching}
+                render={(row) => <Row key={row.entryId} row={row} poolId={poolId} trail={`Out in week ${row.eliminatedWeek ?? "?"}`} />}
+              />
+            </section>
+          )}
+        </>
+      ) : (
+        <section className="mb-6">
+          <h2 className="mb-2 text-sm font-semibold text-brand-muted">{boardHeading}</h2>
+          <RowList
+            rows={leaderboard}
+            short={LEADERBOARD_SHORT}
+            searching={searching}
+            empty="Nobody yet"
+            render={(row) => (
+              <Row
+                key={row.entryId}
+                row={row}
+                poolId={poolId}
+                lead={row.rank !== undefined ? formatRank({ rank: row.rank, tied: Boolean(row.tied) }) : ""}
+                trail={`${row.points ?? 0} pts`}
+              />
+            )}
+          />
+          <p className="mt-3 text-xs text-brand-faint">Points update as the brewery adds game results.</p>
+        </section>
+      )}
+      <p className="text-xs text-brand-faint">Please drink responsibly.</p>
     </div>
   );
 }

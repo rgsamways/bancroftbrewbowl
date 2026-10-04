@@ -25,7 +25,6 @@ const go = async (p: Page, path: string) => {
   await p.goto(path);
   await p.waitForSelector("header");
 };
-const listItems = (p: Page) => p.$$eval("main ul li a", (as) => as.map((a) => ({ text: a.textContent!.trim(), href: a.getAttribute("href")! })));
 
 test.describe.configure({ mode: "serial" });
 
@@ -112,11 +111,14 @@ test("several pools: Pick goes to the pool that needs a pick; Standings lists th
   await p.waitForURL(`**/pool/${poolA}/entry/${entry.severalA}/pick`); // the alive pool, not the one they are out of
   await expect(p.getByText("Week 1 pick")).toBeVisible();
 
+  // Standings opens the same pool, with a tab for each pool the player is in.
   await go(p, "/standings");
-  await expect(p.getByText("Alpha Survivor")).toBeVisible();
-  const standings = await listItems(p);
-  expect(standings).toHaveLength(2);
-  for (const i of standings) expect(i.href).toMatch(/^\/pool\/[^/]+$/);
+  await p.waitForURL(`**/pool/${poolA}`);
+  const tabs = await p.$$eval('nav[aria-label="Your pools"] a', (as) => as.map((a) => ({ text: a.textContent!.trim(), href: a.getAttribute("href")! })));
+  expect(tabs.map((t) => t.href).sort()).toEqual([`/pool/${poolA}`, `/pool/${poolB}`].sort());
+  await p.click(`nav[aria-label="Your pools"] a[href="/pool/${poolB}"]`);
+  await p.waitForURL(`**/pool/${poolB}`);
+  await expect(p.getByRole("heading", { name: "You're out" })).toBeVisible();
 });
 
 test("only entry eliminated: Pick shows their season, with the way to standings", async () => {

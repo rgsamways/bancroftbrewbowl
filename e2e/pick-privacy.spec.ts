@@ -47,8 +47,9 @@ test.afterAll(async () => {
 test("standings: only your own name links to a pick screen", async () => {
   await player.goto(`/pool/${poolId}`);
   await expect(player.getByText("Walk Other")).toBeVisible();
-  const links = await player.$$eval('section a[href*="/entry/"]', (as) => as.map((a) => a.textContent!.trim()));
-  expect(links).toEqual(["Walk Player"]);
+  const links = await player.$$eval('main a[href*="/entry/"]', (as) => as.map((a) => a.textContent!.trim()));
+  expect(links).toHaveLength(1);
+  expect(links[0]).toContain("Walk Player");
 });
 
 test("someone else's pick screen says it isn't your entry and offers no teams", async () => {

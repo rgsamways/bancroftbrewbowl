@@ -67,6 +67,6 @@ test("the entry that picked the loser is eliminated and the other stays alive", 
   expect(await status(winnerEntry)).toBe("alive");
 
   await player.goto(`/pool/${poolId}`);
-  await expect(player.getByText("Still alive (1)")).toBeVisible();
-  await expect(player.getByText("Eliminated (1)")).toBeVisible();
+  await expect(player.getByText("Still alive 1")).toBeVisible();
+  await expect(player.getByText("Eliminated 1")).toBeVisible();
 });
