@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { resolveWipeoutSchema } from "@bbb/shared";
 import { db } from "../db/client.js";
-import { entries, games, pools, wipeoutEvents } from "../db/schema.js";
+import { entries, games, picks, pools, wipeoutEvents } from "../db/schema.js";
 import { actorOf, recordActivity } from "../lib/activity.js";
 import { requireAdmin } from "../lib/guards.js";
 import { parseBody } from "../lib/validate.js";
@@ -10,7 +10,8 @@ import { resolveEntry, WITH_EMAIL } from "./entries.js";
 
 export async function wipeoutRoutes(fastify: FastifyInstance) {
   fastify.get("/pools/:poolId/wipeouts", async (request, reply) => {
-    if (!(await requireAdmin(request, reply))) return;
+    const session = await requireAdmin(request, reply);
+    if (!session) return;
 
     const { poolId } = request.params as { poolId: string };
     const events = await db.query.wipeoutEvents.findMany({
@@ -25,6 +26,9 @@ export async function wipeoutRoutes(fastify: FastifyInstance) {
           where: inArray(entries.id, event.candidateEntryIds),
           with: { user: true },
         });
+        const weekPicks = await db.query.picks.findMany({
+          where: and(inArray(picks.entryId, event.candidateEntryIds), eq(picks.weekNumber, event.weekNumber)),
+        });
         return {
           id: event.id,
           poolId: event.poolId,
@@ -33,7 +37,13 @@ export async function wipeoutRoutes(fastify: FastifyInstance) {
           game: game ? { homeTeam: game.homeTeam, awayTeam: game.awayTeam } : null,
           // Admin-only route, so emails are fine. Written as an explicit call: the old
           // `.map(resolveEntry)` handed each entry's list position over as its "points".
-          candidateEntries: candidateEntries.map((entry) => resolveEntry(entry, undefined, WITH_EMAIL)),
+          // `pickedTeams` is that entry's pick(s) for the week (it has locked by now, so it is not
+          // secret) and `isYou` marks the viewing admin's own entry.
+          candidateEntries: candidateEntries.map((entry) => ({
+            ...resolveEntry(entry, undefined, WITH_EMAIL),
+            pickedTeams: weekPicks.filter((p) => p.entryId === entry.id).map((p) => p.teamCode),
+            isYou: entry.userId === session.user.id,
+          })),
           createdAt: event.createdAt,
         };
       })

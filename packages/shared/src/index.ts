@@ -12,3 +12,4 @@ export * from "./rank.js";
 export * from "./entry-summary.js";
 export * from "./standings.js";
 export * from "./admin-activity.js";
+export * from "./admin-summary.js";

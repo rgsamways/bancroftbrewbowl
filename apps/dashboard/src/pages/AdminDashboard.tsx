@@ -116,7 +116,7 @@ export function AdminDashboard() {
         <CreatePoolForm
           onCreated={(pool) => {
             setShowCreateModal(false);
-            navigate(`/admin/${pool.id}`);
+            navigate(`/admin/pools/${pool.id}`);
           }}
         />
       </Modal>
@@ -127,7 +127,7 @@ export function AdminDashboard() {
             poolId={poolId}
             onDeleted={() => {
               setShowSettingsModal(false);
-              navigate("/admin");
+              navigate("/admin/pools");
             }}
           />
         </Modal>
@@ -528,7 +528,7 @@ function PoolsTab({ currentPoolId }: { currentPoolId: string | undefined }) {
         {pools.map((pool) => (
           <li key={pool.id}>
             <Link
-              to={`/admin/${pool.id}`}
+              to={`/admin/pools/${pool.id}`}
               className={`flex items-center justify-between px-3 py-2 text-sm hover:bg-brand-surface-raised ${
                 pool.id === currentPoolId ? "bg-brand-surface-raised font-semibold text-brand-accent" : ""
               }`}

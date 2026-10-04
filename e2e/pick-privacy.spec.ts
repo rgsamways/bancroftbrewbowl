@@ -94,7 +94,7 @@ test("a player cannot change or delete another player's pick (403), and it stays
 });
 
 test("admin picks table: other players' teams are hidden, the admin's own is shown", async () => {
-  await admin.goto(`/admin/${poolId}`);
+  await admin.goto(`/admin/pools/${poolId}`);
   await admin.locator('button:text-is("Picks")').click();
   await expect(admin.locator("table")).toBeVisible();
   await expect(admin.getByText("Walk Player")).toBeVisible();

@@ -22,13 +22,13 @@ test("an admin's result shows up in Activity, a player is sent away, and filters
     void gameId;
 
     // The admin enters a result on the Schedule page.
-    await admin.goto("/admin/schedule");
-    await admin.getByLabel("Season").selectOption(String(SEASON));
-    await admin.getByRole("button", { name: "BUF won" }).click();
-    await expect(admin.getByRole("button", { name: "KC lost" })).toBeVisible();
+    await admin.goto("/admin/results");
+    await admin.getByRole("button", { name: "BUF Bills won" }).click();
+    await expect(admin.getByText("Done 1")).toBeVisible();
 
-    // And locks nothing else; then opens Activity from the admin navigation.
-    await admin.getByRole("link", { name: "Activity" }).click();
+    // Then opens Activity from More.
+    await admin.getByRole("link", { name: "More" }).click();
+    await admin.getByRole("link", { name: /^Activity/ }).click();
     await admin.waitForURL("**/admin/activity");
     await expect(admin.getByText("Every change that affects the standings or the menu, and who made it.")).toBeVisible();
     const first = admin.locator("main li").first();
@@ -52,6 +52,7 @@ test("an admin's result shows up in Activity, a player is sent away, and filters
     // A player has no link to it, and opening the address shows nothing of the record.
     await player.goto("/");
     await expect(player.getByRole("link", { name: "Activity" })).toHaveCount(0);
+    await expect(player.getByRole("navigation", { name: "Admin" })).toHaveCount(0);
     await player.goto("/admin/activity");
     await player.waitForURL((url) => !url.pathname.startsWith("/admin"));
     await expect(player.getByText("entered a result")).toHaveCount(0);

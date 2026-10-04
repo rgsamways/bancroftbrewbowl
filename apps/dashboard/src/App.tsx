@@ -1,8 +1,14 @@
 import { useRef } from "react";
-import { Routes, Route } from "react-router";
+import { Navigate, Routes, Route } from "react-router";
 import { useSession } from "./lib/auth-client";
 import { Login } from "./pages/Login";
 import { Shell } from "./components/Shell";
+import { AdminLayout, FocusLayout, RequireAdmin } from "./components/AdminLayout";
+import { NextStep } from "./pages/NextStep";
+import { AdminResults } from "./pages/AdminResults";
+import { ResultsWizard } from "./pages/ResultsWizard";
+import { WipeoutDecision } from "./pages/WipeoutDecision";
+import { AdminMore } from "./pages/AdminMore";
 import { Home } from "./pages/Home";
 import { Account } from "./pages/Account";
 import { PasswordPage } from "./pages/PasswordPage";
@@ -11,7 +17,6 @@ import { ActivityPage } from "./pages/ActivityPage";
 import { PoolStandings } from "./pages/PoolStandings";
 import { PickScreen } from "./pages/PickScreen";
 import { AdminDashboard } from "./pages/AdminDashboard";
-import { SchedulePage } from "./pages/SchedulePage";
 import { PromotionsPage } from "./pages/PromotionsPage";
 import { PickLanding, StandingsLanding } from "./pages/TabLanding";
 
@@ -37,11 +42,22 @@ export default function App() {
         <Route path="/standings" element={<StandingsLanding />} />
         <Route path="/pool/:poolId" element={<PoolStandings />} />
         <Route path="/pool/:poolId/entry/:entryId/pick" element={<PickScreen />} />
-        <Route path="/admin/schedule" element={<SchedulePage />} />
-        <Route path="/admin/promotions" element={<PromotionsPage />} />
-        <Route path="/admin/activity" element={<ActivityPage />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/:poolId" element={<AdminDashboard />} />
+      </Route>
+      <Route element={<RequireAdmin />}>
+        <Route element={<AdminLayout />}>
+          <Route path="/admin" element={<NextStep />} />
+          <Route path="/admin/results" element={<AdminResults />} />
+          <Route path="/admin/more" element={<AdminMore />} />
+          <Route path="/admin/activity" element={<ActivityPage />} />
+          <Route path="/admin/promotions" element={<PromotionsPage />} />
+          <Route path="/admin/pools" element={<AdminDashboard />} />
+          <Route path="/admin/pools/:poolId" element={<AdminDashboard />} />
+        </Route>
+        <Route element={<FocusLayout />}>
+          <Route path="/admin/results/steps" element={<ResultsWizard />} />
+          <Route path="/admin/wipeout/:poolId/:wipeoutId" element={<WipeoutDecision />} />
+        </Route>
+        <Route path="/admin/schedule" element={<Navigate to="/admin/results" replace />} />
       </Route>
     </Routes>
   );

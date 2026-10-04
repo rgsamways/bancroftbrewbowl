@@ -51,12 +51,13 @@ test("a player cannot enter a result (403) and the game stays pending", async ()
   expect(row.result).toBe("pending");
 });
 
-test("an admin enters the away team as the winner on the Schedule page", async () => {
-  await admin.goto("/admin/schedule");
-  await admin.getByLabel("Season").selectOption(String(SEASON));
-  await expect(admin.getByText("BUF @ KC")).toBeVisible();
-  await admin.getByRole("button", { name: "BUF won" }).click();
-  await expect(admin.getByRole("button", { name: "KC lost" })).toBeVisible();
+test("an admin enters the away team as the winner on the Results screen", async () => {
+  await admin.goto("/admin/results");
+  await expect(admin.getByText("Waiting for a result")).toBeVisible();
+  await expect(admin.getByText("Bills @ Chiefs")).toBeVisible();
+  await admin.getByRole("button", { name: "BUF Bills won" }).click();
+  await expect(admin.getByText("Done 1")).toBeVisible();
+  await expect(admin.getByText("Bills won")).toBeVisible();
   const row = (await db.query(`select result from games where id = $1`, [gameId])).rows[0];
   expect(row.result).toBe("away_win");
 });

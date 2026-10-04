@@ -129,28 +129,49 @@ test("only entry eliminated: Pick shows their season, with the way to standings"
   await expect(p.getByRole("link", { name: "See standings" })).toHaveAttribute("href", `/pool/${poolA}`);
 });
 
-test("an admin gets an Admin tab and the admin pages stay reachable inside the frame", async () => {
+test("an admin gets an Admin tab that opens the admin area with its own tab bar", async () => {
   const p = pages.admin;
   await go(p, "/");
   expect(await tabLabels(p)).toBe("Home | Pick | Standings | Admin");
 
   await p.click('nav[aria-label="Main"] a:has-text("Admin")');
   await p.waitForURL("**/admin");
-  await p.waitForSelector('a[href="/admin/schedule"]');
-  expect(await currentTab(p)).toBe("Admin");
-  expect(await p.$$('a[href="/admin"], a[href="/admin/schedule"], a[href="/admin/promotions"]')).not.toHaveLength(0);
+  // The admin bar replaces the player bar.
+  await expect(p.locator('nav[aria-label="Main"]')).toHaveCount(0);
+  const adminTabs = await p.$$eval('nav[aria-label="Admin"] a', (as) =>
+    as.map((a) => ({ label: a.textContent!.trim(), current: a.getAttribute("aria-current") === "page", height: Math.round(a.getBoundingClientRect().height) }))
+  );
+  expect(adminTabs.map((t) => t.label).join(" | ")).toBe("Next step | Results | Pools | More");
+  expect(adminTabs.filter((t) => t.current).map((t) => t.label)).toEqual(["Next step"]);
+  for (const t of adminTabs) expect(t.height).toBeGreaterThanOrEqual(44);
 
-  await p.click('a[href="/admin/schedule"]');
-  await expect(p.getByText("Season").first()).toBeVisible();
-  expect(new URL(p.url()).pathname).toBe("/admin/schedule");
-  expect(await currentTab(p)).toBe("Admin");
+  await p.click('nav[aria-label="Admin"] a:has-text("More")');
+  await p.waitForURL("**/admin/more");
+  await expect(p.getByRole("link", { name: /^Activity/ })).toBeVisible();
+  await expect(p.getByRole("link", { name: /^Promotions/ })).toBeVisible();
 
-  await p.click('a[href="/admin/promotions"]');
-  await p.waitForURL("**/admin/promotions");
+  // The old Schedule address now leads to Results.
+  await go(p, "/admin/schedule");
+  await p.waitForURL("**/admin/results");
 
-  await go(p, `/admin/${poolA}`);
+  await go(p, `/admin/pools/${poolA}`);
   await expect(p.locator('button:text-is("Picks")')).toBeVisible();
   await expect(p.locator('button:text-is("Entries")')).toBeVisible();
+
+  // And back to the player view, with the player bar again.
+  await go(p, "/admin/more");
+  await p.getByRole("link", { name: /^Switch back to the player view/ }).click();
+  await p.waitForURL((url) => url.pathname === "/");
+  await expect(p.locator('nav[aria-label="Main"]')).toBeVisible();
+});
+
+test("a player who opens an admin address is sent to the player Home", async () => {
+  const p = pages.one;
+  for (const path of ["/admin", "/admin/results", "/admin/more", `/admin/pools/${poolA}`]) {
+    await p.goto(path);
+    await p.waitForURL((url) => url.pathname === "/");
+    await expect(p.locator('nav[aria-label="Admin"]')).toHaveCount(0);
+  }
 });
 
 test("a non-admin never sees the Admin tab", async () => {
@@ -161,7 +182,7 @@ test("no sideways scrolling on any frame screen at 390 wide", async () => {
   const routes: [Role, string][] = [
     ["one", "/"], ["one", "/account"], ["one", "/pick"], ["several", "/pick"], ["several", "/standings"],
     ["one", `/pool/${poolA}`], ["one", `/pool/${poolA}/entry/${entry.one}/pick`],
-    ["admin", "/admin"], ["admin", "/admin/schedule"], ["admin", "/admin/promotions"], ["admin", `/admin/${poolA}`],
+    ["admin", "/admin"], ["admin", "/admin/results"], ["admin", "/admin/more"], ["admin", "/admin/activity"], ["admin", "/admin/promotions"], ["admin", `/admin/pools/${poolA}`],
   ];
   const bad: string[] = [];
   for (const [role, path] of routes) {
