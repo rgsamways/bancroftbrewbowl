@@ -35,7 +35,7 @@ Easier to use, phone-first front end with a polished, modern look, built with th
 ## Don't forget (Robin, 2026-10-04)
 
 - **Late start and results cleanup.** The NFL is in week 4 and the site is starting several weeks in. We need a plan to clean up the NFL weekly results (production still has none entered for the early weeks) and to tell players the site started late so they understand. Raise it with Robin; don't bulk-score production without his say-so. Wording can use the From the brewery announcement tool or slice 13.
-- **Location map, last.** An OpenStreetMap with the brewery's location and directions, business hours and similar details. Do it after the v2 slices and before the fun ideas (`docs/IDEAS.md`). Reference Tobi's project at `C:\dev	obisgrabandgo` (it uses `leaflet`; see `public/map.js` and `src/server/app.ts`) and add Brew Bowl's own flavour. Needs the real address and hours from the owner.
+- **Location map, last.** An OpenStreetMap with the brewery's location and directions, business hours and similar details. Do it after the v2 slices and before the fun ideas (`docs/IDEAS.md`). Reference Tobi's project at `C:/dev/tobisgrabandgo` (it uses `leaflet`; see `public/map.js` and `src/server/app.ts`) and add Brew Bowl's own flavour. Needs the real address and hours from the owner.
 
 ## In planning
 
