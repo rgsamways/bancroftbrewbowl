@@ -17,17 +17,24 @@ type EntryRow = {
   user: { name: string; email: string } | null;
 };
 
+/** Pass this where the person looking is allowed to see the email: an admin, or
+ * the owner of that entry. Everywhere else the email is left blank. */
+export const WITH_EMAIL = { includeEmail: true } as const;
+
 /** Resolves an entry's public shape — name/email always come from the linked
  * account when one exists, falling back to the admin's invite details until
  * that person signs in and the entry gets claimed. `points` is only present
  * when the caller passes one (pick 'em pools) — survivor's response shape
- * is unchanged. */
-export function resolveEntry(entry: EntryRow, points?: number) {
+ * is unchanged.
+ *
+ * The email is blank unless `includeEmail` is set, so a new caller can't leak
+ * one by forgetting. */
+export function resolveEntry(entry: EntryRow, points?: number, options: { includeEmail?: boolean } = {}) {
   return {
     id: entry.id,
     poolId: entry.poolId,
     displayName: entry.user?.name ?? entry.invitedName ?? "Unknown",
-    email: entry.user?.email ?? entry.invitedEmail ?? "",
+    email: options.includeEmail ? (entry.user?.email ?? entry.invitedEmail ?? "") : "",
     status: entry.status,
     eliminatedWeek: entry.eliminatedWeek,
     createdAt: entry.createdAt,
@@ -70,7 +77,7 @@ export async function entryRoutes(fastify: FastifyInstance) {
       ),
     });
     if (existingEntry) {
-      reply.send(resolveEntry({ ...existingEntry, user: existingUser ?? null }));
+      reply.send(resolveEntry({ ...existingEntry, user: existingUser ?? null }, undefined, WITH_EMAIL));
       return;
     }
 
@@ -83,7 +90,7 @@ export async function entryRoutes(fastify: FastifyInstance) {
       )
       .returning();
 
-    reply.status(201).send(resolveEntry({ ...entry, user: existingUser ?? null }));
+    reply.status(201).send(resolveEntry({ ...entry, user: existingUser ?? null }, undefined, WITH_EMAIL));
   });
 
   fastify.post("/pools/:poolId/join", async (request, reply) => {
@@ -96,13 +103,13 @@ export async function entryRoutes(fastify: FastifyInstance) {
       where: and(eq(entries.poolId, poolId), eq(entries.userId, session.user.id)),
     });
     if (existing) {
-      reply.send(resolveEntry({ ...existing, user: session.user }));
+      reply.send(resolveEntry({ ...existing, user: session.user }, undefined, WITH_EMAIL));
       return;
     }
 
     const [entry] = await db.insert(entries).values({ poolId, userId: session.user.id }).returning();
 
-    reply.status(201).send(resolveEntry({ ...entry, user: session.user }));
+    reply.status(201).send(resolveEntry({ ...entry, user: session.user }, undefined, WITH_EMAIL));
   });
 
   fastify.get("/me/entries", async (request, reply) => {
@@ -114,11 +121,18 @@ export async function entryRoutes(fastify: FastifyInstance) {
       orderBy: [asc(entries.createdAt)],
       with: { pool: true, user: true },
     });
-    reply.send(myEntries.map((entry) => ({ ...resolveEntry(entry), pool: entry.pool })));
+    // Your own entries, so your own email is fine to include.
+    reply.send(myEntries.map((entry) => ({ ...resolveEntry(entry, undefined, WITH_EMAIL), pool: entry.pool })));
   });
 
   fastify.get("/pools/:poolId/entries", async (request, reply) => {
-    if (!(await requireSession(request, reply))) return;
+    const session = await requireSession(request, reply);
+    if (!session) return;
+
+    // Names, status and points are for everyone in the pool. An email is only for
+    // an admin, and for the person it belongs to.
+    const seesEmail = (entryUserId: string | null) =>
+      Boolean(session.user.isAdmin) || (entryUserId !== null && entryUserId === session.user.id);
 
     const { poolId } = request.params as { poolId: string };
     const pool = await db.query.pools.findFirst({ where: eq(pools.id, poolId) });
@@ -131,11 +145,15 @@ export async function entryRoutes(fastify: FastifyInstance) {
     if (pool?.type === "pick_em") {
       const tieHandling = (pool.rules as PickEmRulesConfig).tie_handling;
       const pointsByEntry = await computePickEmPoints(poolEntries.map((e) => e.id), tieHandling);
-      reply.send(poolEntries.map((entry) => resolveEntry(entry, pointsByEntry.get(entry.id) ?? 0)));
+      reply.send(
+        poolEntries.map((entry) =>
+          resolveEntry(entry, pointsByEntry.get(entry.id) ?? 0, { includeEmail: seesEmail(entry.userId) })
+        )
+      );
       return;
     }
 
-    reply.send(poolEntries.map((entry) => resolveEntry(entry)));
+    reply.send(poolEntries.map((entry) => resolveEntry(entry, undefined, { includeEmail: seesEmail(entry.userId) })));
   });
 
   fastify.patch("/entries/:entryId", async (request, reply) => {
@@ -151,6 +169,6 @@ export async function entryRoutes(fastify: FastifyInstance) {
       return;
     }
     const linkedUser = entry.userId ? await db.query.user.findFirst({ where: eq(user.id, entry.userId) }) : null;
-    reply.send(resolveEntry({ ...entry, user: linkedUser ?? null }));
+    reply.send(resolveEntry({ ...entry, user: linkedUser ?? null }, undefined, WITH_EMAIL));
   });
 }

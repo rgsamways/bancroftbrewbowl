@@ -5,7 +5,7 @@ import { db } from "../db/client.js";
 import { entries, games, wipeoutEvents } from "../db/schema.js";
 import { requireAdmin } from "../lib/guards.js";
 import { parseBody } from "../lib/validate.js";
-import { resolveEntry } from "./entries.js";
+import { resolveEntry, WITH_EMAIL } from "./entries.js";
 
 export async function wipeoutRoutes(fastify: FastifyInstance) {
   fastify.get("/pools/:poolId/wipeouts", async (request, reply) => {
@@ -30,7 +30,9 @@ export async function wipeoutRoutes(fastify: FastifyInstance) {
           weekNumber: event.weekNumber,
           gameId: event.gameId,
           game: game ? { homeTeam: game.homeTeam, awayTeam: game.awayTeam } : null,
-          candidateEntries: candidateEntries.map(resolveEntry),
+          // Admin-only route, so emails are fine. Written as an explicit call: the old
+          // `.map(resolveEntry)` handed each entry's list position over as its "points".
+          candidateEntries: candidateEntries.map((entry) => resolveEntry(entry, undefined, WITH_EMAIL)),
           createdAt: event.createdAt,
         };
       })

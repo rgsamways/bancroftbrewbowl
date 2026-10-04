@@ -1,0 +1,39 @@
+import Fastify, { type FastifyInstance } from "fastify";
+import { vi } from "vitest";
+import { getSession } from "../lib/auth-plugin.js";
+import { entryRoutes } from "../routes/entries.js";
+import { pickRoutes } from "../routes/picks.js";
+import { poolRoutes } from "../routes/pools.js";
+
+// Route tests run the real route code against the real test database, with only
+// the "who is signed in" lookup replaced. A test file that uses this harness must
+// mock the session module at the top of the file (vitest hoists it):
+//
+//   vi.mock("../lib/auth-plugin.js", () => ({ getSession: vi.fn(), authPlugin: async () => {} }));
+//
+// then call `actAs(...)` before each request.
+
+export type TestActor = { id: string; name: string; email: string; isAdmin?: boolean | null } | null;
+
+/** Builds a Fastify app with the routes under test, without the real sign-in
+ * plugin and without listening on a port. Use `app.inject(...)` to call it. */
+export async function buildTestApp(): Promise<FastifyInstance> {
+  const app = Fastify();
+  await app.register(poolRoutes);
+  await app.register(entryRoutes);
+  await app.register(pickRoutes);
+  await app.ready();
+  return app;
+}
+
+/** Sets who the next requests are made as. `null` means signed out. */
+export function actAs(actor: TestActor) {
+  vi.mocked(getSession).mockResolvedValue(
+    actor
+      ? ({
+          user: { id: actor.id, name: actor.name, email: actor.email, isAdmin: actor.isAdmin ?? false },
+          session: { id: "test-session", userId: actor.id },
+        } as never)
+      : null
+  );
+}

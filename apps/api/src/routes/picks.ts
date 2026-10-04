@@ -1,24 +1,23 @@
 import type { FastifyInstance } from "fastify";
-import { and, count, eq, min, ne } from "drizzle-orm";
+import { and, count, eq, ne } from "drizzle-orm";
 import { submitPickSchema, type SurvivorRulesConfig } from "@bbb/shared";
 import { db } from "../db/client.js";
 import { entries, games, picks, pools } from "../db/schema.js";
-import { requireSession } from "../lib/guards.js";
+import { requireEntryOwner, requireSession } from "../lib/guards.js";
+import { getLockedWeeks, getWeekLockTime } from "../lib/pick-lock.js";
+import { visiblePicks } from "../lib/pick-visibility.js";
 import { parseBody } from "../lib/validate.js";
 
 export async function pickRoutes(fastify: FastifyInstance) {
   fastify.post("/entries/:entryId/picks", async (request, reply) => {
-    if (!(await requireSession(request, reply))) return;
-
     const { entryId } = request.params as { entryId: string };
+    const owned = await requireEntryOwner(request, reply, entryId);
+    if (!owned) return;
+    const { entry } = owned;
+
     const body = parseBody(submitPickSchema, request.body, reply);
     if (!body) return;
 
-    const entry = await db.query.entries.findFirst({ where: eq(entries.id, entryId) });
-    if (!entry) {
-      reply.status(404).send({ error: "Entry not found" });
-      return;
-    }
     if (entry.status !== "alive") {
       reply.status(409).send({ error: "Entry has been eliminated" });
       return;
@@ -30,15 +29,12 @@ export async function pickRoutes(fastify: FastifyInstance) {
       return;
     }
 
-    const [week] = await db
-      .select({ pickDeadline: min(games.kickoffTime) })
-      .from(games)
-      .where(and(eq(games.seasonYear, pool.seasonYear), eq(games.weekNumber, body.week_number)));
-    if (!week?.pickDeadline) {
+    const lockTime = await getWeekLockTime(pool.seasonYear, body.week_number);
+    if (!lockTime) {
       reply.status(404).send({ error: "Week not found" });
       return;
     }
-    if (new Date() >= new Date(week.pickDeadline)) {
+    if (new Date() >= lockTime) {
       reply.status(409).send({ error: "Pick deadline has passed" });
       return;
     }
@@ -115,30 +111,24 @@ export async function pickRoutes(fastify: FastifyInstance) {
   });
 
   fastify.delete("/entries/:entryId/picks/:weekNumber/:teamCode", async (request, reply) => {
-    if (!(await requireSession(request, reply))) return;
-
     const { entryId, weekNumber, teamCode } = request.params as {
       entryId: string;
       weekNumber: string;
       teamCode: string;
     };
 
-    const entry = await db.query.entries.findFirst({ where: eq(entries.id, entryId) });
-    if (!entry) {
-      reply.status(404).send({ error: "Entry not found" });
-      return;
-    }
+    const owned = await requireEntryOwner(request, reply, entryId);
+    if (!owned) return;
+    const { entry } = owned;
+
     const pool = await db.query.pools.findFirst({ where: eq(pools.id, entry.poolId) });
     if (!pool) {
       reply.status(404).send({ error: "Pool not found" });
       return;
     }
 
-    const [week] = await db
-      .select({ pickDeadline: min(games.kickoffTime) })
-      .from(games)
-      .where(and(eq(games.seasonYear, pool.seasonYear), eq(games.weekNumber, Number(weekNumber))));
-    if (week?.pickDeadline && new Date() >= new Date(week.pickDeadline)) {
+    const lockTime = await getWeekLockTime(pool.seasonYear, Number(weekNumber));
+    if (lockTime && new Date() >= lockTime) {
       reply.status(409).send({ error: "Pick deadline has passed" });
       return;
     }
@@ -160,28 +150,52 @@ export async function pickRoutes(fastify: FastifyInstance) {
     reply.send(deleted);
   });
 
+  // Reads go through `visiblePicks`: you always see your own picks, everyone's
+  // picks for a week that has locked, and nothing of anyone else's before that
+  // (an admin gets a "has picked" marker, with no team). See lib/pick-visibility.ts.
   fastify.get("/entries/:entryId/picks", async (request, reply) => {
-    if (!(await requireSession(request, reply))) return;
+    const session = await requireSession(request, reply);
+    if (!session) return;
 
     const { entryId } = request.params as { entryId: string };
+    const entry = await db.query.entries.findFirst({ where: eq(entries.id, entryId) });
+    const pool = entry ? await db.query.pools.findFirst({ where: eq(pools.id, entry.poolId) }) : undefined;
+    if (!entry || !pool) {
+      reply.send([]);
+      return;
+    }
+
     const entryPicks = await db.query.picks.findMany({ where: eq(picks.entryId, entryId) });
-    reply.send(entryPicks);
+    const lockedWeeks = await getLockedWeeks(pool.seasonYear);
+    const viewer = { userId: session.user.id, isAdmin: Boolean(session.user.isAdmin) };
+    reply.send(visiblePicks(entryPicks.map((p) => ({ ...p, ownerUserId: entry.userId })), viewer, lockedWeeks));
   });
 
   fastify.get("/pools/:poolId/picks", async (request, reply) => {
-    if (!(await requireSession(request, reply))) return;
+    const session = await requireSession(request, reply);
+    if (!session) return;
 
     const { poolId } = request.params as { poolId: string };
+    const pool = await db.query.pools.findFirst({ where: eq(pools.id, poolId) });
+    if (!pool) {
+      reply.send([]);
+      return;
+    }
+
     const rows = await db
       .select({
         entryId: picks.entryId,
         weekNumber: picks.weekNumber,
         teamCode: picks.teamCode,
         result: picks.result,
+        ownerUserId: entries.userId,
       })
       .from(picks)
       .innerJoin(entries, eq(picks.entryId, entries.id))
       .where(eq(entries.poolId, poolId));
-    reply.send(rows);
+
+    const lockedWeeks = await getLockedWeeks(pool.seasonYear);
+    const viewer = { userId: session.user.id, isAdmin: Boolean(session.user.isAdmin) };
+    reply.send(visiblePicks(rows, viewer, lockedWeeks));
   });
 }
