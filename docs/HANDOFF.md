@@ -192,3 +192,10 @@ Done 2026-10-04 by Robin from this list: cleared two early picks (his own: DEN w
 - Tests: `routes/espn-results.test.ts` (fake reader), `lib/espn.test.ts`, `e2e/espn-results.spec.ts` (season 2967).
 - Weekly routine now: after the games finish, an admin taps Check for results, then Apply. The terminal step is no longer needed.
 
+## Where we stopped (2026-10-04, evening)
+
+- **Vercel rate-limited the dashboard builds** ("Deployment rate limited, retry in 24 hours"; about 150 builds that day from 79 commits to `main`, each also mirrored to `staging`). Robin will not pay for Pro. The API (Railway) is not affected and is live.
+- **The ESPN "Check for results" button is on `main` and live in the API, but the dashboard half is not deployed yet** (production dashboard is one step behind). To finish: after the limit lifts (about 24 hours), redeploy the latest commit (Vercel dashboard > Redeploy, or one empty push), confirm the Results screen shows "Check for results", then archive `openspec/changes/espn-results-button` (sync specs first: `espn-results` is a new main spec, `admin-steps` gets the added requirement), and update ROADMAP.
+- **Be kind to the build limit:** batch docs-only commits into one push; skip the `staging` push for notes and docs; consider an "ignored build step" on Vercel so changes only under `docs/`, `openspec/` or `apps/api/` do not build the dashboard.
+- Still waiting on Robin: post the two From the brewery announcements (week 4 note for Robin and Lark; week 5 general), and re-run `seed-schedule 2026` (or, once the button is live, Check for results) after the week 4 games finish. `v2.0.0` is tagged on `d91744c`; later work is not in that tag (a `v2.0.1` is optional).
+
