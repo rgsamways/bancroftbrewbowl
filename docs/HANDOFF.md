@@ -4,7 +4,7 @@ _Written 2026-10-04, end of the long mockup-and-planning session. If you're read
 
 ## Start here
 
-The state in one line: **v2 is fully designed and planned; slice 1 (`secure-pick-access`, the privacy fix) is built, live and archived; the v2 screens themselves are not built yet.** The next job is slice 2, `v2-shell`, in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
+The state in one line: **v2 is fully designed and planned; slices 1 and 2 are built, live and archived (the privacy fix, and the new app frame with the bottom tab bar); the individual v2 screens are not built yet.** The next job is slice 3, `e2e-smoke`, in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
 
 Read, in order:
 
@@ -30,6 +30,8 @@ Read, in order:
 - **The `per_game_kickoff` deadline rule exists in pool settings but no server code reads it.** Locking is the first kickoff of the week.
 - **The schedule import is a script** (`apps/api/scripts/seed-schedule.ts`), not a screen. `apps/api/scripts/make-admin.ts` makes an admin.
 - Adding a player by email and editing a player's status exist in the API but are not in today's admin screens.
+- **Temporary pieces slice 2 left on purpose:** the `/pick` and `/standings` landing pages (`pages/TabLanding.tsx`, replaced in slices 6 and 7), the Pools / Schedule / Promotions links row on admin pages (in `Shell.tsx`, replaced in slice 9), and the admin Pools page's tab row that now scrolls inside itself. Old pages still have white text on copper buttons (3.4 to 1 contrast); each is fixed with dark ink as its page is redone.
+- **The staging preview site can't call the staging API** (`api-staging` has no `DASHBOARD_URL`), so screens are checked locally in real Chrome. The local recipe: run the API on port 3011 and Vite on 5183 with `VITE_API_URL=http://localhost:3011`, sign in by reading the one-time token from the `verification` table (local email only logs the subject).
 
 ## Decisions already made (don't re-ask; details in memory)
 

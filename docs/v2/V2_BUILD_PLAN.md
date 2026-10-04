@@ -43,7 +43,7 @@ Size: S is a short session, M is about one session, L is two or more.
 ### 1. `secure-pick-access` (done, live 2026-10-04)
 Owner-only writes, picks hidden until the lock (admins see "picked" without the team), emails private. Already written in `openspec/changes/secure-pick-access` with tests that fail first. Ships to production as soon as verified. **Why first:** it is the only item that fixes a hole that exists today.
 
-### 2. `v2-shell`
+### 2. `v2-shell` (done, live 2026-10-04)
 - New design tokens (copper `#c17a45`, dark neutrals), Inter, Lucide everywhere, replacing the Oswald and Poppins setup in `apps/dashboard/src/index.css`.
 - New layout: header with the logo and avatar, a bottom tab bar (Home, Pick, Standings, Menu, plus Admin for admins), the public layout without a bar. Me is reached from the avatar.
 - Replaces `Shell.tsx`, `Sidebar.tsx`, `RightPanel*.tsx` and `MobileNavContext.tsx`. **The old pages keep working inside the new shell** until their own slice restyles them. The right-hand help drawer goes.

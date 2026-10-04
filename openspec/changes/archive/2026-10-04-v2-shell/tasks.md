@@ -24,5 +24,5 @@
 ## 6. Verify and ship
 
 - [x] 6.1 Walk through the local app in real Chrome at 390 by 844 as a player with no pools, one pool, and several pools, and as an admin: tabs shown, active tab marked, header avatar and logo, Pick and Standings destinations, Me and Sign out, every admin page via the sub-navigation, Home, standings and the pick screen still working; check no sideways scroll, 44 pixel tap targets, content clear of the bar, and look at a screenshot of every route; fix anything that looks wrong
-- [ ] 6.2 Push to the `staging` branch and confirm it builds and the staging API still answers; push `main` and confirm the production deploys succeed
-- [ ] 6.3 On the live site, open the public sign-in page and verify the new font and colours loaded; update `openspec/ROADMAP.md`, sync specs, archive the change
+- [x] 6.2 Push to the `staging` branch and confirm it builds and the staging API still answers; push `main` and confirm the production deploys succeed
+- [x] 6.3 On the live site, open the public sign-in page and verify the new font and colours loaded; update `openspec/ROADMAP.md`, sync specs, archive the change _(the live sign-in page was checked in real Chrome at 390 by 844: Inter, near-black background, copper button; the signed-in screens were verified locally only, since checking them on the live site would mean writing test data to production)_
