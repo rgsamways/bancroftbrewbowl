@@ -4,7 +4,7 @@ _Rewritten 2026-10-04 at the end of the long build session (slices 1 to 9). If y
 
 ## Start here
 
-The state in one line: **v2 is fully designed and planned; slices 1 to 13a (9a, 9b, 10, 11a, 11b, 12 and 13a) are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick, Standings, the admin activity record, the admin steps, the pool screens); `password-sign-in` is archived (Robin confirmed it on his phone).** The next job is slice 13b, `tv-and-recap`, in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
+The state in one line: **v2 is fully designed and planned; slices 1 to 13b (9a, 9b, 10, 11a, 11b, 12, 13a and 13b) are built, live and archived (privacy fix, app frame, real-browser tests, password and sign-in screens, pool total, Home and Pick, Standings, the admin activity record, the admin steps, the pool screens); `password-sign-in` is archived (Robin confirmed it on his phone).** The next jobs are 14 (optional roles) and 15 (cleanup and the v2.0.0 tag), in the order in `docs/v2/V2_BUILD_PLAN.md`. Wait for Robin's go before starting each slice (`CLAUDE.md` pace rule).
 
 Read, in order:
 
@@ -145,3 +145,12 @@ Read, in order:
 - Live this weekend: `GET /me/summary` `brewery.live` is the first music event this weekend (same rule as the Music tab). It is automatic: no "show on Home" switch, and no column for one.
 - Table card at `/admin/table-card`: QR drawn in the browser with the `qrcode` package (its own lazy chunk), encoding `<origin>/menu`; Print button; print styles hide everything but the card.
 - Test note: `e2e/frame.spec.ts` now waits for the pool tabs before reading them (a missing wait that failed about one run in three once Home got slightly slower).
+
+## Slice 13b notes (tv-and-recap, 2026-10-04)
+
+- `GET /pools/:id/tv` and `GET /pools/:id/recap?week=N` (signed in; no emails; no one else's picks). Pick counts live in one place, `lib/pick-counts.ts`, which returns nothing before the week locks. `lib/recap.ts` has the upset rule and the "latest recap week" rule (latest fully decided week in which the pool had picks, so weeks before a late start have no recap). `GET /me/summary` carries `recapWeek` per entry.
+- Biggest upset (survivor only) = the winning team the fewest players picked; equal shares go to the game whose loser more players picked, then the earlier kickoff. Pick 'em recap shows correct of games, points, rank and the leader; no most picked or upset.
+- TV page `pages/PoolTv.tsx` sits outside the Shell in `components/TvLayout.tsx` (fixed 1280 by 720 canvas scaled to the screen). Recap page `pages/PoolRecap.tsx` is inside the Shell. Share uses the phone's share sheet, else copies the text.
+- "Out this week" counts entries with `eliminated_week = N`, so a waiting wipeout makes it lag until an admin resolves it.
+- Tests: `routes/tv-recap.test.ts`, `lib/recap.test.ts`, `packages/shared/src/tv-recap.test.ts`, `e2e/tv.spec.ts` (1280 by 720), `e2e/recap.spec.ts`. Seasons used: API 2910 and up, e2e 2996 to 2998.
+- **Late start (Robin's plan, not run yet):** fill results up to the current week with `pnpm seed-schedule 2026` (from `apps/api`; it writes results without scoring, so the missed weeks are a bye for everyone), then post a From the brewery announcement saying the pool started mid-season. Check production has no picks in the past weeks first. Run locally first to look at the results.

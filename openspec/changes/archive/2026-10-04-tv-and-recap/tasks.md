@@ -25,5 +25,5 @@
 
 - [x] 5.1 `pnpm lint`, `typecheck`, `typecheck:e2e`, `test`, `test:e2e` pass
 - [x] 5.2 Walk both pages in real Chrome against the mockups
-- [ ] 5.3 Push to `staging`, check its API, promote to `main`, confirm the production deploy (read-only, no test data)
-- [ ] 5.4 Sync specs, archive, update `openspec/ROADMAP.md` and `docs/HANDOFF.md`
+- [x] 5.3 Push to `staging`, check its API, promote to `main`, confirm the production deploy (read-only, no test data)
+- [x] 5.4 Sync specs, archive, update `openspec/ROADMAP.md` and `docs/HANDOFF.md`
