@@ -29,8 +29,25 @@ const final = (home: string, away: string, result: "home_win" | "away_win" | "ti
   result,
   homeScore,
   awayScore,
+  state: "final",
+  statusText: "Final",
+  homeScoreNow: homeScore,
+  awayScoreNow: awayScore,
+  homeRecord: null,
+  awayRecord: null,
+  network: null,
 });
-const live = (home: string, away: string): EspnGame => ({ ...final(home, away, "home_win", 0, 0), final: false, result: "pending", homeScore: null, awayScore: null });
+const live = (home: string, away: string): EspnGame => ({
+  ...final(home, away, "home_win", 0, 0),
+  final: false,
+  result: "pending",
+  homeScore: null,
+  awayScore: null,
+  state: "upcoming",
+  statusText: "",
+  homeScoreNow: null,
+  awayScoreNow: null,
+});
 
 describe("Check for results (ESPN)", () => {
   let app: FastifyInstance;

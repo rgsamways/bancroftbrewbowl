@@ -44,6 +44,7 @@ export default defineConfig({
         DATABASE_URL: databaseUrl() ?? "",
         ESPN_BASE_URL: ESPN_STUB_URL,
         OPERATOR_EMAILS: E2E_OPERATOR_EMAIL,
+        SCOREBOARD_TTL_MS: "100",
       },
     },
     {

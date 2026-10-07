@@ -7,6 +7,7 @@ import {
   type MeSummary,
   type PickEmRulesConfig,
   type PickSheet,
+  type ScoreboardResponse,
   type SummaryEntry,
   type SurvivorRulesConfig,
 } from "@bbb/shared";
@@ -24,6 +25,7 @@ import {
 } from "../lib/entry-state.js";
 import { isGameLocked, pickDeadlineRuleOf } from "../lib/pick-lock.js";
 import { isAdminUser, isOperatorUser } from "../lib/operator.js";
+import { getScoreboard } from "../lib/scoreboard.js";
 import { loadBreweryHome } from "../lib/brewery.js";
 import { latestRecapWeek, pickedWeeksByPool } from "../lib/recap.js";
 import { computePickEmPoints } from "./entries.js";
@@ -53,6 +55,48 @@ export async function homeRoutes(fastify: FastifyInstance) {
     const session = await requireSession(request, reply);
     if (!session) return;
     reply.send({ isAdmin: isAdminUser(session.user), isOperator: isOperatorUser(session.user) });
+  });
+
+  // The NFL scoreboard for Home: one cached read of ESPN shared by everyone, plus the signed-in
+  // player's own picks for the week (never anyone else's). When there is nothing to show it says so
+  // rather than failing, so Home can simply leave the section out.
+  fastify.get("/me/scoreboard", async (request, reply) => {
+    const session = await requireSession(request, reply);
+    if (!session) return;
+    const shared = await getScoreboard();
+    if (!shared || shared.games.length === 0) {
+      const none: ScoreboardResponse = { scoreboard: null };
+      reply.send(none);
+      return;
+    }
+
+    const mine = await db.query.entries.findMany({
+      where: and(eq(entries.userId, session.user.id), eq(entries.status, "alive")),
+      with: { pool: true },
+    });
+    const current = mine.filter((e) => e.pool.seasonYear === shared.seasonYear && e.pool.status !== "completed");
+    const myPicks =
+      current.length > 0
+        ? await db.query.picks.findMany({
+            where: and(inArray(picks.entryId, current.map((e) => e.id)), eq(picks.weekNumber, shared.weekNumber)),
+          })
+        : [];
+    const yourPicks = current
+      .map((e) => ({ poolId: e.pool.id, poolName: e.pool.name, teams: myPicks.filter((p) => p.entryId === e.id).map((p) => p.teamCode) }))
+      .filter((p) => p.teams.length > 0);
+
+    const body: ScoreboardResponse = {
+      scoreboard: {
+        seasonYear: shared.seasonYear,
+        weekNumber: shared.weekNumber,
+        asOf: shared.asOf.toISOString(),
+        stale: shared.stale,
+        games: shared.games,
+        byes: shared.byes,
+        yourPicks,
+      },
+    };
+    reply.send(body);
   });
 
   fastify.get("/me/summary", async (request, reply) => {

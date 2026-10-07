@@ -14,6 +14,9 @@ const setEspn = (state: object) =>
     if (!r.ok) throw new Error("could not set the ESPN stand-in");
   });
 
+// Leave the ESPN stand-in empty for the next test file (Home reads it for the scoreboard).
+test.afterEach(() => setEspn({ mode: "ok", games: [] }));
+
 test("check, apply and see the result scored; then nothing new; then ESPN down keeps hand entry available", async ({ browser }) => {
   const db = new TestDb();
   await db.connect();

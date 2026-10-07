@@ -21,6 +21,7 @@ import { attentionOrder, pickPathFor } from "../lib/attention";
 import { Countdown } from "../components/Countdown";
 import { PoolChips } from "../components/PoolChips";
 import { InstallCard } from "../components/InstallCard";
+import { Scoreboard } from "../components/Scoreboard";
 
 const SELECTED_KEY = "bbb:home-pool";
 
@@ -399,6 +400,7 @@ export function Home() {
           </span>
         </Link>
       )}
+      <Scoreboard />
       <InstallCard />
 
       {offerPickEm.length > 0 && (

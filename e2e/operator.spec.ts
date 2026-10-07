@@ -11,6 +11,9 @@ const setEspn = (state: object) =>
     if (!r.ok) throw new Error("could not set the ESPN stand-in");
   });
 
+// Leave the ESPN stand-in empty for the next test file (Home reads it for the scoreboard).
+test.afterEach(() => setEspn({ mode: "ok", games: [] }));
+
 test("only the god-user sees site setup; an ordinary admin and a player do not", async ({ browser }) => {
   const db = new TestDb();
   await db.connect();
