@@ -21,3 +21,4 @@ export * from "./scoreboard.js";
 export * from "./display-name.js";
 export * from "./pick-grid.js";
 export * from "./notices.js";
+export * from "./tv-screens.js";

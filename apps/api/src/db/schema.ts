@@ -390,6 +390,56 @@ export const musicEvents = pgTable(
   (table) => [index("music_events_date_idx").on(table.eventDate, table.startTime)]
 );
 
+// TV screens: a playlist is an ordered list of slides, a screen is one physical TV with its own
+// private link (`code`) that plays one playlist. `kind` is plain text checked in app code, so a new
+// kind of slide needs no migration.
+export const tvPlaylists = pgTable(
+  "tv_playlists",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [uniqueIndex("tv_playlists_name_lower_idx").on(sql`lower(${table.name})`)]
+);
+
+export const tvPlaylistSlides = pgTable(
+  "tv_playlist_slides",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    playlistId: uuid("playlist_id")
+      .notNull()
+      .references(() => tvPlaylists.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    poolId: uuid("pool_id").references(() => pools.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    seconds: integer("seconds").notNull().default(15),
+    enabled: boolean("enabled").notNull().default(true),
+  },
+  (table) => [unique("tv_playlist_slides_position_unique").on(table.playlistId, table.position)]
+);
+
+export const tvScreens = pgTable(
+  "tv_screens",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    code: text("code").notNull().unique(),
+    playlistId: uuid("playlist_id").references(() => tvPlaylists.id, { onDelete: "set null" }),
+    showQr: boolean("show_qr").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [uniqueIndex("tv_screens_name_lower_idx").on(sql`lower(${table.name})`)]
+);
+
 export const poolsRelations = relations(pools, ({ many }) => ({
   entries: many(entries),
 }));

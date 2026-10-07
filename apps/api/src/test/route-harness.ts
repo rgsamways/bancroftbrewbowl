@@ -10,6 +10,7 @@ import { activityRoutes } from "../routes/activity.js";
 import { nflRoutes } from "../routes/nfl.js";
 import { breweryRoutes } from "../routes/brewery.js";
 import { noticeRoutes } from "../routes/notices.js";
+import { tvScreenRoutes } from "../routes/tv-screens.js";
 import { wipeoutRoutes } from "../routes/wipeouts.js";
 import { standingsRoutes } from "../routes/standings.js";
 import { tvRoutes } from "../routes/tv.js";
@@ -54,6 +55,7 @@ export async function buildTestApp(): Promise<FastifyInstance> {
   await app.register(wipeoutRoutes);
   await app.register(breweryRoutes);
   await app.register(noticeRoutes);
+  await app.register(tvScreenRoutes);
   await app.ready();
   return app;
 }

@@ -34,3 +34,35 @@ export function TvLayout({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
+export const STRIP_HEIGHT = 56;
+
+/** The canvas for a TV screen: the same 1280 by 720 scaled stage, with the slide in the top 664
+ * pixels and an optional thin strip along the bottom (the "Play on your phone" strip). */
+export function TvStage({ children, strip }: { children: ReactNode; strip?: ReactNode }) {
+  const [scale, setScale] = useState(fitScale);
+  useEffect(() => {
+    const onResize = () => setScale(fitScale());
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 overflow-hidden bg-brand-bg">
+      <div
+        data-testid="tv-canvas"
+        className="absolute left-1/2 top-1/2 overflow-hidden bg-brand-bg"
+        style={{ width: WIDTH, height: HEIGHT, transform: `translate(-50%, -50%) scale(${scale})` }}
+      >
+        <div data-testid="tv-slide" className="overflow-hidden" style={{ height: HEIGHT - (strip ? STRIP_HEIGHT : 0) }}>
+          {children}
+        </div>
+        {strip && (
+          <div data-testid="tv-strip" className="flex items-center gap-4 border-t border-brand-border bg-brand-surface px-11" style={{ height: STRIP_HEIGHT }}>
+            {strip}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

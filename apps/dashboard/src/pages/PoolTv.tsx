@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams } from "react-router";
 import { formatRank, type PoolTv as PoolTvData, type TvStatus } from "@bbb/shared";
 import { useApi } from "../lib/useApi";
 import { teamNickname } from "../lib/teams";
 import { TvLayout } from "../components/TvLayout";
+import { Qr } from "../components/Qr";
 
 const REFRESH_MS = 30_000;
 const MAX_NAMES = 30;
@@ -14,29 +15,6 @@ const STATUS_TEXT: Record<TvStatus, string> = {
   season_over: "Season complete",
   no_games: "Waiting for the schedule",
 };
-
-function Qr({ url }: { url: string }) {
-  const [svg, setSvg] = useState<string | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    void import("qrcode").then(async (QR) => {
-      const drawn = await QR.toString(url, { type: "svg", margin: 1, errorCorrectionLevel: "M" });
-      if (!cancelled) setSvg(drawn);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [url]);
-  return (
-    <div
-      role="img"
-      aria-label="QR code to play on your phone"
-      data-url={url}
-      className="h-[84px] w-[84px] flex-none overflow-hidden rounded-[10px] bg-white [&>svg]:h-full [&>svg]:w-full"
-      dangerouslySetInnerHTML={{ __html: svg ?? "" }}
-    />
-  );
-}
 
 /** The bar's TV: a signed-in page, survivor first, refreshed every 30 seconds. */
 export function PoolTv() {
@@ -59,13 +37,23 @@ export function PoolTv() {
   }
   if (!data) return <TvLayout>{null}</TvLayout>;
 
+  return (
+    <TvLayout>
+      <PoolTvSections data={data} showQrBlock />
+    </TvLayout>
+  );
+}
+
+/** The two halves of a pool's TV: the count and most picked on the left, the names (or leaderboard)
+ * on the right. Used by the signed-in TV page and, without the QR block, by the TV screens. */
+export function PoolTvSections({ data, showQrBlock }: { data: PoolTvData; showQrBlock: boolean }) {
   const survivor = data.pool.type === "survivor";
   const week = data.weekNumber ? ` · Week ${data.weekNumber}` : "";
   const shown = data.alive.slice(0, MAX_NAMES);
   const hidden = data.alive.length - shown.length;
 
   return (
-    <TvLayout>
+    <>
       <section className="flex flex-col border-r border-brand-border px-11 pb-9 pt-11">
         <div className="flex items-center gap-3.5">
           <div aria-hidden="true" className="grid h-[52px] w-[52px] place-items-center rounded-[14px] bg-brand-accent text-[26px] font-bold text-brand-accent-ink">
@@ -149,6 +137,7 @@ export function PoolTv() {
             </ol>
           </>
         )}
+        {showQrBlock && (
         <div className="mt-auto flex items-center gap-[22px] rounded-[18px] border border-brand-border bg-brand-surface px-[22px] py-4">
           <Qr url={window.location.origin} />
           <div>
@@ -156,7 +145,8 @@ export function PoolTv() {
             <span className="mt-1 block text-[17px] text-brand-muted">Scan to sign in at {window.location.host}</span>
           </div>
         </div>
+        )}
       </section>
-    </TvLayout>
+    </>
   );
 }

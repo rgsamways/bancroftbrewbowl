@@ -75,6 +75,8 @@ test("every screen keeps its text inside the centred column on a wide window", a
       "/admin/activity",
       "/admin/brewery",
       "/admin/notices",
+      "/admin/tv",
+      "/admin/tv/playlists/new",
       "/admin/brewery/feature",
       "/admin/brewery/special",
       "/admin/brewery/announcement",
@@ -91,6 +93,7 @@ test("every screen keeps its text inside the centred column on a wide window", a
       `/admin/pools/${poolId}?tab=settings`,
       "/admin/setup/schedule",
       "/admin/setup/admins",
+      "/admin/setup/tv",
       "/admin/setup/sign-in",
     ];
 

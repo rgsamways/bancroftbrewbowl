@@ -1,18 +1,12 @@
 import type { FastifyInstance } from "fastify";
-import { asc, eq } from "drizzle-orm";
-import { publicName, rankOf, sharePercent, type PickEmRulesConfig, type PoolTv, type TvStatus } from "@bbb/shared";
+import { eq } from "drizzle-orm";
 import { db } from "../db/client.js";
-import { entries, pools } from "../db/schema.js";
+import { pools } from "../db/schema.js";
 import { requireSession } from "../lib/guards.js";
-import { currentWeek, loadSeasonWeeks } from "../lib/entry-state.js";
-import { pickCounts } from "../lib/pick-counts.js";
-import { pickDeadlineRuleOf, revealRuleOf } from "../lib/pick-lock.js";
-import { computePickEmPoints } from "./entries.js";
+import { buildPoolTv } from "../lib/pool-tv.js";
 
-const byName = (a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: "base" });
-
-/** What the bar's TV shows, in one request: names, counts and points only. Most picked
- * appears only once the week has locked (see lib/pick-counts.ts). */
+/** What the bar's TV shows for a pool, in one request (signed in). The content is built by
+ * `lib/pool-tv.ts`, which the private TV screens share. */
 export async function tvRoutes(fastify: FastifyInstance) {
   fastify.get("/pools/:poolId/tv", async (request, reply) => {
     const session = await requireSession(request, reply);
@@ -24,59 +18,6 @@ export async function tvRoutes(fastify: FastifyInstance) {
       reply.status(404).send({ error: "Pool not found" });
       return;
     }
-    const now = new Date();
-
-    const poolEntries = await db.query.entries.findMany({
-      where: eq(entries.poolId, poolId),
-      orderBy: [asc(entries.createdAt)],
-      with: { user: true },
-    });
-    const nameOf = (e: (typeof poolEntries)[number]) => publicName(e.user?.name, e.invitedName);
-
-    const weeks = (await loadSeasonWeeks([pool.seasonYear])).get(pool.seasonYear) ?? [];
-    const week = currentWeek(weeks);
-    const status: TvStatus = weeks.length === 0 ? "no_games" : !week ? "season_over" : now >= week.lockTime ? "locked" : "open";
-
-    const body: PoolTv = {
-      pool: { id: pool.id, name: pool.name, type: pool.type },
-      weekNumber: week?.weekNumber ?? null,
-      status,
-      revealPicks: revealRuleOf(pool),
-      pickDeadline: pickDeadlineRuleOf(pool),
-      playersTotal: poolEntries.length,
-      playersLeft: null,
-      alive: [],
-      leaderboard: [],
-      mostPicked: [],
-    };
-
-    if (pool.type === "survivor") {
-      const alive = poolEntries.filter((e) => e.status === "alive").map(nameOf).sort(byName);
-      body.alive = alive;
-      body.playersLeft = alive.length;
-      if (week) {
-        const counts = await pickCounts(poolId, week, revealRuleOf(pool), now, { deadline: pickDeadlineRuleOf(pool), seasonYear: pool.seasonYear });
-        body.mostPicked = (counts?.teams ?? []).slice(0, 3).map((t) => ({
-          team: t.team,
-          picks: t.picks,
-          sharePercent: sharePercent(t.picks, counts!.pickers),
-        }));
-      }
-    } else {
-      const points = await computePickEmPoints(
-        poolEntries.map((e) => e.id),
-        (pool.rules as PickEmRulesConfig).tie_handling
-      );
-      const all = poolEntries.map((e) => points.get(e.id) ?? 0);
-      body.leaderboard = poolEntries
-        .map((e) => {
-          const pts = points.get(e.id) ?? 0;
-          return { name: nameOf(e), points: pts, ...rankOf(pts, all) };
-        })
-        .sort((a, b) => b.points - a.points || byName(a.name, b.name))
-        .slice(0, 10);
-    }
-
-    reply.send(body);
+    reply.send(await buildPoolTv(pool));
   });
 }

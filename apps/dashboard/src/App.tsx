@@ -17,8 +17,12 @@ import { JoinPage } from "./pages/JoinPage";
 import { ActivityPage } from "./pages/ActivityPage";
 import { PoolStandings } from "./pages/PoolStandings";
 import { PoolTv } from "./pages/PoolTv";
+import { TvPlayer } from "./pages/TvPlayer";
 import { PoolRecap } from "./pages/PoolRecap";
 import { OperatorSchedule } from "./pages/operator/OperatorSchedule";
+import { AdminTv } from "./pages/AdminTv";
+import { AdminTvPlaylist } from "./pages/AdminTvPlaylist";
+import { OperatorTv } from "./pages/operator/OperatorTv";
 import { OperatorAdmins } from "./pages/operator/OperatorAdmins";
 import { OperatorSignInHelp } from "./pages/operator/OperatorSignInHelp";
 import { PickScreen } from "./pages/PickScreen";
@@ -52,6 +56,7 @@ export default function App() {
   if (!session) {
     return (
       <Routes>
+        <Route path="/tv/:code" element={<TvPlayer />} />
         <Route path="/menu" element={<PublicMenuPage />} />
         <Route path="/menu/kitchen" element={<PublicMenuPage tab="kitchen" />} />
         <Route path="/menu/music" element={<PublicMenuPage tab="music" />} />
@@ -63,6 +68,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/pool/:poolId/tv" element={<PoolTv />} />
+      <Route path="/tv/:code" element={<TvPlayer />} />
       <Route element={<Shell />}>
         <Route path="/" element={<Home />} />
         <Route path="/account" element={<Account />} />
@@ -86,6 +92,8 @@ export default function App() {
           <Route path="/admin/activity" element={<ActivityPage />} />
           <Route path="/admin/brewery" element={<AdminBrewery />} />
           <Route path="/admin/notices" element={<AdminNotices />} />
+          <Route path="/admin/tv" element={<AdminTv />} />
+          <Route path="/admin/tv/playlists/:id" element={<AdminTvPlaylist />} />
           <Route path="/admin/guide" element={<AdminGuide />} />
           <Route path="/admin/menu" element={<AdminMenu />} />
           <Route path="/admin/menu/:id" element={<EditItem />} />
@@ -95,6 +103,7 @@ export default function App() {
           <Route element={<RequireOperator />}>
             <Route path="/admin/setup/schedule" element={<OperatorSchedule />} />
             <Route path="/admin/setup/admins" element={<OperatorAdmins />} />
+            <Route path="/admin/setup/tv" element={<OperatorTv />} />
             <Route path="/admin/setup/sign-in" element={<OperatorSignInHelp />} />
           </Route>
         </Route>

@@ -10,6 +10,7 @@ const TOOLS: Item[] = [
   { to: "/admin/pools", title: "All pools", detail: "Players, picks and settings" },
   { to: "/admin/activity", title: "Activity", detail: "Who changed what" },
   { to: "/admin/notices", title: "Notices", detail: "An important message at the top of every page" },
+  { to: "/admin/tv", title: "TV screens", detail: "What each TV in the brewery shows" },
   { to: "/admin/brewery", title: "From the brewery", detail: "Features, specials, music, announcements" },
   { to: "/admin/results", title: "Season schedule", detail: "Check the schedule is loaded" },
   { to: "/admin/guide", title: "Admin guide", detail: "How to run a week" },
@@ -20,6 +21,7 @@ const TOOLS: Item[] = [
 const SETUP: Item[] = [
   { to: "/admin/setup/schedule", title: "Schedule", detail: "Load a season's games from ESPN" },
   { to: "/admin/setup/admins", title: "Admins", detail: "Who has admin access" },
+  { to: "/admin/setup/tv", title: "TV screens setup", detail: "Add a TV, copy its link, reset it" },
   { to: "/admin/setup/sign-in", title: "Help someone sign in", detail: "For a player who can't get in" },
 ];
 
