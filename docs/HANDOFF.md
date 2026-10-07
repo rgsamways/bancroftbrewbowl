@@ -1,17 +1,36 @@
 # Session Handoff
 
-_Rewritten 2026-10-04 after slice 15. Treat the specifics below as a snapshot, not live truth: check `git log`, `openspec list` and the live site first._
+_Rewritten 2026-10-07 (end of the session that built per-game locking, the god-user, the Home scoreboard and Standings week by week). Treat specifics as a snapshot: check `git log`, `openspec list` and the live site first. Older per-slice notes further down are still accurate history; where they say "nothing reads `per_game_kickoff`" or "v2.0.0 waits", this section supersedes them._
 
-## Start here
+## Start here (2026-10-07)
 
-The state in one line: **v2 is built, live and archived through slice 15 (cleanup), apart from the optional slice 14 (roles); the `v2.0.0` tag waits for Robin's go.** Every slice (privacy fix, app frame, browser tests, sign-in and passwords, pool total, Home and Pick, Standings, admin activity, admin steps and pools, confirmations, menu, music, From the brewery, help and info, TV and recap) is on production. `CLAUDE.md`'s pace rule applies: don't start anything below unprompted.
+**State:** `main` = `origin/main` at `869e949`, clean tree. v2.0.0 is tagged (2026-10-04). Everything below is live on production except where noted. Last checks: lint, typecheck, typecheck:e2e clean; 439 unit tests and 102 browser tests pass. The dashboard build for `869e949` reported success; the Railway API deploy was not separately checked (that push only added one read route).
 
-What is open, in order:
+**Shipped since the tag** (all archived unless listed under "Open changes"):
+- ESPN "Check for results" button (admin), safe display names, TV page and recap, the real menu, late-start catch-up (bye for weeks 1 to 4), reveal-picks setting.
+- **Per-game pick locking** (`pick_deadline_rule: per_game_kickoff`): a pick locks at its own game's kickoff, any weekday (handles Wednesday/Friday NFL games and flexed games). Single source: `apps/api/src/lib/pick-lock.ts` (`revealPredicate`, lock helpers), `lib/entry-state.ts`.
+- **God-user and site-setup screens** (`admin-tools`, archived): `OPERATOR_EMAILS=rgsamways@gmail.com` (set on production; not on staging) makes Robin the only account passing `requireOperator` (Site setup: Schedule, Admins, Help someone sign in); `requireAdmin` also passes for them. Fairness rules still bind it. Dashboard asks `/me/access` once per page load (hard refresh after changing the env var).
+- **Account and Activity titles aligned**; `e2e/alignment.spec.ts` checks every screen at a wide window (now includes `?view=weeks`).
 
-1. **Tag `v2.0.0`** on `main` (git tag only; package versions stay 0.0.0). Waits for Robin, who first wants the late-start plan settled.
-2. **Late start and results cleanup** (Robin's plan, not run): fill the NFL results up to the current week with `pnpm seed-schedule 2026` from `apps/api` (it writes results without scoring, so the missed weeks are a bye for everyone), after checking production has no picks in past weeks; then post a From the brewery announcement that the pool started mid-season. Look at the result on a local database first. Never bulk-write to production without Robin's say-so.
-3. **Slice 14, roles** (`docs/ROLES_AND_RULES.md`): only if the owner wants to hand out parts of the work.
-4. **Location map** (OpenStreetMap, directions, hours; copy from Tobi's project at `C:/dev/tobisgrabandgo`; needs the real address and hours), then the fun ideas in `docs/IDEAS.md`.
+**Open changes (not archived; archive after Robin has seen each work):**
+- `per-game-pick-locking` (14/16): remaining tasks are the live look and archive.
+- `home-scoreboard` (7/9): live NFL scores on Home from one cached ESPN feed (`lib/scoreboard.ts`, `GET /me/scoreboard`, `components/Scoreboard.tsx`). Never reads odds or logos.
+- `standings-week-by-week` (6/8): Standings > "Week by week" (`?view=weeks`), `GET /pools/:poolId/pick-grid`, shared `pick-grid.ts`, `PickGridView.tsx`. Remaining: Robin looks at it on a phone on a game day, then sync specs, archive, update ROADMAP.
+
+**Waiting on Robin (don't do these for him):**
+1. In his own pool's Settings, switch lock rule to "At each game's kickoff" before Thursday's 8:15 PM EDT game (Oct 8).
+2. Post the two From the brewery announcements (week 4 note for Robin and Lark; week 5 general, wording drafted earlier).
+3. Optionally set `OPERATOR_EMAILS` on staging: `railway variables --set "OPERATOR_EMAILS=rgsamways@gmail.com" --service api-staging --environment staging`.
+4. Production commands are run by Robin (the permission guard blocks me): `railway ssh --service api --environment production -- pnpm --filter @bbb/api <script>`.
+
+**Just decided (2026-10-07): "teams already used" on Home.** The Pick screen already dims used teams ("Used week N", `PickScreen.tsx` ~line 414) and Standings > Week by week has a "teams used" line. I proposed only a "Teams left: N of 32" line in the Home hero (survivor, no repeats), not a strip of circles. **Robin said hold off. Do not build it unless he asks again.**
+
+**Not started / deferred (don't start unprompted, `CLAUDE.md` pace rule):** playoffs plan (ESPN reader only reads regular season weeks 1 to 18); menu colour circles and photo uploads; staff QR page and weekly in-person check-in; staff roles (slice 14, `docs/ROLES_AND_RULES.md`); the games ideas in `docs/IDEAS.md` (Concentration, Connect Four, Player Rank Movement, Squares with a legal check, Next Play lag); Sleeper/player pools; **OpenStreetMap location, directions and hours page: last, before the fun ideas** (copy from `C:/dev/tobisgrabandgo`; needs real address and hours).
+
+**Constraints that must carry over:** never write test data to production; ports 3001 and 5173 belong to other projects; plan with `openspec-propose` (plan-mode design pass for schema work) and wait for Robin's go; call out schema changes before pushing and migrate staging first; commit/push/deploy at the end of a verified change is pre-authorized (say what you're about to do; ask first for anything destructive); update the matching `e2e/` spec when a screen changes; keep explanations short and simple; picks are private until their reveal time; never show odds/spreads or ESPN logos; Robin won't pay for Vercel Pro, so batch pushes (about 150 builds/day cap) and skip pushing `staging` for docs-only changes; check a Vercel build with `gh api repos/rgsamways/bancroftbrewbowl/commits/<sha>/status --jq .state`; Railway project `25ea1399-c1e1-4ec8-bb92-dce78d8976cc`, production env `ee4ae0ef-33e2-4535-a87e-b58023f56905`, staging `7cb1cf45-fd3e-4833-87e7-7bc2a325e0e6`; the local DB holds the real 2026 season, so tests use their own seasons (the grid tests use 2840+ in API tests and 2955 to 2958 in e2e). Tool quirks: Bash heredocs with apostrophes can fail (use the Write tool, run python scripts from `C:/tmp`, `encoding="utf-8"`); foreground `sleep` is blocked (use background `until` loops).
+
+**Older state (2026-10-04) for reference:**
+1. ~~Tag `v2.0.0`~~ done. 2. ~~Late start and results cleanup~~ done on production (only the announcements remain). 3. Slice 14, roles: optional. 4. Location map, then the fun ideas.
 
 Read, in order:
 
