@@ -11,6 +11,8 @@ Today a whole week locks at its first kickoff, so a Thursday game locks every pi
 - Home, Pick, the TV most-picked list and admin screens understand a week that is part-locked.
 - A pool setting "When picks lock" in Settings (locks with the other rules). **New pools created in the app default to per-game; the schema default stays whole-week**, so existing pools and stored data behave exactly as before. Robin's current pool is switched by an admin in Settings.
 - Safeguards: a pick whose game has a result is locked even if its kickoff was later moved, and a replaced pick's old result is cleared.
+- Any day of the week: locks come from each game's real kickoff, so Wednesday, Friday and Saturday games (holiday weeks, special games) work with no special handling, and a week's first game can be on any day.
+- Kickoff times must be right for per-game locks to be right, and the NFL moves games (flex scheduling). "Check for results" also notices games ESPN has moved and, on Apply, updates the kickoff of games that haven't started.
 - No schema change (rules are JSON).
 
 ## Capabilities
@@ -24,6 +26,7 @@ None.
 - `home`: states and countdown for a part-locked week.
 - `admin-pools`: the "When picks lock" setting.
 - `tv-standings`: most picked follows per-game visibility.
+- `espn-results`: moved kickoffs are shown and applied.
 
 ## Impact
 

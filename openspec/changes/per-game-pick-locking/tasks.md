@@ -3,6 +3,8 @@
 - [ ] 1.1 `pickDeadlineRuleOf(pool)` (missing means whole-week) and `getTeamLock(season, week, team)` in `lib/pick-lock.ts` (game id, kickoff, result; null for a bye); a team is locked when its kickoff has passed or its result is not pending; unit tests incl. a bye and a moved kickoff
 - [ ] 1.2 `POST /pools` defaults new pools to `per_game_kickoff` (schema default stays whole-week); test that a new pool gets it and an old pool does not
 
+- [ ] 1.3 Tests use non-Sunday kickoffs on purpose: a Wednesday and a Friday game, a Saturday game, a week whose first game is a Friday, and a Thanksgiving-style three-game Thursday; whole-week and per-game both behave correctly
+
 ## 2. Writes
 
 - [ ] 2.1 `routes/picks.ts` POST and DELETE: per-game checks (game exists, unlocked), survivor replace needs both games unlocked and clears the old result, pick 'em one pick per game, double-pick per pick; whole-week path untouched; test matrix incl. both pool types, bye, started game, replace across games, delete
@@ -25,6 +27,11 @@
 ## 6. Tests in a real browser
 
 - [ ] 6.1 `e2e`: a per-game pool with Thursday started and Sunday open (pick Sunday, change it, cannot touch Thursday), then everything started shows locked; a whole-week pool still locks everything; Settings step; visibility as each game starts; update the specs that assert whole-week wording
+
+## 6b. Moved kickoffs
+
+- [ ] 6b.1 `previewEspnResults` also returns games whose kickoff differs from ESPN's by more than a minute (not started, no result); `applyEspnResults` (or a separate apply field) updates those kickoffs and never touches a started game; one Activity record covers it; tests incl. a game flexed from Sunday to Monday night and one moved earlier
+- [ ] 6b.2 Results screen shows "N games moved" with the old and new time in the Check for results card, applied with the same confirm; e2e with the ESPN stub
 
 ## 7. Verify and ship
 
