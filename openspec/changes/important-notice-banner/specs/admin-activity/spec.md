@@ -26,3 +26,7 @@ The system SHALL write one activity record, naming the signed-in admin, each tim
 #### Scenario: Posting a notice
 - **WHEN** an admin posts a notice
 - **THEN** a record says that admin posted the notice, naming its title
+
+#### Scenario: Switching a TV playlist
+- **WHEN** an admin sets "Bar TV" to play "Holiday"
+- **THEN** a record says that admin set Bar TV to play Holiday, and no link appears in it

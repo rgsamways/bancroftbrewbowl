@@ -26,3 +26,7 @@ The system SHALL write one activity record, naming the signed-in admin, each tim
 #### Scenario: Cancelling one day
 - **WHEN** an admin cancels one Tuesday of "Trivia"
 - **THEN** a record says that admin cancelled Trivia on that date
+
+#### Scenario: Switching a TV playlist
+- **WHEN** an admin sets "Bar TV" to play "Holiday"
+- **THEN** a record says that admin set Bar TV to play Holiday, and no link appears in it
