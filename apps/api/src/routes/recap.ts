@@ -6,7 +6,7 @@ import { entries, games, picks, pools } from "../db/schema.js";
 import { requireSession } from "../lib/guards.js";
 import { loadSeasonWeeks } from "../lib/entry-state.js";
 import { pickCounts } from "../lib/pick-counts.js";
-import { revealRuleOf } from "../lib/pick-lock.js";
+import { pickDeadlineRuleOf, revealRuleOf } from "../lib/pick-lock.js";
 import { biggestUpset, latestRecapWeek, pickedWeeksByPool } from "../lib/recap.js";
 import { computePickEmPoints } from "./entries.js";
 
@@ -66,7 +66,7 @@ export async function recapRoutes(fastify: FastifyInstance) {
       body.playersLeft = poolEntries.filter(inAfter).length;
       body.playersOut = poolEntries.filter((e) => e.status === "eliminated" && e.eliminatedWeek === week.weekNumber).length;
 
-      const counts = await pickCounts(poolId, week, revealRuleOf(pool), new Date());
+      const counts = await pickCounts(poolId, week, revealRuleOf(pool), new Date(), { deadline: pickDeadlineRuleOf(pool), seasonYear: pool.seasonYear });
       const top = counts?.teams[0];
       if (counts && top) {
         body.mostPicked = { team: top.team, picks: top.picks, sharePercent: sharePercent(top.picks, counts.pickers) };

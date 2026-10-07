@@ -27,7 +27,9 @@ export function Help() {
 
       <FaqGroup title="Picking">
         <Faq q="When do picks lock?">
-          Picks lock when the first game of the week kicks off. Until then you can change your picks as often as you like.
+          In most pools each pick locks when its own game kicks off, so a Sunday or Monday team stays open after Thursday's game starts. In
+          a pool that locks by the week, everything locks when the first game of the week kicks off. Until a pick locks you can change it as
+          often as you like. The Pick screen shows which kind of pool you're in and when the next game locks.
         </Faq>
         <Faq q="How do I change a pick?">
           Open the Pick tab, then tap a different team. In Survivor you'll tap Lock in to confirm.

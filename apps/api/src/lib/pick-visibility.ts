@@ -17,17 +17,20 @@ export type Viewer = { userId: string; isAdmin: boolean };
 /** A pick row plus who owns the entry it belongs to (null for an unclaimed entry). */
 export type OwnedPick = { entryId: string; weekNumber: number; ownerUserId: string | null };
 
+/** `revealed` is either the set of weeks that are open (a whole week at a time) or a test for one
+ * pick (a pool that reveals each pick as its game starts). */
 export function visiblePicks<T extends OwnedPick>(
   rows: readonly T[],
   viewer: Viewer,
-  lockedWeeks: ReadonlySet<number>
+  revealed: ReadonlySet<number> | ((row: T) => boolean)
 ): (Omit<T, "ownerUserId"> | HiddenPick)[] {
   const out: (Omit<T, "ownerUserId"> | HiddenPick)[] = [];
   for (const row of rows) {
     const { ownerUserId, ...rest } = row;
     const isOwn = ownerUserId !== null && ownerUserId === viewer.userId;
 
-    if (isOwn || lockedWeeks.has(row.weekNumber)) {
+    const open = typeof revealed === "function" ? revealed(row) : revealed.has(row.weekNumber);
+    if (isOwn || open) {
       out.push(rest);
     } else if (viewer.isAdmin) {
       out.push({ entryId: row.entryId, weekNumber: row.weekNumber, teamCode: null, result: null, submitted: true });

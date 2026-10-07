@@ -2,6 +2,7 @@ import { and, asc, eq, inArray, min, sql } from "drizzle-orm";
 import type { EntryState } from "@bbb/shared";
 import { db } from "../db/client.js";
 import { games } from "../db/schema.js";
+import { isGameLocked } from "./pick-lock.js";
 
 // One definition of "what week is it and what does this entry need to do", used by Home,
 // the Pick screen and the Pick tab, so they cannot disagree.
@@ -58,6 +59,13 @@ export function picksNeededFor(poolType: "survivor" | "pick_em", doublePickWeeks
   return doublePickWeeks.includes(week.weekNumber) ? 2 : 1;
 }
 
+/** One game of the current week, enough to tell whether it has started. */
+export type WeekGameLite = { homeTeam: string; awayTeam: string; kickoffTime: Date | string; result: string };
+
+/** For a pool that locks each pick at its own game: the week's games and the teams this entry has
+ * picked in it. Without this, the whole week locks at its first kickoff. */
+export type PerGameInput = { poolType: "survivor" | "pick_em"; games: WeekGameLite[]; pickTeams: string[] };
+
 export type EntryStateInput = {
   entryStatus: "alive" | "eliminated";
   poolStatus: "draft" | "active" | "completed";
@@ -65,6 +73,8 @@ export type EntryStateInput = {
   picksMadeThisWeek: (weekNumber: number) => number;
   picksNeeded: (week: SeasonWeek) => number;
   now: Date;
+  /** Set for a per-game pool; gives the current week's games and this entry's picks in it. */
+  perGame?: (week: SeasonWeek) => PerGameInput;
 };
 
 export type EntryStateResult = {
@@ -72,6 +82,9 @@ export type EntryStateResult = {
   week: SeasonWeek | null;
   picksMade: number;
   picksNeeded: number;
+  /** Per-game pools only: the next lock that matters to this entry (its own pick's kickoff when it
+   * has one, else the next game still open); null when nothing can change. */
+  lockTime?: Date | null;
 };
 
 export function deriveEntryState(input: EntryStateInput): EntryStateResult {
@@ -87,6 +100,30 @@ export function deriveEntryState(input: EntryStateInput): EntryStateResult {
 
   const needed = input.picksNeeded(week);
   const made = Math.min(input.picksMadeThisWeek(week.weekNumber), needed);
+
+  if (input.perGame) {
+    const { poolType, games: weekGames, pickTeams } = input.perGame(week);
+    const result = (state: EntryState, lockTime: Date | null): EntryStateResult => ({ state, week, picksMade: made, picksNeeded: needed, lockTime });
+    const open = weekGames.filter((g) => !isGameLocked(g, input.now));
+    if (open.length === 0) return result("locked", null);
+    const kickoff = (g: WeekGameLite) => new Date(g.kickoffTime);
+    const earliest = (list: WeekGameLite[]) => new Date(Math.min(...list.map((g) => kickoff(g).getTime())));
+    const nextOpen = earliest(open);
+    const gameOf = (team: string) => weekGames.find((g) => g.homeTeam === team || g.awayTeam === team);
+
+    if (poolType === "survivor") {
+      if (made >= needed) {
+        const ownOpen = pickTeams.map(gameOf).filter((g): g is WeekGameLite => g !== undefined && !isGameLocked(g, input.now));
+        // Every pick's game has started: nothing left to do or change this week.
+        return ownOpen.length === 0 ? result("locked", null) : result("picked", earliest(ownOpen));
+      }
+      return result("needs_picks", nextOpen);
+    }
+    // Pick 'em: every game that has not started needs a pick.
+    const missing = open.filter((g) => !pickTeams.some((t) => t === g.homeTeam || t === g.awayTeam));
+    return result(missing.length === 0 ? "picked" : "needs_picks", nextOpen);
+  }
+
   if (input.now >= week.lockTime) return { state: "locked", week, picksMade: made, picksNeeded: needed };
   return { state: made >= needed ? "picked" : "needs_picks", week, picksMade: made, picksNeeded: needed };
 }

@@ -5,7 +5,7 @@ import { db } from "../db/client.js";
 import { entries, games, picks, pools } from "../db/schema.js";
 import { requireEntryOwner, requireSession } from "../lib/guards.js";
 import { teamsPlayingInWeek } from "../lib/entry-state.js";
-import { getRevealedWeeks, getWeekLockTime, revealRuleOf } from "../lib/pick-lock.js";
+import { getTeamGame, getWeekLockTime, isGameLocked, pickDeadlineRuleOf, revealPredicate } from "../lib/pick-lock.js";
 import { visiblePicks } from "../lib/pick-visibility.js";
 import { parseBody } from "../lib/validate.js";
 
@@ -30,12 +30,13 @@ export async function pickRoutes(fastify: FastifyInstance) {
       return;
     }
 
+    const perGame = pickDeadlineRuleOf(pool) === "per_game_kickoff";
     const lockTime = await getWeekLockTime(pool.seasonYear, body.week_number);
     if (!lockTime) {
       reply.status(404).send({ error: "Week not found" });
       return;
     }
-    if (new Date() >= lockTime) {
+    if (!perGame && new Date() >= lockTime) {
       reply.status(409).send({ error: "Pick deadline has passed" });
       return;
     }
@@ -43,6 +44,13 @@ export async function pickRoutes(fastify: FastifyInstance) {
     // A team on a bye, or not scheduled that week, cannot be picked.
     if (!(await teamsPlayingInWeek(pool.seasonYear, body.week_number)).has(body.team_code)) {
       reply.status(400).send({ error: `${body.team_code} doesn't play in week ${body.week_number}` });
+      return;
+    }
+
+    // Per-game pools: a pick locks at its own game's kickoff (or once the game has a result).
+    const teamGame = perGame ? await getTeamGame(pool.seasonYear, body.week_number, body.team_code) : null;
+    if (perGame && teamGame && isGameLocked(teamGame, new Date())) {
+      reply.status(409).send({ error: `The ${body.team_code} game has started, so that pick is locked` });
       return;
     }
 
@@ -79,12 +87,36 @@ export async function pickRoutes(fastify: FastifyInstance) {
       where: and(eq(picks.entryId, entryId), eq(picks.weekNumber, body.week_number)),
     });
 
+    // Per-game pick 'em: at most one pick per game. Picking a team replaces the pick on the other
+    // team of the same game (the game is unlocked, as checked above).
+    if (perGame && pool.type === "pick_em" && teamGame) {
+      const other = teamGame.homeTeam === body.team_code ? teamGame.awayTeam : teamGame.homeTeam;
+      const sameGame = weekPicks.find((p) => p.teamCode === other);
+      if (sameGame) {
+        const [pick] = await db
+          .update(picks)
+          .set({ teamCode: body.team_code, result: "pending" })
+          .where(eq(picks.id, sameGame.id))
+          .returning();
+        reply.status(200).send(pick);
+        return;
+      }
+    }
+
     if (limit === 1) {
+      // Per-game survivor: leaving a team whose game has started is not allowed either.
+      if (perGame && weekPicks[0] && weekPicks[0].teamCode !== body.team_code) {
+        const oldGame = await getTeamGame(pool.seasonYear, body.week_number, weekPicks[0].teamCode);
+        if (oldGame && isGameLocked(oldGame, new Date())) {
+          reply.status(409).send({ error: `Your ${weekPicks[0].teamCode} pick is locked because its game has started` });
+          return;
+        }
+      }
       // Unchanged from before double-pick weeks existed: replace-in-place.
       const [pick] = weekPicks[0]
         ? await db
             .update(picks)
-            .set({ teamCode: body.team_code })
+            .set({ teamCode: body.team_code, result: "pending" })
             .where(eq(picks.id, weekPicks[0].id))
             .returning()
         : await db
@@ -134,10 +166,18 @@ export async function pickRoutes(fastify: FastifyInstance) {
       return;
     }
 
-    const lockTime = await getWeekLockTime(pool.seasonYear, Number(weekNumber));
-    if (lockTime && new Date() >= lockTime) {
-      reply.status(409).send({ error: "Pick deadline has passed" });
-      return;
+    if (pickDeadlineRuleOf(pool) === "per_game_kickoff") {
+      const game = await getTeamGame(pool.seasonYear, Number(weekNumber), teamCode);
+      if (game && isGameLocked(game, new Date())) {
+        reply.status(409).send({ error: `The ${teamCode} game has started, so that pick is locked` });
+        return;
+      }
+    } else {
+      const lockTime = await getWeekLockTime(pool.seasonYear, Number(weekNumber));
+      if (lockTime && new Date() >= lockTime) {
+        reply.status(409).send({ error: "Pick deadline has passed" });
+        return;
+      }
     }
 
     const [deleted] = await db
@@ -158,8 +198,8 @@ export async function pickRoutes(fastify: FastifyInstance) {
   });
 
   // Reads go through `visiblePicks`: you always see your own picks, everyone's
-  // picks for a week that has been revealed (locked, and for a pool that waits, also
-  // fully decided), and nothing of anyone else's before that
+  // picks that have been revealed (a per-game pool: as each game starts; a whole-week pool: from the
+  // week's first kickoff; a pool that waits: once the week is fully decided), and nothing of anyone else's before that
   // (an admin gets a "has picked" marker, with no team). See lib/pick-visibility.ts.
   fastify.get("/entries/:entryId/picks", async (request, reply) => {
     const session = await requireSession(request, reply);
@@ -174,9 +214,9 @@ export async function pickRoutes(fastify: FastifyInstance) {
     }
 
     const entryPicks = await db.query.picks.findMany({ where: eq(picks.entryId, entryId) });
-    const lockedWeeks = await getRevealedWeeks(pool.seasonYear, revealRuleOf(pool));
+    const revealed = await revealPredicate(pool);
     const viewer = { userId: session.user.id, isAdmin: Boolean(session.user.isAdmin) };
-    reply.send(visiblePicks(entryPicks.map((p) => ({ ...p, ownerUserId: entry.userId })), viewer, lockedWeeks));
+    reply.send(visiblePicks(entryPicks.map((p) => ({ ...p, ownerUserId: entry.userId })), viewer, revealed));
   });
 
   fastify.get("/pools/:poolId/picks", async (request, reply) => {
@@ -202,8 +242,8 @@ export async function pickRoutes(fastify: FastifyInstance) {
       .innerJoin(entries, eq(picks.entryId, entries.id))
       .where(eq(entries.poolId, poolId));
 
-    const lockedWeeks = await getRevealedWeeks(pool.seasonYear, revealRuleOf(pool));
+    const revealed = await revealPredicate(pool);
     const viewer = { userId: session.user.id, isAdmin: Boolean(session.user.isAdmin) };
-    reply.send(visiblePicks(rows, viewer, lockedWeeks));
+    reply.send(visiblePicks(rows, viewer, revealed));
   });
 }

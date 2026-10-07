@@ -97,11 +97,21 @@ type Described = {
   sub: string;
   lines: string[];
   countdown: boolean;
+  /** Words before the countdown; per-game pools say which lock it is. */
+  countdownLabel?: string;
   button: { label: string; to: string; primary: boolean };
 };
 
 /** The headline, sub-line, stat lines and button for one entry's current state. */
 function describe(e: SummaryEntry): Described {
+  const d = describeBase(e);
+  if (e.lockRule === "game" && d.countdown) {
+    d.countdownLabel = e.state === "picked" ? "Your pick locks in" : "Next game locks in";
+  }
+  return d;
+}
+
+function describeBase(e: SummaryEntry): Described {
   const week = e.weekNumber;
   const standingsTo = `/pool/${e.poolId}`;
   const pickTo = pickPathFor(e);
@@ -183,7 +193,13 @@ function Hero({ entry, nowMs, onLocked }: { entry: SummaryEntry; nowMs: number; 
         ))}
       </div>
       {d.countdown && entry.lockTime && (
-        <Countdown lockTime={entry.lockTime} nowMs={nowMs} onLocked={onLocked} className="mt-3 text-sm font-semibold text-brand-accent" />
+        <Countdown
+          lockTime={entry.lockTime}
+          nowMs={nowMs}
+          onLocked={onLocked}
+          label={d.countdownLabel}
+          className="mt-3 text-sm font-semibold text-brand-accent"
+        />
       )}
       <Link to={d.button.to} className={d.button.primary ? primaryLink : secondaryLink}>
         {d.button.label}

@@ -130,3 +130,20 @@ describe("visiblePicks", () => {
     });
   });
 });
+
+describe("visiblePicks with a per-pick test (a pool that reveals each pick as its game starts)", () => {
+  const started = (row: { weekNumber: number; teamCode: string }) => row.teamCode === "KC";
+  const rows = [pick("a", BOB, 1, "KC"), pick("a2", BOB, 1, "DET")];
+
+  it("shows another player only the picks whose game has started; an admin sees the others as picked", () => {
+    const forPlayer = visiblePicks(rows, player(ALICE), started);
+    expect(forPlayer.map((r) => ("teamCode" in r ? r.teamCode : null))).toEqual(["KC"]);
+    const forAdmin = visiblePicks(rows, admin, started);
+    expect(forAdmin).toHaveLength(2);
+    expect(forAdmin[1]).toMatchObject({ teamCode: null, submitted: true });
+  });
+
+  it("always shows a player their own picks", () => {
+    expect(visiblePicks(rows, player(BOB), () => false)).toHaveLength(2);
+  });
+});

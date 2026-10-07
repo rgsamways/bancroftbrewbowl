@@ -87,7 +87,9 @@ export function PoolTv() {
           {survivor ? `of ${data.playersTotal} still alive` : "players"}
         </p>
         <p data-testid="tv-status" className="mt-[18px] self-start whitespace-nowrap rounded-full bg-brand-surface-raised px-4 py-2 text-lg font-medium text-brand-muted">
-          {STATUS_TEXT[data.status]}
+          {data.status === "locked" && data.pickDeadline === "per_game_kickoff"
+            ? "Games underway · picks lock game by game"
+            : STATUS_TEXT[data.status]}
         </p>
         {survivor && (
           <div className="mt-auto rounded-[18px] border border-brand-border bg-brand-surface px-5 py-4">

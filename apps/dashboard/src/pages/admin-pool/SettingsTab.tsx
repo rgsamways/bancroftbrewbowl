@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import {
   PICK_EM_TIE_HANDLING,
+  PICK_DEADLINE_RULES,
   REVEAL_PICKS,
+  type PickDeadlineRule,
   type RevealPicks,
   TIE_HANDLING,
   parsePoolTotal,
@@ -303,6 +305,27 @@ export function SettingsTab({ pool, onChanged }: { pool: PoolRow; onChanged: (po
             </select>
           </label>
         )}
+
+        <label className={fieldLabel}>
+          When picks lock
+          <select
+            value={rules.pick_deadline_rule ?? "first_kickoff_of_week"}
+            disabled={locked}
+            onChange={(e) => setRules({ ...rules, pick_deadline_rule: e.target.value as PickDeadlineRule })}
+            className={`${inputClass} mt-1`}
+          >
+            {PICK_DEADLINE_RULES.map((v) => (
+              <option key={v} value={v}>
+                {v === "per_game_kickoff" ? "At each game's kickoff" : "At the week's first kickoff"}
+              </option>
+            ))}
+          </select>
+          <span className="mt-1 block text-xs font-normal text-brand-muted">
+            {(rules.pick_deadline_rule ?? "first_kickoff_of_week") === "per_game_kickoff"
+              ? "A pick stays open until its own game starts, so Sunday and Monday teams can still be picked after Thursday's game."
+              : "Everything locks when the first game of the week starts."}
+          </span>
+        </label>
 
         <label className={fieldLabel}>
           When other players' picks show

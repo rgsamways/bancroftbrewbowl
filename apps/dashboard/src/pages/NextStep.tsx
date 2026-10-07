@@ -187,10 +187,10 @@ export function NextStep() {
                 <Row done title="Schedule loaded" detail={`${summary.weekGamesTotal} games in week ${summary.weekNumber}`} />
                 <Row
                   done={summary.locked}
-                  title={summary.locked ? "Picks locked" : "Picks open"}
+                  title={summary.locked ? "Games under way" : "Picks open"}
                   detail={
                     summary.lockTime
-                      ? `${summary.locked ? "Locked at" : "Lock at"} ${formatKickoff(summary.lockTime)}`
+                      ? `${summary.locked ? "First game kicked off" : "First game"} ${formatKickoff(summary.lockTime)}`
                       : "No kickoff yet"
                   }
                 />

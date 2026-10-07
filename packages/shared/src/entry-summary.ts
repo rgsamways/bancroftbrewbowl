@@ -15,6 +15,8 @@ export type SummaryEntry = {
   state: EntryState;
   weekNumber: number | null;
   lockTime: string | null;
+  /** "week": the week locks at its first kickoff. "game": each pick locks at its own game. */
+  lockRule: "week" | "game";
   picksMade: number;
   picksNeeded: number;
   playersTotal: number;
@@ -51,9 +53,17 @@ export type SheetGame = {
   awayTeam: string;
   kickoffTime: string;
   result: "pending" | "home_win" | "away_win" | "tie";
+  /** No more picks or changes for this game (it has started, or the week has locked). */
+  locked: boolean;
 };
 
-export type SheetPick = { weekNumber: number; teamCode: string; result: "pending" | "win" | "loss" | "tie" };
+export type SheetPick = {
+  weekNumber: number;
+  teamCode: string;
+  result: "pending" | "win" | "loss" | "tie";
+  /** This pick can no longer be changed. */
+  locked: boolean;
+};
 
 export type PickSheet = {
   serverNow: string;
@@ -66,7 +76,11 @@ export type PickSheet = {
   eliminatedWeek: number | null;
   state: EntryState;
   weekNumber: number | null;
+  /** Whole-week pools: the week's first kickoff. Per-game pools: the next lock that matters to this
+   * entry (its own pick's game when it has one, else the next game still open); null when nothing can change. */
   lockTime: string | null;
+  /** "week": everything locks at the week's first kickoff. "game": each pick locks at its own game. */
+  lockRule: "week" | "game";
   /** How many teams this week takes (survivor: 1, or 2 in a double-pick week). */
   limit: number;
   allowRepeatTeams: boolean;

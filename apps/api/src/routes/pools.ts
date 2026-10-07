@@ -21,8 +21,12 @@ function rulesSchemaForType(type: PoolType) {
   return type === "survivor" ? survivorRulesConfigSchema : pickEmRulesConfigSchema;
 }
 
+/** The rules a pool starts with. The schema default for `pick_deadline_rule` stays whole-week (so
+ * stored data and old pools mean what they always did); a pool created now locks each pick at its
+ * own game's kickoff. */
 function defaultRulesForType(type: PoolType) {
-  return type === "survivor" ? defaultSurvivorRulesConfig : defaultPickEmRulesConfig;
+  const base = type === "survivor" ? defaultSurvivorRulesConfig : defaultPickEmRulesConfig;
+  return { ...base, pick_deadline_rule: "per_game_kickoff" as const };
 }
 
 export async function poolRoutes(fastify: FastifyInstance) {

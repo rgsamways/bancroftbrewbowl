@@ -51,9 +51,12 @@ function groupByDay(games: SheetGame[]) {
 function GameList({
   games,
   renderGame,
+  statusOf,
 }: {
   games: SheetGame[];
   renderGame: (game: SheetGame) => React.ReactNode;
+  /** A short status shown beside the kickoff time (per-game pools: "Started", "Final"). */
+  statusOf?: (game: SheetGame) => string | null;
 }) {
   return (
     <div className="mt-4 space-y-5">
@@ -63,7 +66,10 @@ function GameList({
           <ul className="space-y-3">
             {group.games.map((game) => (
               <li key={game.id} id={`game-${game.id}`}>
-                <p className="mb-1 text-xs text-brand-faint">{formatKickoffTime(game.kickoffTime)}</p>
+                <p className="mb-1 text-xs text-brand-faint">
+                  {formatKickoffTime(game.kickoffTime)}
+                  {statusOf?.(game) ? ` · ${statusOf(game)}` : ""}
+                </p>
                 {renderGame(game)}
               </li>
             ))}
@@ -92,13 +98,35 @@ function Header({
       <h1 className="text-3xl font-semibold leading-tight text-brand-text">{title}</h1>
       <p className="mt-1 text-sm text-brand-muted">{line}</p>
       {sheet.lockTime && (
-        <Countdown lockTime={sheet.lockTime} nowMs={nowMs} onLocked={onLocked} className="mt-2 text-sm font-semibold text-brand-accent" />
+        <Countdown
+          lockTime={sheet.lockTime}
+          nowMs={nowMs}
+          onLocked={onLocked}
+          label={sheet.lockRule === "game" ? (sheet.state === "picked" ? "Your pick locks in" : "Next game locks in") : "Locks in"}
+          className="mt-2 text-sm font-semibold text-brand-accent"
+        />
       )}
+      {sheet.lockRule === "game" && <p className="mt-1 text-xs text-brand-faint">Each game locks when it kicks off.</p>}
     </>
   );
 }
 
 const weekPicks = (sheet: PickSheet): SheetPick[] => sheet.picks.filter((p) => p.weekNumber === sheet.weekNumber);
+
+/** In a per-game pool a game is locked once the server says so, or its kickoff has passed on the
+ * server's clock. (A whole-week pool never shows these screens once the week has locked.) */
+const gameIsLocked = (game: SheetGame, nowMs: number) => game.locked || nowMs >= Date.parse(game.kickoffTime);
+
+/** What to show beside a game's time in a per-game pool. */
+const gameStatus = (game: SheetGame, nowMs: number): string | null =>
+  game.result !== "pending" ? "Final" : gameIsLocked(game, nowMs) ? "Started" : null;
+
+/** The card mark for a team in a game that can no longer be picked. */
+function lockedMark(pick: SheetPick | undefined): TeamCardMark {
+  if (!pick) return { kind: "label", text: "Started", tone: "muted" };
+  if (pick.result === "pending") return { kind: "label", text: "Your pick · locked", tone: "muted" };
+  return { kind: "label", text: `Your pick · ${resultLabel(pick.result)}`, tone: pick.result === "win" ? "good" : "bad" };
+}
 
 const resultLabel = (r: SheetPick["result"]) =>
   r === "win" ? "Correct" : r === "loss" ? "Wrong" : r === "tie" ? "Tied" : "Waiting";
@@ -229,7 +257,9 @@ function LockedView({ sheet }: { sheet: PickSheet }) {
       <Note>
         {isPickEm
           ? "Results are added by the brewery as games finish, so they may take a little while to show up."
-          : "Picks can't be changed once the week's first game has started."}
+          : sheet.lockRule === "game"
+            ? "Your pick is locked because its game has started."
+            : "Picks can't be changed once the week's first game has started."}
       </Note>
       <Link to="/" className={`${secondary} mt-6`}>
         Back to Home
@@ -270,7 +300,14 @@ function SurvivorPick({
   }, [savedKey, editing]);
 
   const double = limit > 1;
+  const perGame = sheet.lockRule === "game";
   const gameOf = (team: string) => sheet.games.find((g) => g.homeTeam === team || g.awayTeam === team);
+  // A team whose game has started cannot be picked, changed or removed (per-game pools only).
+  const teamLocked = (team: string) => {
+    const g = gameOf(team);
+    return perGame && g !== undefined && gameIsLocked(g, nowMs);
+  };
+  const statusOf = perGame ? (g: SheetGame) => gameStatus(g, nowMs) : undefined;
   const opponentOf = (team: string) => {
     const g = gameOf(team);
     return g ? (g.homeTeam === team ? g.awayTeam : g.homeTeam) : "";
@@ -278,10 +315,15 @@ function SurvivorPick({
 
   function toggle(team: string) {
     setMessage(null);
+    if (teamLocked(team)) return;
     setSelected((current) => {
       if (limit === 1) return [team];
-      if (current.includes(team)) return current.filter((t) => t !== team);
-      if (current.length >= limit) return [...current.slice(1), team];
+      if (current.includes(team)) return teamLocked(team) ? current : current.filter((t) => t !== team);
+      if (current.length >= limit) {
+        // Make room by dropping the first pick that is still changeable.
+        const drop = current.findIndex((t) => !teamLocked(t));
+        return drop < 0 ? current : [...current.filter((_, i) => i !== drop), team];
+      }
       return [...current, team];
     });
   }
@@ -328,29 +370,47 @@ function SurvivorPick({
         </p>
         <GameList
           games={sheet.games}
+          statusOf={statusOf}
           renderGame={(game) => (
             <div className="flex gap-2">
               {[game.awayTeam, game.homeTeam].map((team) => (
-                <TeamCard key={team} code={team} mark={saved.includes(team) ? { kind: "yourPick" } : { kind: "none" }} />
+                <TeamCard
+                  key={team}
+                  code={team}
+                  mark={
+                    teamLocked(team)
+                      ? lockedMark(saved.includes(team) ? weekPicks(sheet).find((p) => p.teamCode === team) : undefined)
+                      : saved.includes(team)
+                        ? { kind: "yourPick" }
+                        : { kind: "none" }
+                  }
+                />
               ))}
             </div>
           )}
         />
         <div className="mt-6 space-y-3">
-          <button type="button" onClick={() => setEditing(true)} className={secondary}>
-            Change my pick{double ? "s" : ""}
-          </button>
+          {saved.some((t) => !teamLocked(t)) && (
+            <button type="button" onClick={() => setEditing(true)} className={secondary}>
+              Change my pick{double ? "s" : ""}
+            </button>
+          )}
           <Link to="/" className={secondary}>
             Back to Home
           </Link>
         </div>
-        <Note>You can change your pick any time until the week's first game kicks off.</Note>
+        <Note>
+          {perGame
+            ? "You can change a pick until its game kicks off. Once it starts, that pick is locked."
+            : "You can change your pick any time until the week's first game kicks off."}
+        </Note>
         <Footer />
       </Page>
     );
   }
 
   const markFor = (team: string): TeamCardMark => {
+    if (teamLocked(team)) return lockedMark(weekPicks(sheet).find((p) => p.teamCode === team));
     const usedWeek = sheet.usedTeams[team];
     if (usedWeek !== undefined && !sheet.allowRepeatTeams) return { kind: "used", week: usedWeek };
     return selected.includes(team) ? { kind: "selected" } : { kind: "none" };
@@ -395,10 +455,17 @@ function SurvivorPick({
 
       <GameList
         games={sheet.games}
+        statusOf={statusOf}
         renderGame={(game) => (
           <div className="flex gap-2">
             {[game.awayTeam, game.homeTeam].map((team) => (
-              <TeamCard key={team} code={team} mark={markFor(team)} onSelect={() => toggle(team)} disabled={busy} />
+              <TeamCard
+                key={team}
+                code={team}
+                mark={markFor(team)}
+                onSelect={teamLocked(team) ? undefined : () => toggle(team)}
+                disabled={busy}
+              />
             ))}
           </div>
         )}
@@ -440,14 +507,18 @@ function PickEmPick({
   const inFlight = useRef<Set<string>>(new Set());
   const [message, setMessage] = useState<string | null>(null);
 
+  const perGame = sheet.lockRule === "game";
   const pickFor = (game: SheetGame) => mine.find((p) => p.teamCode === game.homeTeam || p.teamCode === game.awayTeam);
-  const unpicked = sheet.games.filter((g) => !pickFor(g));
+  const closed = (game: SheetGame) => perGame && gameIsLocked(game, nowMs);
+  // Games that can still be picked and have no pick yet.
+  const unpicked = sheet.games.filter((g) => !pickFor(g) && !closed(g));
   const total = sheet.games.length;
-  const picked = total - unpicked.length;
+  const picked = sheet.games.filter((g) => pickFor(g)).length;
 
   const tap = useCallback(
     async (game: SheetGame, team: string) => {
       if (inFlight.current.has(game.id)) return;
+      if (perGame && gameIsLocked(game, nowMs)) return;
       const current = mine.find((p) => p.teamCode === game.homeTeam || p.teamCode === game.awayTeam);
       if (current?.teamCode === team) return;
       inFlight.current.add(game.id);
@@ -469,7 +540,7 @@ function PickEmPick({
         setPending(new Set(inFlight.current));
       }
     },
-    [mine, reload, sheet.entryId, week]
+    [mine, reload, sheet.entryId, week, perGame, nowMs]
   );
 
   function jumpToNext() {
@@ -503,7 +574,9 @@ function PickEmPick({
         <div className="mt-3 rounded-[14px] border border-brand-border bg-brand-surface p-4">
           <p className="font-semibold text-brand-text">All picks in</p>
           <p className="text-sm text-brand-muted">
-            You're all set for Week {week}. You can change any pick until the week's first game kicks off.
+            {perGame
+              ? `You're all set for the games still to come in Week ${week}. You can change a pick until its game kicks off.`
+              : `You're all set for Week ${week}. You can change any pick until the week's first game kicks off.`}
           </p>
         </div>
       )}
@@ -515,9 +588,11 @@ function PickEmPick({
 
       <GameList
         games={sheet.games}
+        statusOf={perGame ? (g) => gameStatus(g, nowMs) : undefined}
         renderGame={(game) => {
           const current = pickFor(game);
           const saving = pending.has(game.id);
+          const isClosed = closed(game);
           return (
             <>
               <div className="flex gap-2">
@@ -525,18 +600,32 @@ function PickEmPick({
                   <TeamCard
                     key={team}
                     code={team}
-                    mark={current?.teamCode === team ? { kind: "picked" } : { kind: "none" }}
-                    onSelect={() => void tap(game, team)}
+                    mark={
+                      isClosed
+                        ? current?.teamCode === team
+                          ? lockedMark(current)
+                          : { kind: "none" }
+                        : current?.teamCode === team
+                          ? { kind: "picked" }
+                          : { kind: "none" }
+                    }
+                    onSelect={isClosed ? undefined : () => void tap(game, team)}
                     disabled={saving}
                   />
                 ))}
               </div>
-              <p className="mt-1 text-xs text-brand-faint">{saving ? "Saving…" : current ? "" : "Pick a winner"}</p>
+              <p className="mt-1 text-xs text-brand-faint">
+                {saving ? "Saving…" : isClosed ? (current ? "" : "No pick made") : current ? "" : "Pick a winner"}
+              </p>
             </>
           );
         }}
       />
-      <Note>Your picks save as you tap. You can change them any time until the week's first game kicks off.</Note>
+      <Note>
+        {perGame
+          ? "Your picks save as you tap. You can change a pick until its game kicks off."
+          : "Your picks save as you tap. You can change them any time until the week's first game kicks off."}
+      </Note>
       <Link to="/" className={`${secondary} mt-6`}>
         Back to Home
       </Link>
@@ -573,7 +662,10 @@ export function PickScreen() {
     return <EmptyView sheet={sheet} />;
   }
 
-  const lockedByClock = sheet.lockTime !== null && nowMs >= Date.parse(sheet.lockTime);
+  // A whole-week pool locks everything at the week's first kickoff. A per-game pool only shows the
+  // locked view when nothing is left to pick or change (the server decides; each game's own clock
+  // is handled inside the screens).
+  const lockedByClock = sheet.lockRule === "week" && sheet.lockTime !== null && nowMs >= Date.parse(sheet.lockTime);
   if (sheet.state === "locked" || lockedByClock) return <LockedView sheet={sheet} />;
 
   return sheet.poolType === "pick_em" ? (

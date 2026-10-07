@@ -7,7 +7,13 @@ import { db } from "../db/client.js";
 import { EspnError } from "../lib/espn.js";
 import { applyEspnResults, previewEspnResults } from "../lib/espn-results.js";
 
-const applySchema = z.object({ gameIds: z.array(z.string().uuid()).min(1).max(60) }).strict();
+const applySchema = z
+  .object({
+    gameIds: z.array(z.string().uuid()).max(60).default([]),
+    movedIds: z.array(z.string().uuid()).max(60).default([]),
+  })
+  .strict()
+  .refine((v) => v.gameIds.length + v.movedIds.length > 0, { message: "Nothing to apply" });
 
 const ESPN_DOWN = "We couldn't check ESPN right now. You can still enter results by hand below.";
 
@@ -35,16 +41,22 @@ export async function espnResultsRoutes(fastify: FastifyInstance) {
     if (!body) return;
     try {
       const actor = actorOf(session);
-      const outcome = await applyEspnResults(body.gameIds, actor);
+      const outcome = await applyEspnResults(body.gameIds ?? [], actor, body.movedIds ?? []);
       // One record per import, written right after the results are saved and scored. An import
       // that changed nothing writes none.
+      const movedText =
+        outcome.moved.length > 0
+          ? `moved ${outcome.moved.length} kickoff${outcome.moved.length === 1 ? "" : "s"} to ESPN's time: ${outcome.moved.map((g) => gameLabel(g)).join("; ")}`
+          : "";
       if (outcome.applied.length > 0) {
         const list = outcome.applied.map((g) => `${gameLabel(g)} ${resultText(g, g.result)}`).join("; ");
         await recordActivity(db, actor, {
           kind: "results_imported",
-          summary: `${actor.name} imported ${outcome.applied.length} result${outcome.applied.length === 1 ? "" : "s"} from ESPN: ${list}.`,
+          summary: `${actor.name} imported ${outcome.applied.length} result${outcome.applied.length === 1 ? "" : "s"} from ESPN: ${list}${movedText ? `, and ${movedText}` : ""}.`,
           affectsOwnEntry: outcome.affectsOwnEntry,
         });
+      } else if (outcome.moved.length > 0) {
+        await recordActivity(db, actor, { kind: "schedule_updated", summary: `${actor.name} ${movedText}.`, affectsOwnEntry: false });
       }
       reply.send(outcome);
     } catch (e) {

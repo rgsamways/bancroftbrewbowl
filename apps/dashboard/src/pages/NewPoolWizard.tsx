@@ -10,13 +10,13 @@ const RULE_SUMMARY: Record<PoolType, [string, string][]> = {
     ["Picks", "One team a week"],
     ["Same team twice", "Not allowed"],
     ["A tied game", "Knocks you out"],
-    ["Picks lock", "At the first kickoff"],
+    ["Picks lock", "At each game's kickoff"],
   ],
   pick_em: [
     ["Picks", "Every game, every week"],
     ["Points", "One for each correct pick"],
     ["A tied game", "Doesn't score"],
-    ["Picks lock", "At the first kickoff"],
+    ["Picks lock", "At each game's kickoff"],
   ],
 };
 

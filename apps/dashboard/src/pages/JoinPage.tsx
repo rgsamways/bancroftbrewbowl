@@ -5,7 +5,7 @@ import { useSession } from "../lib/auth-client";
 import { api, ApiError } from "../lib/api";
 import { useApi } from "../lib/useApi";
 
-type Pool = { id: string; name: string; seasonYear: number; status: string; type: PoolType };
+type Pool = { id: string; name: string; seasonYear: number; status: string; type: PoolType; rules?: { pick_deadline_rule?: string } };
 
 const RULES: Record<PoolType, [string, string][]> = {
   survivor: [
@@ -21,6 +21,16 @@ const RULES: Record<PoolType, [string, string][]> = {
     ["Picks lock at kickoff", "You can change your picks until the week's first game starts."],
   ],
 };
+
+/** The rules to show, with the lock line matching how this pool actually locks. */
+function rulesFor(pool: Pool): [string, string][] {
+  const perGame = pool.rules?.pick_deadline_rule === "per_game_kickoff";
+  return RULES[pool.type].map(([title, text]) =>
+    title === "Picks lock at kickoff" && perGame
+      ? [title, `Each pick locks when its own game starts, so you can change ${pool.type === "pick_em" ? "a pick" : "your pick"} until then.`]
+      : [title, text]
+  );
+}
 
 const primary =
   "flex min-h-12 w-full items-center justify-center rounded-[12px] bg-brand-accent px-4 font-semibold text-brand-accent-ink hover:bg-brand-accent-hover disabled:opacity-50";
@@ -91,7 +101,7 @@ export function JoinPage() {
 
       <h2 className="mb-2 mt-6 text-sm font-semibold text-brand-muted">How this pool works</h2>
       <ul className="space-y-3">
-        {RULES[pool.type].map(([title, text]) => (
+        {rulesFor(pool).map(([title, text]) => (
           <li key={title} className="text-sm text-brand-muted">
             <span className="block font-semibold text-brand-text">{title}</span>
             {text}

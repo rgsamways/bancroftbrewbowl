@@ -86,3 +86,84 @@ describe("picksNeededFor", () => {
     expect(picksNeededFor("pick_em", [], w)).toBe(14);
   });
 });
+
+describe("deriveEntryState for a pool that locks each pick at its own game", () => {
+  // Week 2: Thursday (started), Sunday (open), Monday (open). Now is Sunday morning.
+  const wk = [week(1, "2026-09-10T17:00:00Z", 0), week(2, "2026-09-17T00:15:00Z", 3)];
+  const games = [
+    { homeTeam: "KC", awayTeam: "BUF", kickoffTime: "2026-09-17T00:15:00Z", result: "pending" },
+    { homeTeam: "DET", awayTeam: "NYJ", kickoffTime: "2026-09-20T17:00:00Z", result: "pending" },
+    { homeTeam: "PHI", awayTeam: "DAL", kickoffTime: "2026-09-22T00:15:00Z", result: "pending" },
+  ];
+  const run = (poolType: "survivor" | "pick_em", pickTeams: string[], over: { needed?: number; now?: string } = {}) =>
+    deriveEntryState({
+      entryStatus: "alive",
+      poolStatus: "active",
+      weeks: wk,
+      picksMadeThisWeek: () => pickTeams.length,
+      picksNeeded: () => over.needed ?? (poolType === "pick_em" ? 3 : 1),
+      now: at(over.now ?? "2026-09-20T12:00:00Z"),
+      perGame: () => ({ poolType, games, pickTeams }),
+    });
+
+  it("survivor with no pick still needs one while a later game is open, counting down to the next game", () => {
+    const r = run("survivor", []);
+    expect(r.state).toBe("needs_picks");
+    expect(r.lockTime!.toISOString()).toBe("2026-09-20T17:00:00.000Z");
+  });
+
+  it("survivor with an open pick is picked, counting down to that pick's own game", () => {
+    const r = run("survivor", ["PHI"]);
+    expect(r.state).toBe("picked");
+    expect(r.lockTime!.toISOString()).toBe("2026-09-22T00:15:00.000Z");
+  });
+
+  it("survivor whose pick's game has started is locked, with nothing to count down to", () => {
+    const r = run("survivor", ["KC"]);
+    expect(r.state).toBe("locked");
+    expect(r.lockTime).toBeNull();
+  });
+
+  it("a double-pick week with one locked pick and no second still needs picks", () => {
+    expect(run("survivor", ["KC"], { needed: 2 }).state).toBe("needs_picks");
+    expect(run("survivor", ["KC", "DET"], { needed: 2 }).state).toBe("picked");
+  });
+
+  it("pick 'em needs a pick for every game that has not started, and ignores the one that has", () => {
+    expect(run("pick_em", ["DET"]).state).toBe("needs_picks");
+    expect(run("pick_em", ["DET", "PHI"]).state).toBe("picked");
+    expect(run("pick_em", ["DAL", "NYJ"]).state).toBe("picked"); // either team of a game counts
+  });
+
+  it("everything started is locked for both pool types", () => {
+    expect(run("survivor", [], { now: "2026-09-22T01:00:00Z" }).state).toBe("locked");
+    expect(run("pick_em", ["DET"], { now: "2026-09-22T01:00:00Z" }).state).toBe("locked");
+  });
+
+  it("a game that has a result counts as started even if its kickoff is still ahead", () => {
+    const moved = [{ ...games[1]!, result: "home_win" }, games[2]!, games[0]!];
+    const r = deriveEntryState({
+      entryStatus: "alive",
+      poolStatus: "active",
+      weeks: wk,
+      picksMadeThisWeek: () => 1,
+      picksNeeded: () => 1,
+      now: at("2026-09-18T12:00:00Z"),
+      perGame: () => ({ poolType: "survivor", games: moved, pickTeams: ["DET"] }),
+    });
+    expect(r.state).toBe("locked");
+  });
+
+  it("is still eliminated first, whatever the games", () => {
+    const r = deriveEntryState({
+      entryStatus: "eliminated",
+      poolStatus: "active",
+      weeks: wk,
+      picksMadeThisWeek: () => 0,
+      picksNeeded: () => 1,
+      now: at("2026-09-20T12:00:00Z"),
+      perGame: () => ({ poolType: "survivor", games, pickTeams: [] }),
+    });
+    expect(r.state).toBe("eliminated");
+  });
+});

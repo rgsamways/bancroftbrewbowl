@@ -25,6 +25,7 @@ export function PicksTab({ pool }: { pool: PoolRow }) {
   const idx = weeks.findIndex((w) => w.weekNumber === shown);
   const info = weeks[idx]!;
   const later = (pool.rules as { reveal_picks?: string }).reveal_picks === "after_final_game";
+  const perGame = (pool.rules as { pick_deadline_rule?: string }).pick_deadline_rule === "per_game_kickoff";
   // Other players' teams show once the week has locked and, for a pool that waits, every game has a result.
   const locked = info.locked && (!later || info.completed);
 
@@ -36,7 +37,9 @@ export function PicksTab({ pool }: { pool: PoolRow }) {
   const picked = alive.filter(hasPick);
   const lost = roster.filter((e) => picksFor(e.id).some((p) => p.result === "loss"));
 
-  const chips: { key: Chip; label: string; list: RosterEntry[] }[] = locked
+  // A per-game pool reveals each pick as its game starts, so the week is never "all locked" at once.
+  const gameByGame = perGame && !later;
+  const chips: { key: Chip; label: string; list: RosterEntry[] }[] = locked && !gameByGame
     ? [
         { key: "alive", label: "Alive", list: alive },
         { key: "nopick", label: "No pick", list: noPick },
@@ -46,6 +49,7 @@ export function PicksTab({ pool }: { pool: PoolRow }) {
         { key: "alive", label: "Alive", list: alive },
         { key: "nopick", label: "No pick", list: noPick },
         { key: "picked", label: "Picked", list: picked },
+        ...(gameByGame ? [{ key: "lost" as Chip, label: "Lost", list: lost }] : []),
       ];
   const active = chips.find((c) => c.key === chip) ?? chips[0]!;
 
@@ -53,13 +57,13 @@ export function PicksTab({ pool }: { pool: PoolRow }) {
     const mine = picksFor(e.id);
     if (mine.length === 0) return { text: "Hasn't picked", tone: "muted" as const };
     const teams = mine.map((p) => p.teamCode).filter((t): t is string => t !== null);
-    if (teams.length === 0) return { text: "Picked", sub: later ? "Team hidden until the week's games are final" : "Team hidden until the lock", tone: "muted" as const };
+    if (teams.length === 0) return { text: "Picked", sub: later ? "Team hidden until the week's games are final" : perGame ? "Team shows when its game starts" : "Team hidden until the lock", tone: "muted" as const };
     const names = teams.map(teamNickname).join(" and ");
     if (e.isYou && !locked) return { text: `You · ${names}, your pick`, tone: "plain" as const };
     return { text: names, tone: "plain" as const };
   };
   const resultChip = (e: RosterEntry) => {
-    if (!locked) return null; // nothing can have a result before the week locks
+    if (!locked && !gameByGame) return null; // nothing can have a result before the week locks
     const results = picksFor(e.id).map((p) => p.result);
     if (results.length === 0 || results.includes(null)) return null;
     if (results.includes("loss")) return { label: "Lost", cls: "bg-red-950 text-red-400" };
@@ -98,7 +102,9 @@ export function PicksTab({ pool }: { pool: PoolRow }) {
       </div>
 
       <p className="text-sm text-brand-muted">
-        {locked
+        {gameByGame
+          ? "Each pick shows once its game starts. Before that, even admins only see who has picked."
+          : locked
           ? "This week has locked, so everyone can see everyone's picks. Before a week locks, even admins only see who has picked."
           : later
             ? "Teams are hidden until every game of the week has a result. That goes for everyone, admins too. You can still see who needs a nudge."

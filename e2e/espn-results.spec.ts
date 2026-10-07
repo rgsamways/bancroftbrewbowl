@@ -88,3 +88,41 @@ test("check, apply and see the result scored; then nothing new; then ESPN down k
     await db.close();
   }
 });
+
+test("a flexed game: Check for results shows the new kickoff and Apply moves it, so the pick lock follows", async ({ browser }) => {
+  const db = new TestDb();
+  await db.connect();
+  try {
+    const SEASON = 2963;
+    const adminEmail = db.email("flexadm");
+    const admin = await signIn(browser, db, adminEmail);
+    await db.setUser(adminEmail, "Flex Admin", true);
+    await db.createPool("Flex Pool", SEASON);
+    const game = await db.createGame(SEASON, 1, "KC", "BUF", 3); // three days from now
+    const ours = (await db.query(`select extract(epoch from kickoff_time) * 1000 as ms from games where id = $1`, [game])).rows[0].ms as number;
+    const flexed = new Date(Number(ours) + 5 * 3600 * 1000); // ESPN now says five hours later
+
+    await setEspn({ mode: "ok", games: [{ week: 1, home: "KC", away: "BUF", final: false, homeScore: 0, awayScore: 0, date: flexed.toISOString() }] });
+
+    await admin.goto("/admin/results");
+    await admin.getByRole("button", { name: "Check for results" }).click();
+    await expect(admin.getByText("1 game moved")).toBeVisible();
+    await expect(admin.getByText(/Bills at Chiefs now starts .* \(was /)).toBeVisible();
+    expect(Math.abs(Number((await db.query(`select extract(epoch from kickoff_time) * 1000 as ms from games where id = $1`, [game])).rows[0].ms) - Number(ours))).toBeLessThan(1000);
+
+    await admin.getByRole("button", { name: "Apply 1 time change" }).click();
+    await expect(admin.getByText(/Updated 1 game time\./)).toBeVisible();
+    const now = Number((await db.query(`select extract(epoch from kickoff_time) * 1000 as ms from games where id = $1`, [game])).rows[0].ms);
+    expect(Math.abs(now - flexed.getTime())).toBeLessThan(2000);
+    expect(Number((await db.query(`select count(*) from admin_activity where kind = 'schedule_updated'`)).rows[0].count)).toBeGreaterThanOrEqual(1);
+
+    // Checking again finds nothing new.
+    await admin.getByRole("button", { name: "Check for results" }).click();
+    await expect(admin.getByText("Nothing new to apply.")).toBeVisible();
+
+    await admin.context().close();
+  } finally {
+    await db.close();
+  }
+});
+

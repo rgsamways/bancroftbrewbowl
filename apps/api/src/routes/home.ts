@@ -13,7 +13,16 @@ import {
 import { db } from "../db/client.js";
 import { entries, games, picks, pools } from "../db/schema.js";
 import { requireEntryOwner, requireSession } from "../lib/guards.js";
-import { deriveEntryState, loadSeasonWeeks, picksNeededFor, type SeasonWeek } from "../lib/entry-state.js";
+import {
+  currentWeek,
+  deriveEntryState,
+  loadSeasonWeeks,
+  picksNeededFor,
+  type EntryStateResult,
+  type SeasonWeek,
+  type WeekGameLite,
+} from "../lib/entry-state.js";
+import { isGameLocked, pickDeadlineRuleOf } from "../lib/pick-lock.js";
 import { loadBreweryHome } from "../lib/brewery.js";
 import { latestRecapWeek, pickedWeeksByPool } from "../lib/recap.js";
 import { computePickEmPoints } from "./entries.js";
@@ -26,6 +35,13 @@ function doublePickWeeks(pool: PoolRow): number[] {
 
 function countsTie(pool: PoolRow) {
   return pool.type === "pick_em" && (pool.rules as PickEmRulesConfig).tie_handling === "everyone_correct";
+}
+
+/** The lock time to send: for a per-game pool the next lock that matters to the entry (null when
+ * nothing can change), otherwise the week's first kickoff. */
+function lockTimeOf(d: EntryStateResult): string | null {
+  if (d.lockTime !== undefined) return d.lockTime ? d.lockTime.toISOString() : null;
+  return d.week ? d.week.lockTime.toISOString() : null;
 }
 
 /** Home and the Pick screen each get everything they need in one request. */
@@ -77,6 +93,13 @@ export async function homeRoutes(fastify: FastifyInstance) {
 
     const pickedWeeks = await pickedWeeksByPool(poolIds);
 
+    // The current week's games for each season, for pools that lock each pick at its own game.
+    const currentGames = new Map<number, WeekGameLite[]>();
+    for (const [season, list] of weeksBySeason) {
+      const cw = currentWeek(list);
+      if (cw) currentGames.set(season, await db.select().from(games).where(and(eq(games.seasonYear, season), eq(games.weekNumber, cw.weekNumber))));
+    }
+
     const nameOf = (e: (typeof poolEntries)[number]) => publicName(e.user?.name, e.invitedName);
 
     const summaryEntries: SummaryEntry[] = mine.map((entry) => {
@@ -90,6 +113,14 @@ export async function homeRoutes(fastify: FastifyInstance) {
         picksMadeThisWeek: (w) => entryPicks.filter((p) => p.weekNumber === w).length,
         picksNeeded: (w: SeasonWeek) => picksNeededFor(pool.type, doublePickWeeks(pool), w),
         now,
+        perGame:
+          pickDeadlineRuleOf(pool) === "per_game_kickoff"
+            ? (w) => ({
+                poolType: pool.type,
+                games: currentGames.get(pool.seasonYear) ?? [],
+                pickTeams: entryPicks.filter((p) => p.weekNumber === w.weekNumber).map((p) => p.teamCode),
+              })
+            : undefined,
       });
 
       const inPool = poolEntries.filter((e) => e.poolId === pool.id);
@@ -122,7 +153,8 @@ export async function homeRoutes(fastify: FastifyInstance) {
         eliminatedWeek: entry.eliminatedWeek,
         state: derived.state,
         weekNumber,
-        lockTime: derived.week ? derived.week.lockTime.toISOString() : null,
+        lockTime: lockTimeOf(derived),
+        lockRule: pickDeadlineRuleOf(pool) === "per_game_kickoff" ? "game" : "week",
         picksMade: derived.picksMade,
         picksNeeded: derived.picksNeeded,
         playersTotal: inPool.length,
@@ -162,6 +194,16 @@ export async function homeRoutes(fastify: FastifyInstance) {
       where: eq(picks.entryId, entry.id),
       orderBy: [asc(picks.weekNumber), asc(picks.createdAt)],
     });
+    const perGame = pickDeadlineRuleOf(pool) === "per_game_kickoff";
+    // The current week's games (an eliminated entry or a finished season has no week to pick in; the
+    // pick history is still returned).
+    const nowWeek = currentWeek(weeks);
+    const weekGames = nowWeek
+      ? await db.query.games.findMany({
+          where: and(eq(games.seasonYear, pool.seasonYear), eq(games.weekNumber, nowWeek.weekNumber)),
+          orderBy: [asc(games.kickoffTime), asc(games.homeTeam)],
+        })
+      : [];
     const derived = deriveEntryState({
       entryStatus: entry.status,
       poolStatus: pool.status,
@@ -169,22 +211,34 @@ export async function homeRoutes(fastify: FastifyInstance) {
       picksMadeThisWeek: (w) => entryPicks.filter((p) => p.weekNumber === w).length,
       picksNeeded: (w) => picksNeededFor(pool.type, doublePickWeeks(pool), w),
       now,
+      perGame: perGame
+        ? (w) => ({
+            poolType: pool.type,
+            games: weekGames,
+            pickTeams: entryPicks.filter((p) => p.weekNumber === w.weekNumber).map((p) => p.teamCode),
+          })
+        : undefined,
     });
 
-    // An eliminated entry or a finished season has no week to pick in; the pick history is
-    // still returned.
     const week = derived.week;
-    const weekGames = week
-      ? await db.query.games.findMany({
-          where: and(eq(games.seasonYear, pool.seasonYear), eq(games.weekNumber, week.weekNumber)),
-          orderBy: [asc(games.kickoffTime), asc(games.homeTeam)],
-        })
-      : [];
+    // An eliminated entry or a finished season has no week to pick in, so it is sent no games.
+    const shownGames = week ? weekGames : [];
+    const weekLocked = week ? now >= week.lockTime : false;
+    const gameLocked = (g: WeekGameLite) => (perGame ? isGameLocked(g, now) : weekLocked);
 
     const usedTeams: Record<string, number> = {};
     for (const p of entryPicks) {
       if (p.weekNumber !== week?.weekNumber) usedTeams[p.teamCode] = p.weekNumber;
     }
+
+    // A pick is locked when its week is over, or (this week) when its game has started (per-game
+    // pools) or the week has locked (whole-week pools).
+    const pickLocked = (p: (typeof entryPicks)[number]) => {
+      if (!week || p.weekNumber < week.weekNumber) return true;
+      if (p.weekNumber > week.weekNumber) return false;
+      const g = weekGames.find((x) => x.homeTeam === p.teamCode || x.awayTeam === p.teamCode);
+      return g ? gameLocked(g) : weekLocked;
+    };
 
     const sheet: PickSheet = {
       serverNow: now.toISOString(),
@@ -197,17 +251,19 @@ export async function homeRoutes(fastify: FastifyInstance) {
       eliminatedWeek: entry.eliminatedWeek,
       state: derived.state,
       weekNumber: week?.weekNumber ?? null,
-      lockTime: week ? week.lockTime.toISOString() : null,
+      lockTime: lockTimeOf(derived),
+      lockRule: perGame ? "game" : "week",
       limit: derived.picksNeeded || 1,
       allowRepeatTeams: pool.type === "pick_em" || (pool.rules as SurvivorRulesConfig).allow_repeat_teams,
-      games: weekGames.map((g) => ({
+      games: shownGames.map((g) => ({
         id: g.id,
         homeTeam: g.homeTeam,
         awayTeam: g.awayTeam,
         kickoffTime: new Date(g.kickoffTime).toISOString(),
         result: g.result,
+        locked: gameLocked(g),
       })),
-      picks: entryPicks.map((p) => ({ weekNumber: p.weekNumber, teamCode: p.teamCode, result: p.result })),
+      picks: entryPicks.map((p) => ({ weekNumber: p.weekNumber, teamCode: p.teamCode, result: p.result, locked: pickLocked(p) })),
       usedTeams,
     };
     reply.send(sheet);

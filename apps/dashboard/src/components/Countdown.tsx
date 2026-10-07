@@ -8,11 +8,14 @@ export function Countdown({
   nowMs,
   onLocked,
   className = "",
+  label = "Locks in",
 }: {
   lockTime: string;
   nowMs: number;
   onLocked?: () => void;
   className?: string;
+  /** The words before the time, e.g. "Next game locks in". */
+  label?: string;
 }) {
   const msLeft = Date.parse(lockTime) - nowMs;
   const fired = useRef(false);
@@ -29,5 +32,9 @@ export function Countdown({
   }, [msLeft, onLocked]);
 
   if (msLeft <= 0) return <p className={className}>Picks are locked</p>;
-  return <p className={className}>Locks in {formatCountdown(msLeft)}</p>;
+  return (
+    <p className={className}>
+      {label} {formatCountdown(msLeft)}
+    </p>
+  );
 }

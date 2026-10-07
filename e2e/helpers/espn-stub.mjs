@@ -1,6 +1,6 @@
 // A stand-in for ESPN's scoreboard, so the browser tests never contact the real service.
 // The API is started with ESPN_BASE_URL pointing here. Tests set what ESPN "says" by POSTing to
-// /__set: { mode: "ok" | "down", games: [{ week, home, away, final, homeScore, awayScore }] }.
+// /__set: { mode: "ok" | "down", games: [{ week, home, away, final, homeScore, awayScore, date? }] }.
 import http from "node:http";
 import process from "node:process";
 import { URL } from "node:url";
@@ -11,7 +11,7 @@ let state = { mode: "ok", games: [] };
 
 const event = (g) => ({
   name: `${g.away} at ${g.home}`,
-  date: "2026-09-13T17:00Z",
+  date: g.date ?? "2026-09-13T17:00Z",
   competitions: [
     {
       status: { type: { completed: Boolean(g.final) } },

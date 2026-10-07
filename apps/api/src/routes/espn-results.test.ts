@@ -103,14 +103,15 @@ describe("Check for results (ESPN)", () => {
     expect((await gameRow(s.a.id)).result).toBe("pending");
   });
 
-  it("previews finished games, reports a difference, asks only about weeks that have kicked off, and writes nothing", async () => {
+  it("previews finished games, reports a difference, asks about the current week and the next two, and writes nothing", async () => {
     const s = await scene();
     const { status, json } = await call(s.admin, "GET", "/admin/results/espn");
     expect(status).toBe(200);
     expect(json.seasonYear).toBe(s.season);
     expect(json.finished).toEqual([expect.objectContaining({ gameId: s.a.id, week: 1, result: "home_win", homeScore: 27, awayScore: 24 })]);
     expect(json.differs).toEqual([expect.objectContaining({ gameId: s.c.id, enteredResult: "home_win", espnResult: "away_win" })]);
-    expect(fetchWeek.mock.calls.map((c) => c[1])).toEqual([1]); // not week 2, which has not kicked off
+    expect(fetchWeek.mock.calls.map((c) => c[1])).toEqual([1, 2]); // the current week and the next one with games
+    expect(json.moved).toEqual([]);
     expect((await gameRow(s.a.id)).result).toBe("pending");
     expect((await gameRow(s.c.id)).result).toBe("home_win");
     expect(await records(s.admin)).toHaveLength(0);
@@ -213,5 +214,78 @@ describe("Check for results (ESPN)", () => {
     expect(apply.status).toBe(502);
     expect((await gameRow(s.a.id)).result).toBe("pending");
     expect(await records(s.admin)).toHaveLength(0);
+  });
+
+  describe("moved kickoffs (the NFL flexed a game)", () => {
+    const kickoff = (g: EspnGame, hours: number): EspnGame => ({ ...g, kickoff: at(hours) });
+
+    it("lists a game ESPN has moved, for the next two weeks too, never one that has started, and writes nothing", async () => {
+      const s = await scene();
+      // Week 2's KC at DET is stored +48h; ESPN now says +72h (flexed). Week 6 and week 7 also exist.
+      const w2 = (await db.query.games.findMany({ where: eq(games.seasonYear, s.season) })).find((g) => g.weekNumber === 2)!;
+      await game(s.season, 6, "SEA", "SF", at(24 * 33));
+      await game(s.season, 7, "LAR", "ARI", at(24 * 40));
+      fetchWeek.mockImplementation(async (_y, week) => {
+        if (week === 1) return [kickoff(final("KC", "BUF", "home_win", 27, 24), -30), kickoff(live("DET", "NYJ"), 5)]; // DET: stored -29h, ESPN +5h but it has a result? no, it is pending and started: left alone
+        if (week === 2) return [kickoff(live("KC", "DET"), 72)];
+        if (week === 6) return [kickoff(live("SEA", "SF"), 24 * 33 + 5)];
+        return [kickoff(live("LAR", "ARI"), 24 * 40 + 5)];
+      });
+      const { json } = await call(s.admin, "GET", "/admin/results/espn");
+      const moved = (json.moved ?? []) as { gameId: string; week: number; from: string; to: string }[];
+      expect(moved.map((m) => m.week).sort()).toEqual([2, 6]);
+      expect(moved.find((m) => m.week === 2)).toMatchObject({ gameId: w2.id });
+      expect(Math.abs(Date.parse(moved.find((m) => m.week === 2)!.to) - at(72).getTime())).toBeLessThan(2000);
+      expect(fetchWeek.mock.calls.map((c) => c[1])).not.toContain(7); // beyond the next two weeks
+      expect((await db.query.games.findFirst({ where: eq(games.id, w2.id) }))!.kickoffTime.getTime()).toBeLessThan(at(49).getTime()); // not written
+      expect(await records(s.admin)).toHaveLength(0);
+    });
+
+    it("ignores differences of a minute or less", async () => {
+      const s = await scene();
+      fetchWeek.mockImplementation(async (_y, week) => (week === 2 ? [kickoff(live("KC", "DET"), 48 + 0.01)] : []));
+      expect(((await call(s.admin, "GET", "/admin/results/espn")).json.moved as unknown[])).toEqual([]);
+    });
+
+    it("applies a moved kickoff, records it, and never moves a game that has started", async () => {
+      const s = await scene();
+      const w2 = (await db.query.games.findMany({ where: eq(games.seasonYear, s.season) })).find((g) => g.weekNumber === 2)!;
+      fetchWeek.mockImplementation(async (_y, week) =>
+        week === 2 ? [kickoff(live("KC", "DET"), 72)] : week === 1 ? [live("DET", "NYJ")] : []
+      );
+      const res = await call(s.admin, "POST", "/admin/results/espn/apply", { movedIds: [w2.id, s.b.id] });
+      expect(res.status).toBe(200);
+      const body = res.json as unknown as { moved: { gameId: string }[]; movedSkipped: { gameId: string }[] };
+      expect(body.moved.map((m) => m.gameId)).toEqual([w2.id]);
+      expect(body.movedSkipped.map((m) => m.gameId)).toEqual([s.b.id]); // week 1's DET game started 29 hours ago
+      expect(Math.abs((await gameRow(w2.id)).kickoffTime.getTime() - at(72).getTime())).toBeLessThan(2000);
+      const rows = await records(s.admin);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({ kind: "schedule_updated" });
+      expect(rows[0]!.summary).toContain("moved 1 kickoff");
+    });
+
+    it("one apply can save results and move kickoffs, with a single record", async () => {
+      const s = await scene();
+      const w2 = (await db.query.games.findMany({ where: eq(games.seasonYear, s.season) })).find((g) => g.weekNumber === 2)!;
+      fetchWeek.mockImplementation(async (_y, week) =>
+        week === 2
+          ? [kickoff(live("KC", "DET"), 72)]
+          : week === 1
+            ? [final("KC", "BUF", "home_win", 27, 24), live("DET", "NYJ"), final("PHI", "DAL", "away_win", 10, 20), final("MIA", "NE", "home_win", 17, 3)]
+            : []
+      );
+      await call(s.admin, "POST", "/admin/results/espn/apply", { gameIds: [s.a.id], movedIds: [w2.id] });
+      expect((await gameRow(s.a.id)).result).toBe("home_win");
+      const rows = await records(s.admin);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({ kind: "results_imported" });
+      expect(rows[0]!.summary).toContain("and moved 1 kickoff");
+    });
+
+    it("refuses an apply with nothing in it", async () => {
+      const s = await scene();
+      expect((await call(s.admin, "POST", "/admin/results/espn/apply", {})).status).toBe(400);
+    });
   });
 });

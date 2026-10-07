@@ -35,6 +35,12 @@ export function AdminGuide() {
 
       <FaqGroup title="Setting up">
         <Faq q="Create a pool">Open Pools, then New pool. Choose Survivor or Pick 'Em. You can't change the type afterwards.</Faq>
+        <Faq q="When do picks lock?">
+          In the pool's Settings, "When picks lock" is either "At each game's kickoff" (new pools start this way) or "At the week's first
+          kickoff". With each game's kickoff, players can still pick later games after the first game has started. If the NFL moves a game,
+          tap Check for results: it lists games whose time changed, and Apply updates them so the locks stay right.
+        </Faq>
+
         <Faq q="Lock the rules">
           When the rules are right, switch Rules are locked on in the pool's Settings. Players can't be surprised by changes mid-season.
           You can unlock it again if you need to.

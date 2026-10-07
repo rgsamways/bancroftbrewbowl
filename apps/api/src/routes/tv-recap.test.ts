@@ -103,7 +103,7 @@ describe("TV and recap", () => {
       ]);
       expect(text).not.toContain("@");
       // Names are listed, but nothing ties a name to a team.
-      expect(Object.keys(body).sort()).toEqual(["alive", "leaderboard", "mostPicked", "playersLeft", "playersTotal", "pool", "revealPicks", "status", "weekNumber"]);
+      expect(Object.keys(body).sort()).toEqual(["alive", "leaderboard", "mostPicked", "pickDeadline", "playersLeft", "playersTotal", "pool", "revealPicks", "status", "weekNumber"]);
     });
 
     it("season_over when every game is decided", async () => {

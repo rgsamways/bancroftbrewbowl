@@ -265,7 +265,10 @@ describe("home summary and pick sheet", () => {
       expect(body).toMatchObject({ state: "needs_picks", weekNumber: 2, limit: 1, poolType: "survivor" });
       expect(body.games.map((g) => g.homeTeam)).toEqual(["KC", "SEA"]);
       expect(body.usedTeams).toEqual({ DAL: 1 });
-      expect(body.picks).toEqual([{ weekNumber: 1, teamCode: "DAL", result: "pending" }]);
+      // A pick from an earlier week is locked; the whole-week pool keeps the whole-week rule.
+      expect(body.lockRule).toBe("week");
+      expect(body.picks).toEqual([{ weekNumber: 1, teamCode: "DAL", result: "pending", locked: true }]);
+      expect(body.games.every((g) => g.locked === false)).toBe(true);
     });
 
     it("refuses another player and an admin, with no picks in the answer", async () => {

@@ -250,6 +250,16 @@ test("Settings: the rules lock and unlock, editing while unlocked, the total whi
     await expect
       .poll(async () => (await db.query(`select name from pools where id = $1`, [poolId])).rows[0].name)
       .toBe(`${poolName} (edited)`);
+    // When picks lock: a pool saved before the setting keeps the whole-week rule; an admin can switch it.
+    const lockRule = page.getByLabel("When picks lock");
+    await expect(lockRule).toHaveValue("first_kickoff_of_week");
+    await lockRule.selectOption("per_game_kickoff");
+    await expect(page.getByText(/Sunday and Monday teams can still be picked/)).toBeVisible();
+    await page.getByRole("button", { name: "Save changes" }).click();
+    await expect
+      .poll(async () => (await db.query(`select rules->>'pick_deadline_rule' as r from pools where id = $1`, [poolId])).rows[0].r)
+      .toBe("per_game_kickoff");
+
     // The reveal rule: saved with the other rules, then locked with them.
     const reveal = page.getByLabel("When other players' picks show");
     await expect(reveal).toHaveValue("at_lock");
@@ -261,6 +271,7 @@ test("Settings: the rules lock and unlock, editing while unlocked, the total whi
     await page.getByRole("button", { name: "Lock the rules" }).click();
     await expect(page.getByRole("heading", { name: "Rules are locked" })).toBeVisible();
     await expect(reveal).toBeDisabled();
+    await expect(lockRule).toBeDisabled();
     expect((await activity(db, userId, "pool_unlocked")).length).toBe(1);
     expect((await activity(db, userId, "pool_locked")).length).toBe(1);
 
