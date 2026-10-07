@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useParams, useSearchParams } from "react-router";
 import {
   formatRank,
   initials,
@@ -9,6 +9,7 @@ import {
 } from "@bbb/shared";
 import { useApi } from "../lib/useApi";
 import { PoolTotalCard } from "../components/PoolTotalCard";
+import { PickGridView } from "../components/PickGridView";
 
 const ALIVE_SHORT = 8;
 const ELIMINATED_SHORT = 5;
@@ -171,6 +172,9 @@ export function PoolStandings() {
   const { data, error } = useApi<PoolStandingsData>(`/pools/${poolId}/standings`);
   const { data: summary } = useApi<MeSummary>("/me/summary");
   const [query, setQuery] = useState("");
+  const [params, setParams] = useSearchParams();
+  const weeksView = params.get("view") === "weeks";
+  const chooseView = (view: "standings" | "weeks") => setParams(view === "weeks" ? { view: "weeks" } : {}, { replace: true });
 
   if (error && !data) {
     return (
@@ -201,6 +205,28 @@ export function PoolStandings() {
       <PoolTabs poolId={poolId} summary={summary} />
       {data.pool.type === "survivor" ? <SurvivorSummary data={data} /> : <PickEmSummary data={data} />}
       <PoolTotalCard cents={data.pool.poolTotalCents} />
+
+      <div role="group" aria-label="View" className="mb-5 grid grid-cols-2 gap-1.5 rounded-[12px] border border-brand-border bg-brand-surface p-1">
+        {([["standings", "Standings"], ["weeks", "Week by week"]] as const).map(([key, label]) => {
+          const on = (key === "weeks") === weeksView;
+          return (
+            <button
+              key={key}
+              type="button"
+              aria-pressed={on}
+              onClick={() => chooseView(key)}
+              className={`min-h-11 rounded-[9px] text-sm font-semibold ${on ? "bg-brand-accent-soft text-brand-text" : "text-brand-muted"}`}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      {weeksView ? (
+        <PickGridView poolId={poolId} />
+      ) : (
+        <>
 
       <label className="mb-1 block text-sm font-semibold text-brand-muted" htmlFor="find-player">
         Find a player
@@ -261,6 +287,8 @@ export function PoolStandings() {
           />
           <p className="mt-3 text-xs text-brand-faint">Points update as the brewery adds game results.</p>
         </section>
+      )}
+        </>
       )}
       <Link to={`/pool/${poolId}/tv`} className="mb-4 flex min-h-11 items-center text-sm font-semibold text-brand-accent">
         Show on TV

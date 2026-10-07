@@ -1,10 +1,24 @@
 import type { FastifyInstance } from "fastify";
 import { asc, eq } from "drizzle-orm";
-import { publicName, rankOf, type PickEmRulesConfig, type PoolStandings, type StandingsRow } from "@bbb/shared";
+import {
+  buildPickGrid,
+  NFL_TEAM_CODES,
+  publicName,
+  rankOf,
+  type PickEmRulesConfig,
+  type PickGrid,
+  type PoolStandings,
+  type StandingsRow,
+  type SurvivorRulesConfig,
+  type VisiblePick,
+} from "@bbb/shared";
 import { db } from "../db/client.js";
-import { entries, pools } from "../db/schema.js";
+import { entries, picks, pools } from "../db/schema.js";
 import { requireSession } from "../lib/guards.js";
-import { loadSeasonWeeks } from "../lib/entry-state.js";
+import { currentWeek, loadSeasonWeeks } from "../lib/entry-state.js";
+import { isAdminUser } from "../lib/operator.js";
+import { revealPredicate } from "../lib/pick-lock.js";
+import { visiblePicks } from "../lib/pick-visibility.js";
 import { computePickEmPoints } from "./entries.js";
 
 const byName = (a: { name: string }, b: { name: string }) =>
@@ -100,5 +114,65 @@ export async function standingsRoutes(fastify: FastifyInstance) {
     }
 
     reply.send(result);
+  });
+
+  // The week-by-week grid. It has no privacy rule of its own: every pick goes through the same
+  // `visiblePicks` + `revealPredicate` as the Pick screen, and only then is the grid built.
+  fastify.get("/pools/:poolId/pick-grid", async (request, reply) => {
+    const session = await requireSession(request, reply);
+    if (!session) return;
+
+    const { poolId } = request.params as { poolId: string };
+    const pool = await db.query.pools.findFirst({ where: eq(pools.id, poolId) });
+    if (!pool) {
+      reply.status(404).send({ error: "Pool not found" });
+      return;
+    }
+
+    const poolEntries = await db.query.entries.findMany({
+      where: eq(entries.poolId, poolId),
+      orderBy: [asc(entries.createdAt)],
+      with: { user: true },
+    });
+    const rows = await db
+      .select({
+        entryId: picks.entryId,
+        weekNumber: picks.weekNumber,
+        teamCode: picks.teamCode,
+        result: picks.result,
+        ownerUserId: entries.userId,
+      })
+      .from(picks)
+      .innerJoin(entries, eq(picks.entryId, entries.id))
+      .where(eq(entries.poolId, poolId));
+
+    const viewer = { userId: session.user.id, isAdmin: isAdminUser(session.user) };
+    const visible = visiblePicks(rows, viewer, await revealPredicate(pool)) as VisiblePick[];
+
+    // Columns: the weeks that have picks in this pool (shown or not), up to the current week.
+    const weeks = (await loadSeasonWeeks([pool.seasonYear])).get(pool.seasonYear) ?? [];
+    const now = currentWeek(weeks)?.weekNumber ?? Infinity;
+    const withPicks = new Set(rows.map((r) => r.weekNumber));
+    const columns = weeks.filter((w) => withPicks.has(w.weekNumber) && w.weekNumber <= now).map((w) => w.weekNumber);
+
+    const mine = poolEntries.find((e) => e.userId === session.user.id) ?? null;
+    const grid: PickGrid = buildPickGrid({
+      pool: { id: pool.id, name: pool.name, type: pool.type, seasonYear: pool.seasonYear },
+      weeks: columns,
+      gamesPerWeek: Object.fromEntries(weeks.map((w) => [w.weekNumber, w.gamesTotal])),
+      entries: poolEntries.map((e) => ({
+        entryId: e.id,
+        name: publicName(e.user?.name, e.invitedName),
+        status: e.status,
+        eliminatedWeek: e.eliminatedWeek,
+        isYou: e.id === mine?.id,
+      })),
+      picks: visible,
+      tieCounts: pool.type === "pick_em" && (pool.rules as PickEmRulesConfig).tie_handling === "everyone_correct",
+      repeatsAllowed: pool.type === "survivor" && Boolean((pool.rules as SurvivorRulesConfig).allow_repeat_teams),
+      ownPicks: mine ? rows.filter((r) => r.entryId === mine.id).map((r) => ({ weekNumber: r.weekNumber, teamCode: r.teamCode })) : [],
+      teamCount: NFL_TEAM_CODES.length,
+    });
+    reply.send(grid);
   });
 }

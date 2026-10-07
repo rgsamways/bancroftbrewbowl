@@ -235,3 +235,9 @@ Done 2026-10-04 by Robin from this list: cleared two early picks (his own: DEN w
 - Not started, deliberately: the TV page scoreboard, a full scoreboard page, the playoffs (a different ESPN season type), live play-by-play for games.
 - To finish: watch it on a phone during a live game, then sync specs and archive `openspec/changes/home-scoreboard`.
 
+
+## Standings week by week (standings-week-by-week, 2026-10-07)
+- Standings has a second view, `?view=weeks`: a grid of who picked which team each week (survivor) or points per week with a total and rank (pick 'em).
+- `GET /pools/:poolId/pick-grid` has no privacy rule of its own: every pick goes through `visiblePicks` + `revealPredicate`, then `buildPickGrid` (shared). A test fails if the filter is removed.
+- Columns are weeks with picks up to the current week, so a late start has no empty early columns.
+- Built and tested (439 unit, 102 browser). Not archived until Robin has seen it. The Settings wording fix for the reveal option is in the same push.

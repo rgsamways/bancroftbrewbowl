@@ -58,6 +58,7 @@ test("every screen keeps its text inside the centred column on a wide window", a
       "/standings",
       "/pick",
       `/pool/${poolId}`,
+      `/pool/${poolId}?view=weeks`,
       `/pool/${poolId}/entry/${entryId}/pick`,
       `/pool/${poolId}/recap`,
       `/join/${otherPool}`,
