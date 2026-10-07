@@ -61,13 +61,13 @@ export function AdminMenu() {
         <p className="mt-1 text-sm text-brand-muted">What players see in the Menu tab.</p>
       </div>
       <nav aria-label="Menu sections" className="flex gap-1 rounded-[12px] border border-brand-border bg-brand-surface p-1">
-        <button type="button" onClick={() => setParams({})} className={tab(!kitchen)}>
+        <button type="button" onClick={() => setParams({})} aria-current={!kitchen && !music ? "page" : undefined} className={tab(!kitchen && !music)}>
           Drinks
         </button>
-        <button type="button" onClick={() => setParams({ tab: "kitchen" })} className={tab(kitchen)}>
+        <button type="button" onClick={() => setParams({ tab: "kitchen" })} aria-current={kitchen ? "page" : undefined} className={tab(kitchen)}>
           Kitchen
         </button>
-        <button type="button" onClick={() => setParams({ tab: "music" })} className={tab(music)}>
+        <button type="button" onClick={() => setParams({ tab: "music" })} aria-current={music ? "page" : undefined} className={tab(music)}>
           Music
         </button>
       </nav>

@@ -23,6 +23,11 @@ test("an admin adds two events, edits one, and removes it", async ({ browser }) 
     await page.goto("/admin/menu");
     await page.getByRole("button", { name: "Music" }).click();
     await expect(page.getByRole("link", { name: "Add music or an event" })).toBeVisible();
+    // Only the Music tab is marked as the current one (Drinks used to light up as well).
+    const menuTabs = page.getByRole("navigation", { name: "Menu sections" }).getByRole("button");
+    await expect(menuTabs.filter({ has: page.locator("xpath=self::*[@aria-current='page']") })).toHaveCount(1);
+    await expect(page.getByRole("button", { name: "Music" })).toHaveAttribute("aria-current", "page");
+    await expect(page.getByRole("button", { name: "Drinks" })).not.toHaveAttribute("aria-current", "page");
     expect(await noSideways(page)).toBe(true);
 
     // Add one for the coming weekend with times.

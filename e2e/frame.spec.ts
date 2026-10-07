@@ -224,3 +224,18 @@ test("Inter font, near-black background, and a copper highlighted tab", async ()
   expect(look.bg).toBe("rgb(14, 14, 15)");
   expect(look.active).toBe("rgb(193, 122, 69)");
 });
+
+test("a new page opens at the top, whatever the last one was scrolled to", async () => {
+  const p = pages.one;
+  await go(p, "/");
+  // Make the page tall and scroll down, then change page from the tab bar.
+  await p.evaluate(() => {
+    document.body.style.minHeight = "3000px";
+    window.scrollTo(0, 400);
+  });
+  expect(await p.evaluate(() => window.scrollY)).toBeGreaterThan(100);
+  await p.getByRole("link", { name: "Standings" }).click();
+  await p.waitForSelector("header");
+  await expect.poll(() => p.evaluate(() => window.scrollY)).toBe(0);
+});
+

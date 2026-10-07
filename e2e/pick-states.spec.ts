@@ -38,6 +38,10 @@ test("survivor: used teams are dimmed, a selection is only saved by the confirm 
     await expect(page.getByText("Each team can only be used once all season.")).toBeVisible();
     // Games are grouped under a day heading with a kickoff time.
     await expect(page.getByRole("heading", { level: 2 }).first()).toHaveText(/day$/);
+    // Each team has its colour circle (Chiefs red with the code in it).
+    const circles = page.getByTestId("team-circle");
+    await expect(circles).toHaveCount(4);
+    await expect(page.getByRole("button", { name: /^KC/ }).getByTestId("team-circle")).toHaveCSS("background-color", "rgb(198, 12, 48)");
 
     // DAL was used in week 1: dimmed, labelled and not selectable.
     const dal = page.getByRole("button", { name: /^DAL/ });

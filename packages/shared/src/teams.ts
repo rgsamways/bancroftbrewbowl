@@ -36,3 +36,26 @@ export const NFL_TEAMS = [
 export type TeamCode = (typeof NFL_TEAMS)[number]["code"];
 
 export const NFL_TEAM_CODES = NFL_TEAMS.map((t) => t.code) as unknown as [TeamCode, ...TeamCode[]];
+
+/** Each team's main colour, for the colour circles (Pick, and later games). The first twelve match
+ * the v2 mockups. */
+export const TEAM_COLORS: Record<TeamCode, string> = {
+  ARI: "#97233f", ATL: "#a71930", BAL: "#241773", BUF: "#00338d", CAR: "#0085ca", CHI: "#0b162a",
+  CIN: "#fb4f14", CLE: "#ff3c00", DAL: "#0b2265", DEN: "#fb4f14", DET: "#0076b6", GB: "#203731",
+  HOU: "#03202f", IND: "#002c5f", JAX: "#006778", KC: "#c60c30", LAC: "#0080c6", LAR: "#003594",
+  LV: "#000000", MIA: "#008e97", MIN: "#4f2683", NE: "#002244", NO: "#d3bc8d", NYG: "#0b2265",
+  NYJ: "#125740", PHI: "#046a38", PIT: "#ffb612", SEA: "#002244", SF: "#aa0000", TB: "#d50a0a",
+  TEN: "#4b92db", WAS: "#5a1414",
+};
+
+/** Black or white, whichever reads better on a team colour (hex like "#ffb612"). */
+export function readableOn(hex: string): "#ffffff" | "#1a0f06" {
+  const n = parseInt(hex.slice(1), 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  const luminance = 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+  return luminance > 0.4 ? "#1a0f06" : "#ffffff";
+}
+

@@ -20,5 +20,5 @@
 ## 5. Verify and ship
 
 - [x] 5.1 `pnpm lint`, `typecheck`, `typecheck:e2e`, `test`, `test:e2e` pass
-- [ ] 5.2 Push to `staging`, check the routes answer (401 signed out), promote to `main` (no migration), confirm the deploy; the first real use is Robin's, watching the preview before applying
-- [ ] 5.3 Sync specs, archive, update ROADMAP, HANDOFF and the admin guide
+- [x] 5.2 Push to `staging`, check the routes answer (401 signed out), promote to `main` (no migration), confirm the deploy; the first real use is Robin's, watching the preview before applying
+- [x] 5.3 Sync specs, archive, update ROADMAP, HANDOFF and the admin guide
