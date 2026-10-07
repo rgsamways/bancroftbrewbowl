@@ -121,7 +121,7 @@ export function EditMusic() {
         <p className="mt-1 text-sm text-brand-muted">This takes it off the schedule for good.</p>
         {confirming ? (
           <div className="mt-3 flex gap-2">
-            <button type="button" disabled={busy} onClick={() => void remove()} className={`${buttonClass} !bg-brand-danger`}>
+            <button type="button" disabled={busy} onClick={() => void remove()} className={`${buttonClass} !w-auto shrink-0 whitespace-nowrap !bg-brand-danger`}>
               Yes, remove it
             </button>
             <button type="button" disabled={busy} onClick={() => setConfirming(false)} className={secondaryButtonClass}>

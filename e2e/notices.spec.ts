@@ -67,7 +67,9 @@ test("an admin posts a notice, a player sees and closes it, a new one shows agai
 
     // Removing a notice clears it for everyone.
     await admin.getByRole("button", { name: "Remove E2E Menu change" }).click();
-    await admin.getByRole("button", { name: "Yes, remove it" }).click();
+    const yes = admin.getByRole("button", { name: "Yes, remove it" });
+    expect((await yes.boundingBox())!.height).toBeLessThan(52); // one line, not wrapped
+    await yes.click();
     await expect(admin.getByTestId("admin-notice")).toHaveCount(1);
     await player.reload();
     await expect(player.getByTestId("notice")).toHaveCount(0);

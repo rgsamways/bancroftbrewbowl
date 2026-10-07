@@ -77,7 +77,7 @@ export function AdminBrewery() {
                     <button
                       type="button"
                       onClick={() => void remove(item.id)}
-                      className="flex min-h-11 flex-1 items-center justify-center rounded-[12px] bg-brand-danger px-4 font-semibold text-brand-accent-ink"
+                      className="flex min-h-11 flex-none items-center justify-center whitespace-nowrap rounded-[12px] bg-brand-danger px-4 font-semibold text-brand-accent-ink"
                     >
                       Yes, remove it
                     </button>
