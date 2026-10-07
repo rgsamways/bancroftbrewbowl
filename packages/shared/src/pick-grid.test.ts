@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPickGrid, type BuildGridInput, type GridEntry, type VisiblePick } from "./pick-grid.js";
+import { buildPickGrid, describeFreePass, type BuildGridInput, type GridEntry, type VisiblePick } from "./pick-grid.js";
 
 const survivorPool = { id: "p", name: "Sunday Survivor", type: "survivor" as const, seasonYear: 2026 };
 const pickEmPool = { id: "q", name: "Pick 'Em", type: "pick_em" as const, seasonYear: 2026 };
@@ -23,6 +23,7 @@ const pick = (entryId: string, weekNumber: number, teamCode: string | null, resu
 const base = (over: Partial<BuildGridInput>): BuildGridInput => ({
   pool: survivorPool,
   weeks: [5, 6],
+  freePassWeeks: [],
   gamesPerWeek: { 5: 15, 6: 14 },
   entries: [],
   picks: [],
@@ -71,7 +72,7 @@ describe("buildPickGrid: survivor", () => {
     expect(grid.rows[0]!.cells).toEqual([{ kind: "empty" }, { kind: "empty" }]);
   });
 
-  it("puts the viewer first, then alive players A to Z, then the eliminated with the latest exit first", () => {
+  it("orders alive players A to Z, then the eliminated with the latest exit first, and does not pin the viewer", () => {
     const grid = buildPickGrid(
       base({
         entries: [
@@ -83,7 +84,42 @@ describe("buildPickGrid: survivor", () => {
         ],
       })
     );
-    expect(grid.rows.map((r) => r.name)).toEqual(["Yolanda You", "Amy", "Zed", "Out Late", "Out Early"]);
+    expect(grid.rows.map((r) => r.name)).toEqual(["Amy", "Yolanda You", "Zed", "Out Late", "Out Early"]);
+  });
+
+  it("makes an inverted triangle: the longer a player lasted, the higher the row, ties by name", () => {
+    const exits: [string, number | null][] = [
+      ["Ivy", 2], ["Hal", 9], ["Gus", 4], ["Fay", 7], ["Eli", null], ["Dee", 7], ["Cy", 12], ["Bo", 4], ["Al", null], ["Zoe", 1],
+    ];
+    const grid = buildPickGrid(
+      base({
+        weeks: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        gamesPerWeek: {},
+        entries: exits.map(([name, out], i) =>
+          entry(String(i), name, { status: out === null ? "alive" : "eliminated", eliminatedWeek: out, isYou: name === "Gus" })
+        ),
+      })
+    );
+    expect(grid.rows.map((r) => r.name)).toEqual(["Al", "Eli", "Cy", "Hal", "Dee", "Fay", "Bo", "Gus", "Ivy", "Zoe"]);
+    const lasted = grid.rows.map((r) => r.eliminatedWeek ?? Infinity);
+    expect(lasted).toEqual([...lasted].sort((a, b) => b - a));
+  });
+
+  it("marks free-pass weeks for every row and lists them, keeping real picks elsewhere", () => {
+    const grid = buildPickGrid(
+      base({
+        weeks: [1, 2, 3, 4, 5],
+        freePassWeeks: [1, 2, 3, 4],
+        entries: [entry("a", "Ann"), entry("b", "Bob")],
+        picks: [pick("a", 5, "KC", "pending")],
+      })
+    );
+    expect(grid.freePassWeeks).toEqual([1, 2, 3, 4]);
+    expect(grid.rows.find((r) => r.entryId === "a")!.cells).toEqual([
+      { kind: "free_pass" }, { kind: "free_pass" }, { kind: "free_pass" }, { kind: "free_pass" },
+      { kind: "picks", picks: [{ team: "KC", result: "pending" }] },
+    ]);
+    expect(grid.rows.find((r) => r.entryId === "b")!.cells[4]).toEqual({ kind: "empty" });
   });
 
   it("names the most picked team of each week among the picks shown, with its share of pickers", () => {
@@ -150,10 +186,9 @@ describe("buildPickGrid: pick 'em", () => {
     expect(grid.rows.find((r) => r.entryId === "b")!.total).toBe(2);
   });
 
-  it("pins the viewer's row first, and has no most-picked row or teams-used line", () => {
+  it("orders by total with ties by name, does not pin the viewer, and has no most-picked row or teams-used line", () => {
     const grid = buildPickGrid(base({ pool: pickEmPool, entries, picks }));
-    expect(grid.rows[0]!.isYou).toBe(true);
-    expect(grid.rows.slice(1).map((r) => r.name)).toEqual(["Ann", "Bob", "Cat"]);
+    expect(grid.rows.map((r) => r.name)).toEqual(["Ann", "Bob", "Cat", "Dan"]);
     expect(grid.mostPicked).toEqual([null, null]);
     expect(grid.teamsUsed).toBeNull();
   });
@@ -161,5 +196,16 @@ describe("buildPickGrid: pick 'em", () => {
   it("an unrevealed pick adds nothing to a player's week", () => {
     const grid = buildPickGrid(base({ pool: pickEmPool, entries: [entry("a", "Ann")], picks: [pick("a", 5, "KC", "win"), pick("a", 5, null, null)] }));
     expect(grid.rows[0]!.cells[0]).toEqual({ kind: "points", correct: 1, of: 15 });
+  });
+});
+
+describe("describeFreePass", () => {
+  it("writes the note for a late start, a single week and separate runs, and nothing for none", () => {
+    expect(describeFreePass([1, 2, 3, 4])).toBe("No picks were made in weeks 1 to 4 (the pool started late), so everyone got a free pass.");
+    expect(describeFreePass([1])).toBe("No picks were made in week 1 (the pool started late), so everyone got a free pass.");
+    expect(describeFreePass([3])).toBe("No picks were made in week 3, so everyone got a free pass.");
+    expect(describeFreePass([1, 2])).toBe("No picks were made in weeks 1 and 2 (the pool started late), so everyone got a free pass.");
+    expect(describeFreePass([2, 3, 4, 7])).toBe("No picks were made in weeks 2 to 4 and 7, so everyone got a free pass.");
+    expect(describeFreePass([])).toBeNull();
   });
 });

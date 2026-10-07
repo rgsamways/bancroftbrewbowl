@@ -134,7 +134,7 @@ describe("GET /pools/:id/pick-grid", () => {
     expect(json.teamsUsed).toEqual({ used: 1, total: 32, repeatsAllowed: false });
   });
 
-  it("leaves out weeks before anyone picked (a late start), and weeks after the current one", async () => {
+  it("shows every week up to the current one, marks weeks nobody picked as a free pass, and leaves out later weeks", async () => {
     const s = await scene("survivor", { pick_deadline_rule: "per_game_kickoff" });
     // Weeks 2 to 4 played before the pool began (decided, no picks); week 5 is current with a pick; week 6 is ahead.
     for (const [week, home, away] of [[2, "KC", "BUF"], [3, "DET", "NYJ"], [4, "PHI", "DAL"]] as const) await s.game(week, home, away, -24 * (6 - week), "home_win");
@@ -146,13 +146,19 @@ describe("GET /pools/:id/pick-grid", () => {
     await createPick(s.mine.id, 5, "SF");
     await createPick(s.annEntry.id, 6, "MIA"); // a pick in a week that is not current yet
     const { json } = await get(s.me, s.pool.id);
-    expect(json.weeks).toEqual([5]);
+    expect(json.weeks).toEqual([1, 2, 3, 4, 5]);
+    expect(json.freePassWeeks).toEqual([1, 2, 3, 4]);
+    const mine = json.rows.find((r) => r.name === "Viewer Vic")!;
+    expect(mine.cells.map((c) => c.kind)).toEqual(["free_pass", "free_pass", "free_pass", "free_pass", "picks"]);
+    const bob = json.rows.find((r) => r.name === "Bob Open")!;
+    expect(bob.cells[4]).toEqual({ kind: "empty" }); // the current week is not a free pass
   });
 
-  it("a pool with no picks has no columns, and contains no email addresses", async () => {
+  it("a pool with no picks has only the current week as a column, no free pass yet, and contains no email addresses", async () => {
     const s = await scene("survivor");
     const { json, body } = await get(s.me, s.pool.id);
-    expect(json.weeks).toEqual([]);
+    expect(json.weeks).toEqual([1]);
+    expect(json.freePassWeeks).toEqual([]);
     expect(json.rows).toHaveLength(3);
     expect(body).not.toContain("@");
   });
@@ -165,7 +171,7 @@ describe("GET /pools/:id/pick-grid", () => {
     await db.update(picks).set({ result: "loss" }).where(eq(picks.id, b.id));
     await createPick(s.bobEntry.id, 1, "DET"); // not started: not shown to others
     const { json } = await get(s.me, s.pool.id);
-    expect(json.rows[0]!.name).toBe("Viewer Vic"); // pinned first
+    expect(json.rows[0]!.name).toBe("Ann Alive"); // by points, the viewer is not pinned
     const ann = json.rows.find((r) => r.name === "Ann Alive")!;
     expect(ann.cells[0]).toEqual({ kind: "points", correct: 1, of: 2 });
     expect([ann.total, ann.rank]).toEqual([1, 1]);

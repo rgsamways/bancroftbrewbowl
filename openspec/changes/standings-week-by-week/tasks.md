@@ -12,6 +12,11 @@
 
 - [x] 3.1 `e2e/standings-grid.spec.ts`: survivor and pick 'em grids, another player's unstarted pick is blank and a started one shows, own picks always show, the switch and the address, no sideways page scroll at 390 wide, wide-window alignment; update the Standings specs
 
+## 3b. Follow-up: free-pass weeks and row order (Robin, 2026-10-07)
+
+- [x] 3b.1 Builder and endpoint: columns for every week 1 to the current week; `free_pass` cells and a list of free-pass weeks; survivor order alive A to Z then longest-lasting first with no pinned row; pick 'em unpinned; unit test on made-up data with many exit weeks proving the triangle, and tests for a late start (weeks 1 to 4 free pass, week 5 current) and a current week with no picks
+- [x] 3b.2 Screen: "Free pass" cells, the note under the grid, the viewer's row highlighted but not moved; update `e2e/standings-grid.spec.ts` and `e2e/alignment.spec.ts`
+
 ## 4. Verify and ship
 
 - [x] 4.1 `pnpm lint`, `typecheck`, `typecheck:e2e`, `test`, `test:e2e` pass

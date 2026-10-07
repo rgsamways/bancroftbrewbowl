@@ -13,7 +13,9 @@ export type GridCell =
   | { kind: "hidden" }
   /** Pick 'em: correct picks that week among the picks shown, out of the week's games. */
   | { kind: "points"; correct: number; of: number }
-  | { kind: "empty" };
+  | { kind: "empty" }
+  /** A past week in which nobody in the pool picked (a late start): a bye for everyone. */
+  | { kind: "free_pass" };
 
 export type GridRow = {
   entryId: string;
@@ -31,8 +33,10 @@ export type GridRow = {
 
 export type PickGrid = {
   pool: { id: string; name: string; type: "survivor" | "pick_em"; seasonYear: number };
-  /** The weeks that have picks in this pool, up to the current week. */
+  /** Every week from 1 to the current week (every season week once the season is over). */
   weeks: number[];
+  /** The weeks, among `weeks`, that were a free pass for everyone. */
+  freePassWeeks: number[];
   rows: GridRow[];
   /** Survivor: per week (same order as `weeks`), the most picked team among the picks shown. */
   mostPicked: ({ team: string; sharePercent: number } | null)[];
@@ -61,6 +65,8 @@ export type GridEntry = {
 export type BuildGridInput = {
   pool: PickGrid["pool"];
   weeks: number[];
+  /** Past weeks in which nobody in the pool picked. */
+  freePassWeeks: number[];
   gamesPerWeek: Record<number, number>;
   entries: GridEntry[];
   picks: VisiblePick[];
@@ -81,6 +87,7 @@ export function buildPickGrid(input: BuildGridInput): PickGrid {
   const shown = picks.filter((p) => weeks.includes(p.weekNumber));
 
   const cellFor = (entryId: string, week: number): GridCell => {
+    if (input.freePassWeeks.includes(week)) return { kind: "free_pass" };
     const mine = shown.filter((p) => p.entryId === entryId && p.weekNumber === week);
     if (mine.length === 0) return { kind: "empty" };
     const visible = mine.filter((p) => p.teamCode !== null);
@@ -103,10 +110,10 @@ export function buildPickGrid(input: BuildGridInput): PickGrid {
   }));
 
   if (survivor) {
-    // The viewer first, then alive A to Z, then the eliminated, most recent exit first.
+    // Alive A to Z, then the eliminated with the longest-lasting first, so the grid narrows toward
+    // the bottom. Nobody is pinned: the viewer's row is only highlighted.
     rows.sort(
       (a, b) =>
-        Number(b.isYou) - Number(a.isYou) ||
         Number(a.status === "eliminated") - Number(b.status === "eliminated") ||
         (b.eliminatedWeek ?? 0) - (a.eliminatedWeek ?? 0) ||
         byName(a, b)
@@ -119,10 +126,7 @@ export function buildPickGrid(input: BuildGridInput): PickGrid {
       r.rank = ranked.rank;
       r.tied = ranked.tied;
     });
-    rows.sort((a, b) => (b.total ?? 0) - (a.total ?? 0) || Number(b.isYou) - Number(a.isYou) || byName(a, b));
-    // The viewer's row stays pinned first, as on the survivor grid.
-    const you = rows.findIndex((r) => r.isYou);
-    if (you > 0) rows.unshift(...rows.splice(you, 1));
+    rows.sort((a, b) => (b.total ?? 0) - (a.total ?? 0) || byName(a, b));
   }
 
   const mostPicked = weeks.map((w) => {
@@ -142,5 +146,23 @@ export function buildPickGrid(input: BuildGridInput): PickGrid {
       ? { used: new Set(input.ownPicks.map((p) => p.teamCode)).size, total: input.teamCount, repeatsAllowed: input.repeatsAllowed }
       : null;
 
-  return { pool, weeks, rows, mostPicked, teamsUsed };
+  return { pool, weeks, freePassWeeks: weeks.filter((w) => input.freePassWeeks.includes(w)), rows, mostPicked, teamsUsed };
+}
+
+/** The note under the grid for free-pass weeks, or null when there are none.
+ * "No picks were made in weeks 1 to 4 (the pool started late), so everyone got a free pass." */
+export function describeFreePass(weeks: number[]): string | null {
+  const sorted = [...new Set(weeks)].sort((a, b) => a - b);
+  if (sorted.length === 0) return null;
+  const runs: [number, number][] = [];
+  for (const w of sorted) {
+    const last = runs[runs.length - 1];
+    if (last && w === last[1] + 1) last[1] = w;
+    else runs.push([w, w]);
+  }
+  const parts = runs.map(([a, b]) => (a === b ? `${a}` : b === a + 1 ? `${a} and ${b}` : `${a} to ${b}`));
+  const list = parts.length === 1 ? parts[0]! : `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+  const noun = sorted.length === 1 ? "week" : "weeks";
+  const late = sorted[0] === 1 ? " (the pool started late)" : "";
+  return `No picks were made in ${noun} ${list}${late}, so everyone got a free pass.`;
 }

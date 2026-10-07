@@ -149,16 +149,19 @@ export async function standingsRoutes(fastify: FastifyInstance) {
     const viewer = { userId: session.user.id, isAdmin: isAdminUser(session.user) };
     const visible = visiblePicks(rows, viewer, await revealPredicate(pool)) as VisiblePick[];
 
-    // Columns: the weeks that have picks in this pool (shown or not), up to the current week.
+    // Columns: every week up to the current one. A past week with no picks at all in this pool
+    // (shown or not) was a free pass for everyone, as in a late start.
     const weeks = (await loadSeasonWeeks([pool.seasonYear])).get(pool.seasonYear) ?? [];
     const now = currentWeek(weeks)?.weekNumber ?? Infinity;
     const withPicks = new Set(rows.map((r) => r.weekNumber));
-    const columns = weeks.filter((w) => withPicks.has(w.weekNumber) && w.weekNumber <= now).map((w) => w.weekNumber);
+    const columns = weeks.filter((w) => w.weekNumber <= now).map((w) => w.weekNumber);
+    const freePassWeeks = columns.filter((w) => w < now && !withPicks.has(w));
 
     const mine = poolEntries.find((e) => e.userId === session.user.id) ?? null;
     const grid: PickGrid = buildPickGrid({
       pool: { id: pool.id, name: pool.name, type: pool.type, seasonYear: pool.seasonYear },
       weeks: columns,
+      freePassWeeks,
       gamesPerWeek: Object.fromEntries(weeks.map((w) => [w.weekNumber, w.gamesTotal])),
       entries: poolEntries.map((e) => ({
         entryId: e.id,

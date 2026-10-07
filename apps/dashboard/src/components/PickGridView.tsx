@@ -1,4 +1,4 @@
-import { formatRank, type GridCell, type GridResult, type GridRow, type PickGrid } from "@bbb/shared";
+import { describeFreePass, formatRank, type GridCell, type GridResult, type GridRow, type PickGrid } from "@bbb/shared";
 import { useApi } from "../lib/useApi";
 import { teamCircleStyle, teamNickname } from "../lib/teams";
 
@@ -47,6 +47,13 @@ function Cell({ cell }: { cell: GridCell }) {
       </span>
     );
   }
+  if (cell.kind === "free_pass") {
+    return (
+      <span data-testid="grid-cell" data-kind="free_pass" aria-label="Free pass" className="block text-center text-[10px] leading-tight text-brand-faint">
+        Free pass
+      </span>
+    );
+  }
   return (
     <span data-testid="grid-cell" data-kind="empty" aria-label="No pick shown" className="block text-center text-brand-faint">
       &ndash;
@@ -80,7 +87,8 @@ export function PickGridView({ poolId }: { poolId: string }) {
   if (!grid) return null;
 
   const survivor = grid.pool.type === "survivor";
-  if (grid.weeks.length === 0) {
+  const nothingYet = grid.freePassWeeks.length === 0 && grid.rows.every((r) => r.cells.every((c) => c.kind === "empty"));
+  if (grid.weeks.length === 0 || nothingYet) {
     return (
       <section data-testid="pick-grid" className="rounded-[14px] border border-brand-border bg-brand-surface p-4">
         <p className="font-semibold text-brand-text">Nothing to show yet</p>
@@ -159,6 +167,11 @@ export function PickGridView({ poolId }: { poolId: string }) {
           )}
         </table>
       </div>
+      {describeFreePass(grid.freePassWeeks) && (
+        <p data-testid="grid-free-pass" className="mt-3 text-sm text-brand-muted">
+          {describeFreePass(grid.freePassWeeks)}
+        </p>
+      )}
       <p className="mt-3 text-xs text-brand-faint">
         {survivor
           ? "Green ring: won. Red ring: lost. No ring: still to play. A pick shows once its game has started; until then it is blank."

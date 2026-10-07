@@ -1,15 +1,19 @@
 ## ADDED Requirements
 
 ### Requirement: One request supplies the week-by-week grid
-The system SHALL provide `GET /pools/:poolId/pick-grid`, for a signed-in player only (401 signed out, 404 for no such pool), returning the weeks that have picks in the pool up to the current week, and a row per player with status, elimination week, whether the row is the caller's, and a cell per week. Names SHALL follow the safe-name rule and the answer SHALL contain no email address. Weeks before anyone picked SHALL NOT appear.
+The system SHALL provide `GET /pools/:poolId/pick-grid`, for a signed-in player only (401 signed out, 404 for no such pool), returning every week from 1 to the current week (every week once the season is over), and a row per player with status, elimination week, whether the row is the caller's, and a cell per week. Names SHALL follow the safe-name rule and the answer SHALL contain no email address. A past week in which nobody in the pool has a pick SHALL be marked as a free-pass week, and every row's cell for it SHALL say so. The current week with no picks yet SHALL NOT be a free-pass week.
 
 #### Scenario: Signed out
 - **WHEN** the grid is requested without a session
 - **THEN** the request is refused as not signed in
 
 #### Scenario: Late start
-- **WHEN** weeks 1 to 4 have no picks in the pool and week 5 does
-- **THEN** only week 5 (and later weeks with picks) are columns
+- **WHEN** weeks 1 to 4 have no picks in the pool and week 5 is the current week
+- **THEN** weeks 1 to 5 are columns, weeks 1 to 4 are free-pass weeks for every row, and week 5 is not
+
+#### Scenario: Current week not picked yet
+- **WHEN** nobody has picked yet for the current week
+- **THEN** its cells are blank, not free pass
 
 ### Requirement: The grid shows only what the viewer may already see
 Every cell SHALL pass through the same test as the Pick screen: a player's own picks are always shown; another player's pick is shown only once its game has started (a per-game pool) or its week has locked (a whole-week pool), or, for a pool that waits for the week's last game, once every game of that week has a result. Before that the cell SHALL be blank for an ordinary player, and a neutral "picked" marker with no team for an admin.
@@ -43,3 +47,14 @@ In a pick 'em pool each cell SHALL show the number of correct picks that week am
 #### Scenario: Weekly points
 - **WHEN** a player got 11 of 14 decided games right in a week
 - **THEN** their cell shows 11 and their total includes it
+
+### Requirement: Rows are ordered like a narrowing triangle
+In a survivor pool the rows SHALL be ordered alive players first (A to Z), then eliminated players with the longest-lasting first (latest elimination week first, ties by name). No row SHALL be moved to the top for being the viewer's. In a pick 'em pool the rows SHALL be ordered by total points, ties by name, with no pinned row.
+
+#### Scenario: Triangle
+- **WHEN** players were eliminated in weeks 9, 7, 7, 4 and 2 and two are still alive
+- **THEN** the two alive come first, then the week 9 exit, the two week 7 exits by name, the week 4 exit, and the week 2 exit last
+
+#### Scenario: Viewer is not pinned
+- **WHEN** the viewer was eliminated in week 4 among players eliminated later
+- **THEN** their row sits in its week 4 place, highlighted

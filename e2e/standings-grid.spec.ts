@@ -42,9 +42,8 @@ test("survivor: another player's pick shows only once its game has started; mine
 
     const grid = page.getByTestId("pick-grid");
     await expect(grid.getByRole("columnheader", { name: "W1" })).toBeVisible();
-    // I am first, with my own pick (not yet started) showing.
-    await expect(page.getByTestId("grid-row").first()).toContainText("Grid Gary");
-    await expect(page.getByTestId("grid-row").first()).toContainText("You");
+    // My row is highlighted with "You" (not pinned), with my own pick (not yet started) showing.
+    await expect(page.getByTestId("grid-row").filter({ hasText: "Grid Gary" })).toContainText("You");
     await expect(cellsOf(page, "Grid Gary").first()).toHaveAttribute("aria-label", /Jets, still to play/);
     // Ann's pick is for a game that has started, so it shows, with a result; Bob's has not, so it is blank.
     await expect(cellsOf(page, "Ann Alive").first()).toHaveAttribute("aria-label", /Chiefs, won/);
@@ -97,7 +96,7 @@ test("pick 'em: points per week, a total and a rank", async ({ browser }) => {
 
     await page.goto(`/pool/${poolId}?view=weeks`);
     const rows = page.getByTestId("grid-row");
-    await expect(rows.first()).toContainText("Pam Picker");
+    await expect(rows.first()).toContainText("Pam Picker"); // 2 points puts her first, by total, not because she is the viewer
     await expect(cellsOf(page, "Pam Picker").first()).toHaveText("2");
     await expect(cellsOf(page, "Rick Rival").first()).toHaveText("1");
     await expect(rows.first()).toContainText("1"); // rank
@@ -108,7 +107,7 @@ test("pick 'em: points per week, a total and a rank", async ({ browser }) => {
   }
 });
 
-test("a late start: weeks nobody picked in are not columns", async ({ browser }) => {
+test("a late start: weeks nobody picked in are columns marked as a free pass, with a note", async ({ browser }) => {
   const db = new TestDb();
   await db.connect();
   try {
@@ -128,8 +127,11 @@ test("a late start: weeks nobody picked in are not columns", async ({ browser })
     await page.goto(`/pool/${poolId}?view=weeks`);
     const grid = page.getByTestId("pick-grid");
     await expect(grid.getByRole("columnheader", { name: "W3" })).toBeVisible();
-    await expect(grid.getByRole("columnheader", { name: "W1" })).toHaveCount(0);
-    await expect(grid.getByRole("columnheader", { name: "W2" })).toHaveCount(0);
+    for (const w of ["W1", "W2"]) await expect(grid.getByRole("columnheader", { name: w })).toBeVisible();
+    await expect(cellsOf(page, "Late Larry").nth(0)).toHaveAttribute("data-kind", "free_pass");
+    await expect(cellsOf(page, "Late Larry").nth(1)).toHaveAttribute("data-kind", "free_pass");
+    await expect(cellsOf(page, "Late Larry").nth(2)).toHaveAttribute("data-kind", "picks");
+    await expect(page.getByTestId("grid-free-pass")).toHaveText("No picks were made in weeks 1 and 2 (the pool started late), so everyone got a free pass.");
     await page.context().close();
   } finally {
     await db.close();
