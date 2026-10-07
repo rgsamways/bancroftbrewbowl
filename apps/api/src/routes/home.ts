@@ -23,6 +23,7 @@ import {
   type WeekGameLite,
 } from "../lib/entry-state.js";
 import { isGameLocked, pickDeadlineRuleOf } from "../lib/pick-lock.js";
+import { isAdminUser, isOperatorUser } from "../lib/operator.js";
 import { loadBreweryHome } from "../lib/brewery.js";
 import { latestRecapWeek, pickedWeeksByPool } from "../lib/recap.js";
 import { computePickEmPoints } from "./entries.js";
@@ -46,6 +47,14 @@ function lockTimeOf(d: EntryStateResult): string | null {
 
 /** Home and the Pick screen each get everything they need in one request. */
 export async function homeRoutes(fastify: FastifyInstance) {
+  // What the signed-in person may reach, so the app can show the Admin tab and the site-setup screens.
+  // The server still enforces every route itself.
+  fastify.get("/me/access", async (request, reply) => {
+    const session = await requireSession(request, reply);
+    if (!session) return;
+    reply.send({ isAdmin: isAdminUser(session.user), isOperator: isOperatorUser(session.user) });
+  });
+
   fastify.get("/me/summary", async (request, reply) => {
     const session = await requireSession(request, reply);
     if (!session) return;

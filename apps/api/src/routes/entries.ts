@@ -1,3 +1,4 @@
+import { isAdminUser } from "../lib/operator.js";
 import type { FastifyInstance } from "fastify";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { createEntrySchema, needsConfirmation, publicName, updateEntrySchema, type PickEmRulesConfig, type RequestCreated } from "@bbb/shared";
@@ -153,7 +154,7 @@ export async function entryRoutes(fastify: FastifyInstance) {
     // Names, status and points are for everyone in the pool. An email is only for
     // an admin, and for the person it belongs to.
     const seesEmail = (entryUserId: string | null) =>
-      Boolean(session.user.isAdmin) || (entryUserId !== null && entryUserId === session.user.id);
+      isAdminUser(session.user) || (entryUserId !== null && entryUserId === session.user.id);
 
     const { poolId } = request.params as { poolId: string };
     const pool = await db.query.pools.findFirst({ where: eq(pools.id, poolId) });
@@ -166,7 +167,7 @@ export async function entryRoutes(fastify: FastifyInstance) {
     // For an admin the roster also says who has no account yet and which entry is theirs.
     // Players do not get these two flags.
     const adminFlags = (entry: (typeof poolEntries)[number]) =>
-      session.user.isAdmin ? { invited: entry.user === null, isYou: entry.userId === session.user.id } : {};
+      isAdminUser(session.user) ? { invited: entry.user === null, isYou: entry.userId === session.user.id } : {};
 
     if (pool?.type === "pick_em") {
       const tieHandling = (pool.rules as PickEmRulesConfig).tie_handling;

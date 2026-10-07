@@ -3,7 +3,7 @@ import { Navigate, Routes, Route } from "react-router";
 import { useSession } from "./lib/auth-client";
 import { Login } from "./pages/Login";
 import { Shell } from "./components/Shell";
-import { AdminLayout, FocusLayout, RequireAdmin } from "./components/AdminLayout";
+import { AdminLayout, FocusLayout, RequireAdmin, RequireOperator } from "./components/AdminLayout";
 import { NextStep } from "./pages/NextStep";
 import { AdminResults } from "./pages/AdminResults";
 import { ResultsWizard } from "./pages/ResultsWizard";
@@ -18,6 +18,9 @@ import { ActivityPage } from "./pages/ActivityPage";
 import { PoolStandings } from "./pages/PoolStandings";
 import { PoolTv } from "./pages/PoolTv";
 import { PoolRecap } from "./pages/PoolRecap";
+import { OperatorSchedule } from "./pages/operator/OperatorSchedule";
+import { OperatorAdmins } from "./pages/operator/OperatorAdmins";
+import { OperatorSignInHelp } from "./pages/operator/OperatorSignInHelp";
 import { PickScreen } from "./pages/PickScreen";
 import { AdminPools } from "./pages/AdminPools";
 import { AdminPool } from "./pages/AdminPool";
@@ -87,6 +90,11 @@ export default function App() {
           <Route path="/admin/music/:id" element={<EditMusic />} />
           <Route path="/admin/pools" element={<AdminPools />} />
           <Route path="/admin/pools/:poolId" element={<AdminPool />} />
+          <Route element={<RequireOperator />}>
+            <Route path="/admin/setup/schedule" element={<OperatorSchedule />} />
+            <Route path="/admin/setup/admins" element={<OperatorAdmins />} />
+            <Route path="/admin/setup/sign-in" element={<OperatorSignInHelp />} />
+          </Route>
         </Route>
         <Route element={<FocusLayout />}>
           <Route path="/admin/results/steps" element={<ResultsWizard />} />

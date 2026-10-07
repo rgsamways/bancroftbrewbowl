@@ -17,7 +17,7 @@ export function findUnrecordedAdminWrites(source: string): string[] {
     if (method === "get") return;
     const end = starts[i + 1]?.index ?? source.length;
     const body = source.slice(match.index, end);
-    if (body.includes("requireAdmin(") && !body.includes("recordActivity(")) {
+    if ((body.includes("requireAdmin(") || body.includes("requireOperator(")) && !body.includes("recordActivity(")) {
       missing.push(`${method!.toUpperCase()} ${url}`);
     }
   });

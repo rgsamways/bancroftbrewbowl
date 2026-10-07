@@ -2,7 +2,7 @@ import { Link, Navigate, Outlet, useLocation } from "react-router";
 import { Beer, Ellipsis, ClipboardCheck, Layers, ListChecks, type LucideIcon } from "lucide-react";
 import { AppHeader } from "./AppHeader";
 import { PageHeader } from "./Shell";
-import { useSession, type AppUser } from "../lib/auth-client";
+import { useAccess } from "../lib/useAccess";
 
 // The admin side of the app: its own header and bottom bar (Next step, Results, Pools, More)
 // instead of the player bar. Task screens (results one at a time, the wipeout decision) use
@@ -11,9 +11,17 @@ import { useSession, type AppUser } from "../lib/auth-client";
 
 /** Renders its routes only for an admin, otherwise sends the person to the player Home. */
 export function RequireAdmin() {
-  const { data: session } = useSession();
-  const isAdmin = Boolean((session?.user as AppUser | undefined)?.isAdmin);
+  const { isAdmin, ready } = useAccess();
+  // Wait for the server's answer before deciding: the site's god-user is not flagged as an admin.
+  if (!ready) return null;
   return isAdmin ? <Outlet /> : <Navigate to="/" replace />;
+}
+
+/** Site-setup screens: only the site's god-user, otherwise back to More. */
+export function RequireOperator() {
+  const { isOperator, ready } = useAccess();
+  if (!ready) return null;
+  return isOperator ? <Outlet /> : <Navigate to="/admin/more" replace />;
 }
 
 type AdminTabKey = "next" | "results" | "menu" | "pools" | "more";
@@ -33,7 +41,7 @@ export function activeAdminTab(pathname: string): AdminTabKey | null {
   if (path === "/admin/results" || path.startsWith("/admin/results/")) return "results";
   if (path === "/admin/menu" || path.startsWith("/admin/menu/") || path.startsWith("/admin/music/")) return "menu";
   if (path === "/admin/pools" || path.startsWith("/admin/pools/")) return "pools";
-  if (path === "/admin/more" || path === "/admin/activity" || path === "/admin/brewery" || path.startsWith("/admin/brewery/") || path === "/admin/guide") return "more";
+  if (path === "/admin/more" || path === "/admin/activity" || path === "/admin/brewery" || path.startsWith("/admin/brewery/") || path === "/admin/guide" || path.startsWith("/admin/setup/")) return "more";
   return null;
 }
 

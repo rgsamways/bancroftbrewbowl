@@ -13,6 +13,7 @@ import { wipeoutRoutes } from "../routes/wipeouts.js";
 import { standingsRoutes } from "../routes/standings.js";
 import { tvRoutes } from "../routes/tv.js";
 import { espnResultsRoutes } from "../routes/espn-results.js";
+import { operatorRoutes } from "../routes/operator.js";
 import { recapRoutes } from "../routes/recap.js";
 import { homeRoutes } from "../routes/home.js";
 import { passwordRoutes } from "../routes/password.js";
@@ -27,7 +28,7 @@ import { poolRoutes } from "../routes/pools.js";
 //
 // then call `actAs(...)` before each request.
 
-export type TestActor = { id: string; name: string; email: string; isAdmin?: boolean | null } | null;
+export type TestActor = { id: string; name: string; email: string; isAdmin?: boolean | null; emailVerified?: boolean } | null;
 
 /** Builds a Fastify app with the routes under test, without the real sign-in
  * plugin and without listening on a port. Use `app.inject(...)` to call it. */
@@ -41,6 +42,7 @@ export async function buildTestApp(): Promise<FastifyInstance> {
   await app.register(standingsRoutes);
   await app.register(tvRoutes);
   await app.register(espnResultsRoutes);
+  await app.register(operatorRoutes);
   await app.register(recapRoutes);
   await app.register(activityRoutes);
   await app.register(adminSummaryRoutes);
@@ -59,7 +61,7 @@ export function actAs(actor: TestActor) {
   vi.mocked(getSession).mockResolvedValue(
     actor
       ? ({
-          user: { id: actor.id, name: actor.name, email: actor.email, isAdmin: actor.isAdmin ?? false },
+          user: { id: actor.id, name: actor.name, email: actor.email, isAdmin: actor.isAdmin ?? false, emailVerified: actor.emailVerified ?? true },
           session: { id: "test-session", userId: actor.id },
         } as never)
       : null

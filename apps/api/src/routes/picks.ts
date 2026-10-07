@@ -7,6 +7,7 @@ import { requireEntryOwner, requireSession } from "../lib/guards.js";
 import { teamsPlayingInWeek } from "../lib/entry-state.js";
 import { getTeamGame, getWeekLockTime, isGameLocked, pickDeadlineRuleOf, revealPredicate } from "../lib/pick-lock.js";
 import { visiblePicks } from "../lib/pick-visibility.js";
+import { isAdminUser } from "../lib/operator.js";
 import { parseBody } from "../lib/validate.js";
 
 export async function pickRoutes(fastify: FastifyInstance) {
@@ -215,7 +216,7 @@ export async function pickRoutes(fastify: FastifyInstance) {
 
     const entryPicks = await db.query.picks.findMany({ where: eq(picks.entryId, entryId) });
     const revealed = await revealPredicate(pool);
-    const viewer = { userId: session.user.id, isAdmin: Boolean(session.user.isAdmin) };
+    const viewer = { userId: session.user.id, isAdmin: isAdminUser(session.user) };
     reply.send(visiblePicks(entryPicks.map((p) => ({ ...p, ownerUserId: entry.userId })), viewer, revealed));
   });
 
@@ -243,7 +244,7 @@ export async function pickRoutes(fastify: FastifyInstance) {
       .where(eq(entries.poolId, poolId));
 
     const revealed = await revealPredicate(pool);
-    const viewer = { userId: session.user.id, isAdmin: Boolean(session.user.isAdmin) };
+    const viewer = { userId: session.user.id, isAdmin: isAdminUser(session.user) };
     reply.send(visiblePicks(rows, viewer, revealed));
   });
 }

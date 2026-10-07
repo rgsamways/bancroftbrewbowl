@@ -37,6 +37,10 @@ export const ACTIVITY_KINDS = {
   brewery_special_added: { title: "Added a special", category: "content" },
   brewery_announcement_posted: { title: "Posted an announcement", category: "content" },
   brewery_item_removed: { title: "Removed a From the brewery post", category: "content" },
+  schedule_loaded: { title: "Loaded the NFL schedule", category: "content" },
+  admin_added: { title: "Made someone an admin", category: "content" },
+  admin_removed: { title: "Removed an admin", category: "content" },
+  sign_in_reset: { title: "Helped someone sign in", category: "content" },
   // Retired (the route is gone) but kept so older records still show a title.
   canned_promotion_changed: { title: "Changed an automatic offer", category: "content" },
 } as const satisfies Record<string, { title: string; category: ActivityCategory }>;

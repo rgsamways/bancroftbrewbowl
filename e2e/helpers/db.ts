@@ -41,6 +41,17 @@ export class TestDb {
     return email;
   }
 
+  /** Use a fixed address (the test API's god-user) and have cleanup remove its account. */
+  adopt(address: string) {
+    if (!this.emails.includes(address)) this.emails.push(address);
+    return address;
+  }
+
+  /** Games the app itself created for a season (not through createGame) are removed in cleanup. */
+  trackSeason(year: number) {
+    if (!this.seasons.includes(year)) this.seasons.push(year);
+  }
+
   /** A player who never signs in: just a user row (deleted in cleanup), for filling a pool. */
   async createPlayer(label: string, name: string) {
     const email = this.email(label);

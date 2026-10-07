@@ -9,7 +9,7 @@ Several things Robin currently has to run in a terminal (loading the schedule, m
 - **Site-setup screens (god-user only), in More:**
   - **Schedule:** load a season's NFL schedule from ESPN (replaces the `seed-schedule` script's schedule part): choose the season, see what would be added, then Apply. New games start undecided; results still come from Check for results.
   - **Admins:** list admins, add one by email (the person must have signed in once), remove one. The last admin cannot be removed, and the god-user's account cannot be removed from the list (replaces `make-admin`).
-  - **Help someone sign in:** on a player's row, sign them out everywhere and remove their password so they can use an emailed link (replaces the safe part of `reset-password`). A temporary-password option is left out until the owner asks.
+  - **Help someone sign in:** find a player by email, then sign them out everywhere and remove their password so they can use an emailed link (replaces the safe part of `reset-password`). A temporary-password option is left out until the owner asks.
 - **Everyday admin screens stay as they are** for Lark and any new admin.
 - Every setup action writes one Activity record under the person's name.
 - No schema change.

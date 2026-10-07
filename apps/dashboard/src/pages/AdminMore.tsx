@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { ChevronRight } from "lucide-react";
+import { useAccess } from "../lib/useAccess";
 
 type Item = { to: string; title: string; detail: string };
 
@@ -12,6 +13,13 @@ const TOOLS: Item[] = [
   { to: "/admin/results", title: "Season schedule", detail: "Check the schedule is loaded" },
   { to: "/admin/guide", title: "Admin guide", detail: "How to run a week" },
   { to: "/admin/table-card", title: "Table card", detail: "Print the QR code for the tables" },
+];
+
+// Only the site's god-user sees these (the server refuses everyone else).
+const SETUP: Item[] = [
+  { to: "/admin/setup/schedule", title: "Schedule", detail: "Load a season's games from ESPN" },
+  { to: "/admin/setup/admins", title: "Admins", detail: "Who has admin access" },
+  { to: "/admin/setup/sign-in", title: "Help someone sign in", detail: "For a player who can't get in" },
 ];
 
 const YOU: Item[] = [
@@ -41,11 +49,13 @@ function Group({ heading, items }: { heading: string; items: Item[] }) {
 }
 
 export function AdminMore() {
+  const { isOperator } = useAccess();
   return (
     <div className="mx-auto max-w-lg space-y-6 px-6 pb-6 pt-4">
       <h1 className="text-3xl font-semibold leading-tight text-brand-text">More</h1>
       <Group heading="Step by step" items={STEPS} />
       <Group heading="Other tools" items={TOOLS} />
+      {isOperator && <Group heading="Site setup" items={SETUP} />}
       <Group heading="You" items={YOU} />
     </div>
   );

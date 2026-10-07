@@ -7,6 +7,8 @@ export const API_PORT = 3011;
 export const WEB_PORT = 5183;
 export const ESPN_STUB_PORT = 3021;
 export const ESPN_STUB_URL = `http://localhost:${ESPN_STUB_PORT}`;
+// The one address the test API treats as the site's god-user (OPERATOR_EMAILS).
+export const E2E_OPERATOR_EMAIL = "e2e-operator@example.test";
 export const API_URL = `http://localhost:${API_PORT}`;
 export const WEB_URL = `http://localhost:${WEB_PORT}`;
 

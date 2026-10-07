@@ -209,3 +209,11 @@ Done 2026-10-04 by Robin from this list: cleared two early picks (his own: DEN w
 - Admin Next step now says "Games under way" and "First game kicked off" (true for both rules); the admin Picks tab explains per-game reveal; Help and the Admin guide explain both rules.
 - Tests: `routes/per-game-picks.test.ts`, `routes/per-game-state.test.ts`, additions in `lib/pick-lock.test.ts`, `entry-state.test.ts`, `pick-visibility.test.ts`, `routes/espn-results.test.ts`; `e2e/per-game-picks.spec.ts` (seasons 2964 to 2966) and steps in `e2e/admin-pools.spec.ts` and `e2e/espn-results.spec.ts` (season 2963).
 
+## Admin tools and the god-user (admin-tools, 2026-10-07)
+
+- `OPERATOR_EMAILS` (server setting) lists the god-user accounts. **It must be set in Railway for production and staging before the screens appear** (for example `OPERATOR_EMAILS=rgsamways@gmail.com`); until then nobody is the god-user and the feature is inert. `lib/operator.ts` has `isOperatorUser` (verified email in the list), `isOperatorAddress`, `isAdminUser` (admin flag or god-user); `requireAdmin` accepts the god-user, `requireOperator` accepts only them; the picks and entries routes treat the god-user as an admin view. `GET /me/access` tells the app (`useAccess` in the dashboard: Admin tab, `RequireAdmin`, `RequireOperator`, More).
+- Routes (`routes/operator.ts`): `GET/POST /operator/schedule` (preview and load a season; `lib/schedule-load.ts`), `GET/POST/DELETE /operator/admins`, `GET /operator/users?email=` and `POST /operator/players/:id/sign-in-reset`. Activity kinds: `schedule_loaded`, `admin_added`, `admin_removed`, `sign_in_reset`. The activity coverage test now also checks `requireOperator` routes.
+- Screens under More > Site setup (`pages/operator/`): Schedule, Admins, Help someone sign in.
+- Tests: `routes/operator.test.ts` (god-user, ordinary admin, player, unverified email, fairness rules, each route), `e2e/operator.spec.ts` (the test API's god-user is `e2e-operator@example.test`, set in the Playwright config).
+- Local database note: it can hold leftover admin accounts, so tests that need "the last admin" demote and restore them.
+

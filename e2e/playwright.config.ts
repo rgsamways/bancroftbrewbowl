@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test";
 import path from "node:path";
-import { API_PORT, API_URL, ESPN_STUB_PORT, ESPN_STUB_URL, ROOT, WEB_PORT, WEB_URL, databaseUrl } from "./env";
+import { API_PORT, API_URL, E2E_OPERATOR_EMAIL, ESPN_STUB_PORT, ESPN_STUB_URL, ROOT, WEB_PORT, WEB_URL, databaseUrl } from "./env";
 import { assertLocalDatabase } from "./guard";
 
 // Runs before any server starts or any row is written.
@@ -43,6 +43,7 @@ export default defineConfig({
         DASHBOARD_URL: WEB_URL,
         DATABASE_URL: databaseUrl() ?? "",
         ESPN_BASE_URL: ESPN_STUB_URL,
+        OPERATOR_EMAILS: E2E_OPERATOR_EMAIL,
       },
     },
     {

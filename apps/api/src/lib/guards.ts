@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../db/client.js";
 import { entries } from "../db/schema.js";
 import { getSession } from "./auth-plugin.js";
+import { isAdminUser, isOperatorUser } from "./operator.js";
 
 export async function requireSession(request: FastifyRequest, reply: FastifyReply) {
   const session = await getSession(request);
@@ -42,8 +43,19 @@ export async function requireEntryOwner(request: FastifyRequest, reply: FastifyR
 export async function requireAdmin(request: FastifyRequest, reply: FastifyReply) {
   const session = await requireSession(request, reply);
   if (!session) return null;
-  if (!session.user.isAdmin) {
+  if (!isAdminUser(session.user)) {
     reply.status(403).send({ error: "Admin access required" });
+    return null;
+  }
+  return session;
+}
+
+/** Site setup (loading the schedule, managing admins, helping someone sign in): the god-user only. */
+export async function requireOperator(request: FastifyRequest, reply: FastifyReply) {
+  const session = await requireSession(request, reply);
+  if (!session) return null;
+  if (!isOperatorUser(session.user)) {
+    reply.status(403).send({ error: "Site setup access required" });
     return null;
   }
   return session;

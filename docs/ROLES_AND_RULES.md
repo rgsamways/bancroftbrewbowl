@@ -231,3 +231,12 @@ Keep it small: Player, **Staff** (sold-out for drinks and dishes, add a walk-in 
 - Should staff post announcements and specials directly, or should a manager approve first?
 - Should access expire (seasonal staff), and who may add or remove staff?
 
+## The god-user (built 2026-10-07, `admin-tools`)
+
+Robin's account is the site's god-user, as in his other projects. It is configuration, not data: the server setting `OPERATOR_EMAILS` (a comma-separated list, set in Railway) names the accounts, and only a **verified** email counts. Nothing inside the app can grant or take the status away.
+
+- It passes every admin check without needing the admin flag, and alone sees and uses **Site setup** (More): **Schedule** (load a season from ESPN: new games undecided, kickoffs of unstarted games, never a result), **Admins** (add by email, remove; never the last admin or the site owner's own account) and **Help someone sign in** (sign a player out everywhere and remove their password, so they use an emailed link). Each is recorded in Activity.
+- Lark and any other admin keep the everyday admin screens and do not see Site setup.
+- **The fairness rules still bind the god-user** (see "Rules the app must always keep"): no early look at picks, no changing anyone's pick, no overriding a lock, and a decision about its own entry still needs another admin to confirm.
+- Rules `import_schedule`, `manage_admins` and `reset_password` above are therefore the god-user's, not operator-only scripts; the scripts stay as a developer backup.
+

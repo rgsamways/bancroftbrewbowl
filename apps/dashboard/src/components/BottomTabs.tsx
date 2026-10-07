@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router";
 import { Beer, House, ShieldCheck, Target, Trophy, type LucideIcon } from "lucide-react";
-import { useSession, type AppUser } from "../lib/auth-client";
+import { useAccess } from "../lib/useAccess";
 import { activeTab, tabsFor, type TabKey } from "../lib/tabs";
 
 const ICONS: Record<TabKey, LucideIcon> = {
@@ -16,8 +16,7 @@ const ICONS: Record<TabKey, LucideIcon> = {
 // to admins; the server is what actually enforces admin access.
 export function BottomTabs() {
   const { pathname } = useLocation();
-  const { data: session } = useSession();
-  const isAdmin = Boolean((session?.user as AppUser | undefined)?.isAdmin);
+  const { isAdmin } = useAccess();
   const tabs = tabsFor({ isAdmin });
   const current = activeTab(pathname);
 

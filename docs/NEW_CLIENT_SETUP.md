@@ -27,7 +27,7 @@ and a small number of branding files (step 6), not by forking the logic.
    - `domains: ["api.bancroftbrewbowl.ca"]` → the new client's API domain
    - Everything else (`build`, `start`, `preDeploy`, `healthcheck`) stays
      the same — it's not client-specific.
-5. Set variables (see `.env.example` for the full list):
+5. Set variables (see `.env.example` for the full list; `OPERATOR_EMAILS` is the owner's address, the site's god-user):
    `DATABASE_URL` (reference `${{Postgres.DATABASE_URL}}`),
    `BETTER_AUTH_SECRET` (generate a **new** random one — never reuse
    another client's), `BETTER_AUTH_URL`, `DASHBOARD_URL`, `COOKIE_DOMAIN`,
