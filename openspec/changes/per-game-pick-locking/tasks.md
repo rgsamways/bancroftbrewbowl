@@ -30,7 +30,7 @@
 
 ## 6b. Moved kickoffs
 
-- [ ] 6b.1 `previewEspnResults` also returns games whose kickoff differs from ESPN's by more than a minute (not started, no result); `applyEspnResults` (or a separate apply field) updates those kickoffs and never touches a started game; one Activity record covers it; tests incl. a game flexed from Sunday to Monday night and one moved earlier
+- [ ] 6b.1 `previewEspnResults` also asks ESPN about the current week and the next two weeks (flexes are announced ahead, and those weeks have not kicked off, so they were not asked before) and returns games whose kickoff differs from ESPN's by more than a minute (not started, no result); `applyEspnResults` (or a separate apply field) updates those kickoffs and never touches a started game; one Activity record covers it; tests incl. a game flexed from Sunday to Monday night and one moved earlier
 - [ ] 6b.2 Results screen shows "N games moved" with the old and new time in the Check for results card, applied with the same confirm; e2e with the ESPN stub
 
 ## 7. Verify and ship
