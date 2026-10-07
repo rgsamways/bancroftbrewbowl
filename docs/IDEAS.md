@@ -53,6 +53,8 @@ The top bar (`AppHeader.tsx`) is `max-w-3xl` with 16px side padding while the pa
 
 ## Per-game picks: wait until your game starts (noted 2026-10-04)
 
+**Moved up and planned 2026-10-07: `openspec/changes/per-game-pick-locking`** (Robin: players should be able to pick right up until game time). Decisions: other players' picks show as each game starts; a pool setting, per-game for new pools. Waiting for his go.
+
 Robin's point: people may want to wait until the game they want to pick starts to be decided (or kicks off) instead of locking in before the Thursday game. Today a whole week locks at its first kickoff, so a Thursday game locks every pick for the week.
 
 The setting already exists but does nothing: pool settings list a `per_game_kickoff` deadline rule, and no server code reads it (`docs/BUILD_PLAN.md` "Known gaps"; `apps/api/src/lib/pick-lock.ts` is the one place that decides today's rule). Special NFL-schedule handling would be needed. Things to think through when it is picked up:
