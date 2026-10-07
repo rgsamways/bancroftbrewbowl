@@ -6,7 +6,7 @@ A permanent, admin-only record of every change an admin makes to standings or co
 ## Requirements
 
 ### Requirement: Admin changes are recorded
-The system SHALL write one activity record, naming the signed-in admin, each time an admin successfully: enters or changes a game result, changes a game's score, resolves a wipeout, changes a player's status, adds a player to a pool, creates a pool, locks or unlocks a pool, edits a pool's settings, changes a pool's total, deletes a pool, creates, edits or deletes an announcement, or changes an automatic offer.
+The system SHALL write one activity record, naming the signed-in admin, each time an admin successfully: enters or changes a game result, changes a game's score, resolves a wipeout, changes a player's status, adds a player to a pool, creates a pool, locks or unlocks a pool, edits a pool's settings, changes a pool's total, deletes a pool, creates, edits or deletes an announcement, changes an automatic offer, creates, edits or deletes a TV playlist, changes which playlist a TV screen plays or its QR setting, or (god-user) creates, renames, deletes or resets the link of a TV screen. A record SHALL never contain a screen's private link.
 
 #### Scenario: Entering a result
 - **WHEN** an admin enters a game result
@@ -27,6 +27,10 @@ The system SHALL write one activity record, naming the signed-in admin, each tim
 #### Scenario: A refused change
 - **WHEN** a request is refused (not an admin, invalid, not found)
 - **THEN** no record is written
+
+#### Scenario: Switching a TV playlist
+- **WHEN** an admin sets "Bar TV" to play "Holiday"
+- **THEN** a record says that admin set Bar TV to play Holiday, and no link appears in it
 
 ### Requirement: Each record says who, what, where and when
 The system SHALL store with each record the admin's id and their name at that time, the kind of change, a plain-English sentence, the pool when there is one, whether it affected the admin's own entry, and the time. The sentence SHALL stay as written even if names or pools change or are deleted later.
