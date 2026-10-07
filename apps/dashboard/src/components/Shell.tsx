@@ -11,9 +11,9 @@ export function PageHeader() {
   const title = NAV_LABELS[navKey];
 
   return (
-    <h1 className="px-6 pb-6 pt-6 font-display text-2xl font-bold uppercase tracking-wide text-brand-text">
-      {title}
-    </h1>
+    <div className="mx-auto max-w-lg px-6 pb-6 pt-6">
+      <h1 className="font-display text-2xl font-bold uppercase tracking-wide text-brand-text">{title}</h1>
+    </div>
   );
 }
 

@@ -29,5 +29,5 @@
 ## 7. Verify and ship
 
 - [x] 7.1 `pnpm lint`, `typecheck`, `typecheck:e2e`, `test`, `test:e2e` pass
-- [ ] 7.2 Set `OPERATOR_EMAILS` in Railway (production and staging) to Robin's address before the deploy, then one push to `main` (mind the Vercel build limit); confirm the screens appear for Robin and not for Lark
-- [ ] 7.3 Sync specs, archive, update ROADMAP and HANDOFF
+- [x] 7.2 Set `OPERATOR_EMAILS` in Railway (production and staging) to Robin's address before the deploy, then one push to `main` (mind the Vercel build limit); confirm the screens appear for Robin and not for Lark
+- [x] 7.3 Sync specs, archive, update ROADMAP and HANDOFF

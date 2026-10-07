@@ -217,3 +217,11 @@ Done 2026-10-04 by Robin from this list: cleared two early picks (his own: DEN w
 - Tests: `routes/operator.test.ts` (god-user, ordinary admin, player, unverified email, fairness rules, each route), `e2e/operator.spec.ts` (the test API's god-user is `e2e-operator@example.test`, set in the Playwright config).
 - Local database note: it can hold leftover admin accounts, so tests that need "the last admin" demote and restore them.
 
+## Where we stopped (2026-10-07, evening)
+
+- `admin-tools` is live and archived. `OPERATOR_EMAILS=rgsamways@gmail.com` is set in Railway production (done by Robin); set it on `api-staging` too if the staging site needs the screens. A tab opened before the setting was applied keeps the old answer until reloaded (the app asks the server once per page load).
+- `per-game-pick-locking` is live but **not archived**: Robin's own pool is still on the whole-week rule until he switches it in Settings ("When picks lock"). Archive after he has watched a real week.
+- Alignment: the Account and Activity page titles now sit in the same centred column as everything else (`PageHeader` in `components/Shell.tsx`); `e2e/alignment.spec.ts` opens about 40 screens on a wide window and fails if any text leaves the column, so a new screen that does is caught.
+- Robin's review notes still not started: Home scoreboard on a shared cached ESPN feed, standings views (survivor picks-by-week matrix, which must follow the reveal rules), menu colour circles and photo uploads, a playoffs plan before January, then the games. Also still open: post the two From the brewery announcements; the staff-roles proposal in `docs/ROLES_AND_RULES.md`; the location map.
+- Vercel build limit (see above): this session pushed in batches; check status with `gh api repos/rgsamways/bancroftbrewbowl/commits/<sha>/status`.
+
