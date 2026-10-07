@@ -155,6 +155,9 @@ export function SettingsTab({ pool, onChanged }: { pool: PoolRow; onChanged: (po
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // What "when picks show" means depends on how picks lock: each pick as its game starts, or the whole week at once.
+  const perGameLock = (rules.pick_deadline_rule ?? "first_kickoff_of_week") === "per_game_kickoff";
+
   const seasonOptions = [...new Set([...(seasons ?? []), pool.seasonYear, season])].sort();
 
   async function save(event: React.FormEvent) {
@@ -337,13 +340,15 @@ export function SettingsTab({ pool, onChanged }: { pool: PoolRow; onChanged: (po
           >
             {REVEAL_PICKS.map((v) => (
               <option key={v} value={v}>
-                {v === "at_lock" ? "When the week locks" : "After the week's last game is final"}
+                {v === "at_lock" ? (perGameLock ? "As each game starts" : "When the week locks") : "After the week's last game is final"}
               </option>
             ))}
           </select>
           <span className="mt-1 block text-xs font-normal text-brand-muted">
             {(rules.reveal_picks ?? "at_lock") === "at_lock"
-              ? "Once the first game kicks off, everyone can see everyone's picks."
+              ? perGameLock
+                ? "A pick shows to everyone once its own game kicks off."
+                : "Once the first game of the week kicks off, everyone can see everyone's picks."
               : "Picks stay private all weekend, until every game of the week has a result."}
           </span>
         </label>
