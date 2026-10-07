@@ -72,11 +72,11 @@ The calendar SHALL include every music event already entered, as a Music entry f
 - **THEN** it appears on Saturday's calendar with no second entry needed
 
 ### Requirement: Admin screens for the calendar
-The system SHALL give admins a Calendar area under More with a month list of entries (music events shown but marked "from Music"), an add and edit form (title, date, times, type, note, link, repeat, end date), the "just this day or all" choice for repeats, and a way to cancel or remove. It SHALL use plain wording and fit a phone 390 wide.
+The system SHALL give admins a Calendar area under More with a list of entries for 7 days at a time (previous, next and Today) (music events shown but marked "from Music"), an add and edit form (title, date, times, type, note, link, repeat, end date), the "just this day or all" choice for repeats, and a way to cancel or remove. It SHALL use plain wording and fit a phone 390 wide.
 
 #### Scenario: Reaching it
 - **WHEN** an admin opens More
-- **THEN** they can open Calendar and see the current month's entries
+- **THEN** they can open Calendar and see the next 7 days' entries
 
 #### Scenario: Not for players
 - **WHEN** a player opens the admin calendar address
