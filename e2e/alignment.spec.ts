@@ -74,6 +74,7 @@ test("every screen keeps its text inside the centred column on a wide window", a
       "/admin/more",
       "/admin/activity",
       "/admin/brewery",
+      "/admin/notices",
       "/admin/brewery/feature",
       "/admin/brewery/special",
       "/admin/brewery/announcement",

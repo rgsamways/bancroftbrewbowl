@@ -25,6 +25,7 @@ import { PickScreen } from "./pages/PickScreen";
 import { AdminPools } from "./pages/AdminPools";
 import { AdminPool } from "./pages/AdminPool";
 import { NewPoolWizard } from "./pages/NewPoolWizard";
+import { AdminNotices } from "./pages/AdminNotices";
 import { AdminBrewery } from "./pages/admin-brewery/AdminBrewery";
 import { AnnouncementWizard, FeatureWizard, SpecialWizard } from "./pages/admin-brewery/wizards";
 import { PickLanding, StandingsLanding } from "./pages/TabLanding";
@@ -84,6 +85,7 @@ export default function App() {
           <Route path="/admin/more" element={<AdminMore />} />
           <Route path="/admin/activity" element={<ActivityPage />} />
           <Route path="/admin/brewery" element={<AdminBrewery />} />
+          <Route path="/admin/notices" element={<AdminNotices />} />
           <Route path="/admin/guide" element={<AdminGuide />} />
           <Route path="/admin/menu" element={<AdminMenu />} />
           <Route path="/admin/menu/:id" element={<EditItem />} />

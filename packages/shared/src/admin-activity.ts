@@ -37,6 +37,8 @@ export const ACTIVITY_KINDS = {
   brewery_special_added: { title: "Added a special", category: "content" },
   brewery_announcement_posted: { title: "Posted an announcement", category: "content" },
   brewery_item_removed: { title: "Removed a From the brewery post", category: "content" },
+  notice_posted: { title: "Posted a notice", category: "content" },
+  notice_removed: { title: "Removed a notice", category: "content" },
   schedule_loaded: { title: "Loaded the NFL schedule", category: "content" },
   admin_added: { title: "Made someone an admin", category: "content" },
   admin_removed: { title: "Removed an admin", category: "content" },

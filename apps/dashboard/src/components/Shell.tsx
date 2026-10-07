@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from "react-router";
 import { AppHeader } from "./AppHeader";
 import { BottomTabs } from "./BottomTabs";
+import { NoticeBanner } from "./NoticeBanner";
 import { matchNav, NAV_LABELS } from "../lib/nav";
 
 export function PageHeader() {
@@ -24,6 +25,7 @@ export function Shell() {
     <div className="flex min-h-screen flex-col bg-brand-bg">
         <AppHeader />
         <main className="flex-1 pb-28">
+          <NoticeBanner />
           <PageHeader />
           <Outlet />
         </main>

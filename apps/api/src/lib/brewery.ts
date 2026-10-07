@@ -1,5 +1,6 @@
 import { asc, desc, eq, gte, sql } from "drizzle-orm";
 import {
+  BREWERY_KINDS,
   bucketOf,
   easternToday,
   scheduleText,
@@ -35,6 +36,8 @@ const scheduleOf = (r: Row) => ({ days: r.days, date: r.onDate, startTime: hm(r.
 /** An announcement shows during its week only; a feature during its week or, with no week,
  * until replaced; a special on its days (a one-day special until its date has gone). */
 function isShowingNow(r: Row, now: SeasonWeekNow, today: string): boolean {
+  // Site notices share the table but are not From the brewery items.
+  if (!(BREWERY_KINDS as readonly string[]).includes(r.kind)) return false;
   if (r.kind === "special") return !specialIsOver(scheduleOf(r), today);
   const thisWeek = now !== null && r.seasonYear === now.seasonYear && r.weekNumber === now.weekNumber;
   if (r.kind === "feature") return r.weekNumber === null || thisWeek;
