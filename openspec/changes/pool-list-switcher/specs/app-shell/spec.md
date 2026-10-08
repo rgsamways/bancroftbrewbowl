@@ -3,13 +3,21 @@
 ### Requirement: The Play tab goes to the right place
 The system SHALL show, when the person is in two or more pools, a list of their pools when they tap Play. With exactly one pool, the system SHALL send them to the pool screen they were last on, on this device, or else to that entry's pick screen. It SHALL say plainly when they have joined no pool, with a link to Home. The old addresses `/pick` and `/standings` SHALL lead to the same place as the Play tab.
 
-#### Scenario: One pool, first time
+#### Scenario: First time
 - **WHEN** a person in one pool, who has never opened a pool screen on this device, taps Play
 - **THEN** they land on that pool's pick screen
 
-#### Scenario: One pool, returning to Standings
+#### Scenario: Returning to Standings
 - **WHEN** a person in one pool last viewed its standings, went to Home, and taps Play
 - **THEN** they land on that pool's standings
+
+#### Scenario: Remembers the pool
+- **WHEN** a person in two pools last viewed a pool's standings, taps Play and then that pool's card
+- **THEN** that pool opens on its standings, the screen last used
+
+#### Scenario: Remembered pool is gone
+- **WHEN** the remembered pool is one the person is no longer in and they have one pool left
+- **THEN** Play falls back to the pick screen of the entry that needs attention first
 
 #### Scenario: Several pools
 - **WHEN** a person in two or more pools taps Play
