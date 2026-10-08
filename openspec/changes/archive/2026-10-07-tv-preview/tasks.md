@@ -16,5 +16,5 @@
 ## 4. Verify and ship
 
 - [x] 4.1 `pnpm lint`, `typecheck`, `typecheck:e2e`, `test`, `test:e2e` pass
-- [ ] 4.2 Push `main` (no schema change; batch with other work); Robin tries Preview on production
-- [ ] 4.3 Sync specs, archive, update ROADMAP
+- [x] 4.2 Push `main` (no schema change; batch with other work); Robin tries Preview on production
+- [x] 4.3 Sync specs, archive, update ROADMAP

@@ -33,5 +33,5 @@
 ## 7. Verify and ship
 
 - [x] 7.1 `pnpm lint`, `typecheck`, `typecheck:e2e`, `test`, `test:e2e` pass
-- [ ] 7.2 Call out the schema change, migrate staging first, check the public calendar on the staging API, then push (batch pushes; mind the Vercel build limit); Robin looks at it on a phone and a TV
-- [ ] 7.3 Sync specs (check the merged admin-activity text includes both changes), archive, update ROADMAP and HANDOFF
+- [x] 7.2 Call out the schema change, migrate staging first, check the public calendar on the staging API, then push (batch pushes; mind the Vercel build limit); Robin looks at it on a phone and a TV
+- [x] 7.3 Sync specs (check the merged admin-activity text includes both changes), archive, update ROADMAP and HANDOFF
