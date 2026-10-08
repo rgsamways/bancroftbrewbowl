@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import {
   REPEAT_TEXT,
   calendarFromAllowed,
@@ -227,6 +227,36 @@ export async function calendarRoutes(fastify: FastifyInstance) {
         summary: `${actor.name} changed "${target.row.title}" on ${formatEventDayLong(date)} only.`,
       });
     });
+    reply.status(204).send();
+  });
+
+  /** Bring a cancelled day back exactly as the series defines it. */
+  fastify.post("/calendar/entries/:id/days/:date/restore", async (request, reply) => {
+    const session = await requireAdmin(request, reply);
+    if (!session) return;
+    const { id, date } = request.params as { id: string; date: string };
+    const target = await dayTarget(id, date);
+    if (!target.ok) {
+      reply.status(target.status).send({ error: target.error });
+      return;
+    }
+    const actor = actorOf(session);
+    const restored = await db.transaction(async (tx) => {
+      const [row] = await tx
+        .delete(calendarExceptions)
+        .where(and(eq(calendarExceptions.entryId, id), eq(calendarExceptions.exceptionDate, date), eq(calendarExceptions.cancelled, true)))
+        .returning();
+      if (!row) return false;
+      await recordActivity(tx, actor, {
+        kind: "calendar_day_restored",
+        summary: `${actor.name} restored "${target.row.title}" on ${formatEventDayLong(date)}.`,
+      });
+      return true;
+    });
+    if (!restored) {
+      reply.status(400).send({ error: "That day wasn't cancelled." });
+      return;
+    }
     reply.status(204).send();
   });
 

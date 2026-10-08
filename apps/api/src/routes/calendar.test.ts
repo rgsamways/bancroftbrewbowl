@@ -113,6 +113,17 @@ describe("the calendar", () => {
     expect(titlesOn(await week(inDays(14)), inDays(14))).toEqual([]);
     expect(titlesOn(await week(inDays(21)), inDays(21))).toEqual(["Zz Trivia"]);
 
+    // Restore the cancelled day: it comes back as the series defines it, and nothing else moves.
+    expect((await call(admin, "POST", `/calendar/entries/${id}/days/${inDays(14)}/restore`)).status).toBe(204);
+    expect(titlesOn(await week(inDays(14)), inDays(14))).toEqual(["Zz Trivia"]);
+    expect(titlesOn(await week(next), next)).toEqual(["Zz Trivia finals"]);
+    // A day that was not cancelled (never, or already restored) is refused.
+    expect((await call(admin, "POST", `/calendar/entries/${id}/days/${inDays(14)}/restore`)).status).toBe(400);
+    expect((await call(admin, "POST", `/calendar/entries/${id}/days/${next}/restore`)).status).toBe(400); // changed, not cancelled
+    expect((await call(admin, "POST", `/calendar/entries/${id}/days/${inDays(1)}/restore`)).status).toBe(400); // not a day of the series
+    // Cancel it again so the rest of this test still has a cancelled day.
+    expect((await call(admin, "DELETE", `/calendar/entries/${id}/days/${inDays(14)}`)).status).toBe(204);
+
     // Editing all keeps the days that were changed on their own.
     const edit = await call(admin, "PATCH", `/calendar/entries/${id}`, { title: "Zz Trivia night", date: today, type: "event", repeat: "weekly", startTime: "19:00" });
     expect(edit.status).toBe(204);
@@ -182,6 +193,7 @@ describe("the calendar", () => {
       expect((await call(who, "DELETE", `/calendar/entries/${id}`)).status).toBe(code);
       expect((await call(who, "PUT", `/calendar/entries/${id}/days/${today}`, { title: "Zz Nope", type: "event" })).status).toBe(code);
       expect((await call(who, "DELETE", `/calendar/entries/${id}/days/${today}`)).status).toBe(code);
+      expect((await call(who, "POST", `/calendar/entries/${id}/days/${today}/restore`)).status).toBe(code);
     }
     await call(admin, "PUT", `/calendar/entries/${id}/days/${inDays(7)}`, { title: "Zz Special", type: "event" });
     await call(admin, "DELETE", `/calendar/entries/${id}/days/${inDays(14)}`);
@@ -189,6 +201,7 @@ describe("the calendar", () => {
     await call(admin, "DELETE", `/calendar/entries/${id}`);
     const rows = await db.select().from(adminActivity).where(eq(adminActivity.actorId, admin.id));
     expect(rows.map((r) => r.kind).sort()).toEqual(["calendar_day_cancelled", "calendar_day_changed", "calendar_entry_added", "calendar_entry_changed", "calendar_entry_removed"]);
+    expect((await call(player, "POST", `/calendar/entries/${id}/days/${today}/restore`)).status).toBe(403);
     expect(rows.find((r) => r.kind === "calendar_day_cancelled")!.summary).toContain("only");
     // Nothing the players did was recorded.
     expect(await db.select().from(adminActivity).where(eq(adminActivity.actorId, player.id))).toHaveLength(0);

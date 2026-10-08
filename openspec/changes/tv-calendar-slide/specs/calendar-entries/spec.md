@@ -64,6 +64,17 @@ The system SHALL let an admin change or cancel a single day of a repeating entry
 - **WHEN** an admin edits a series with "all in the series"
 - **THEN** every day that has no single-day change shows the new details, and days with a single-day change keep theirs
 
+### Requirement: Restoring a cancelled day
+The system SHALL let an admin restore a day of a repeating entry that was cancelled on its own, from the entry's "all in the series" screen, which SHALL list the series' upcoming cancelled days each with a Restore button. Restoring SHALL bring that day back exactly as the series defines it, SHALL leave every other day alone, and SHALL be refused for a day that was not cancelled.
+
+#### Scenario: Bringing a day back
+- **WHEN** an admin cancelled one Tuesday of "Trivia" and then restores it
+- **THEN** that Tuesday shows Trivia again as the series defines it, and every other day is unchanged
+
+#### Scenario: A day that was not cancelled
+- **WHEN** a restore is requested for a day that was not cancelled
+- **THEN** it is refused with a clear message and nothing changes
+
 ### Requirement: Music events appear without being re-entered
 The calendar SHALL include every music event already entered, as a Music entry for its date and times, and these SHALL be changed only through Music, not through calendar entries.
 

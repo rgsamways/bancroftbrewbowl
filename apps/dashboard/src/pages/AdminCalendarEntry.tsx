@@ -78,7 +78,7 @@ export function AdminCalendarEntry() {
   const [params] = useSearchParams();
   const day = params.get("date") ?? "";
   const navigate = useNavigate();
-  const { data: detail, error } = useApi<AdminCalendarEntryDetail>(isNew ? "/calendar/entries/none" : `/calendar/entries/${id}`);
+  const { data: detail, error, reload } = useApi<AdminCalendarEntryDetail>(isNew ? "/calendar/entries/none" : `/calendar/entries/${id}`);
   const { data: pools } = useApi<Pool[]>("/pools");
   const [mode, setMode] = useState<"choose" | "day" | "all">(isNew ? "all" : "choose");
   const [form, setForm] = useState<Form>({ ...EMPTY, date: isNew && day ? day : easternToday(new Date()) });
@@ -88,6 +88,23 @@ export function AdminCalendarEntry() {
   const [confirming, setConfirming] = useState<"cancel-day" | "remove" | null>(null);
 
   const repeating = detail ? detail.repeat !== "none" : false;
+  const upcomingCancelled = detail ? detail.cancelledDays.filter((d) => d >= easternToday(new Date())) : [];
+  const [restored, setRestored] = useState<string | null>(null);
+
+  async function restore(date: string) {
+    setBusy(true);
+    setProblem(null);
+    setRestored(null);
+    try {
+      await api(`/calendar/entries/${id}/days/${date}/restore`, { method: "POST" });
+      setRestored(date);
+      await reload();
+    } catch (e) {
+      setProblem(`${e instanceof ApiError ? e.message : "Something went wrong"} Nothing was changed.`);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   // Fill the form once the entry loads: the series for "all", or what that one day shows for "day".
   useEffect(() => {
@@ -281,6 +298,28 @@ export function AdminCalendarEntry() {
             {isNew ? "Add to calendar" : "Save"}
           </button>
         </form>
+      )}
+
+      {!isNew && detail && mode === "all" && upcomingCancelled.length > 0 && (
+        <section data-testid="cancelled-days" className="space-y-2 rounded-[14px] border border-brand-border bg-brand-surface p-4">
+          <h2 className="font-semibold text-brand-text">Cancelled days</h2>
+          <p className="text-sm text-brand-muted">These days are skipped. Restore one to bring it back as the series has it.</p>
+          <ul>
+            {upcomingCancelled.map((d) => (
+              <li key={d} className="flex items-center justify-between gap-3 border-t border-brand-border py-1">
+                <span className="text-brand-text">{formatEventDayLong(d)}</span>
+                <button type="button" disabled={busy} onClick={() => void restore(d)} aria-label={`Restore ${formatEventDayLong(d)}`} className="min-h-11 rounded-[12px] border border-brand-border px-4 text-sm font-semibold text-brand-text hover:border-brand-accent disabled:opacity-50">
+                  Restore
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {restored && (
+        <p role="status" className="text-sm text-emerald-400">
+          {formatEventDayLong(restored)} is back on the calendar.
+        </p>
       )}
 
       {!isNew && detail && mode !== "choose" && (

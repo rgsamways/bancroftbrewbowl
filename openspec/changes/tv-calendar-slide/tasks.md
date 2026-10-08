@@ -24,6 +24,8 @@
 - [x] 5.1 More > Calendar: list for 7 days at a time with previous and next, music rows marked "from Music" and read-only, add and edit form with the four repeat choices and an end date
 - [x] 5.2 Editing or removing a repeating entry asks "Just this day" or "All in the series"; cancelling one day; plain wording at 390 wide
 
+- [x] 5.3 Restore a cancelled day: `POST /calendar/entries/:id/days/:date/restore` (admin, removes the cancelled note, refused for a day that was not cancelled, records Activity), a "Cancelled days" list with Restore on the "all in the series" screen; API test and a browser check
+
 ## 6. Tests in a real browser
 
 - [x] 6.1 `e2e/calendar.spec.ts`: add a one-off and a weekly entry as an admin, see them on the public week page signed out, step to the next 7 days and back with Today, follow a link, cancel one day and see only that day gone, music shows without a second entry, a player cannot reach the admin screens; update `e2e/alignment.spec.ts` for the new pages; TV slide covered in the TV spec once it exists

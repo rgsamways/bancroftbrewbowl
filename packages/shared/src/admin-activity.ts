@@ -51,6 +51,7 @@ export const ACTIVITY_KINDS = {
   calendar_entry_removed: { title: "Removed a calendar entry", category: "content" },
   calendar_day_changed: { title: "Changed one day of a calendar entry", category: "content" },
   calendar_day_cancelled: { title: "Cancelled one day of a calendar entry", category: "content" },
+  calendar_day_restored: { title: "Restored a cancelled day of a calendar entry", category: "content" },
   schedule_loaded: { title: "Loaded the NFL schedule", category: "content" },
   admin_added: { title: "Made someone an admin", category: "content" },
   admin_removed: { title: "Removed an admin", category: "content" },

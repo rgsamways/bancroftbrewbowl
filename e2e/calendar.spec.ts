@@ -132,6 +132,16 @@ test("an admin builds the calendar and anyone reads it: week list, links, one ch
     await phone.goto("/menu/calendar");
     await expect(dayCard(phone, today)).toContainText("E2E Trivia"); // today is unchanged
 
+    // Restoring the cancelled day brings it back as the series defines it.
+    await lark.goto(`/admin/calendar/${id}?date=${today}`);
+    await lark.getByRole("button", { name: "All in the series" }).click();
+    await expect(lark.getByTestId("cancelled-days")).toContainText(labelOf(week3));
+    await lark.getByRole("button", { name: `Restore ${labelOf(week3)}` }).click();
+    await expect(lark.getByText(`${labelOf(week3)} is back on the calendar.`)).toBeVisible();
+    await expect(lark.getByTestId("cancelled-days")).toHaveCount(0);
+    await phone.goto(`/menu/calendar?from=${week3}`);
+    await expect(dayCard(phone, week3)).toContainText("E2E Trivia");
+
     // Editing all keeps the changed day, and removing the series clears every day.
     await lark.goto(`/admin/calendar/${id}?date=${today}`);
     await lark.getByRole("button", { name: "All in the series" }).click();
