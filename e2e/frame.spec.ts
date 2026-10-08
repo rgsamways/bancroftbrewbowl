@@ -56,20 +56,16 @@ test.afterAll(async () => {
 test("a player with no pools: tabs, header, and the join-a-pool message", async () => {
   const p = pages.nopool;
   await go(p, "/");
-  expect(await tabLabels(p)).toBe("Home | Pick | Standings | Menu");
+  expect(await tabLabels(p)).toBe("Home | Play | Menu");
   expect(await currentTab(p)).toBe("Home");
   expect(await p.$$('button[aria-label="Open navigation"], button[aria-label="Page help"], aside')).toHaveLength(0);
   await expect(p.locator('header a[aria-label="Brew Bowl home"]')).toHaveAttribute("href", "/");
   await expect(p.locator('header a[aria-label="Me"]')).toHaveText("NN");
 
-  await p.click('nav[aria-label="Main"] a:has-text("Pick")');
+  await p.click('nav[aria-label="Main"] a:has-text("Play")');
   await expect(p.getByText("You haven't joined a pool yet")).toBeVisible();
   await expect(p.locator('a:has-text("Go to Home")')).toBeVisible();
-  expect(await currentTab(p)).toBe("Pick");
-
-  await p.click('nav[aria-label="Main"] a:has-text("Standings")');
-  await expect(p.getByText("You haven't joined a pool yet")).toBeVisible();
-  expect(await currentTab(p)).toBe("Standings");
+  expect(await currentTab(p)).toBe("Play");
 });
 
 test("the avatar opens Me, no tab is marked there, and Sign out signs out", async () => {
@@ -91,28 +87,29 @@ test("the avatar opens Me, no tab is marked there, and Sign out signs out", asyn
   await expect(p.getByText("Email me a sign-in link")).toBeVisible();
 });
 
-test("one alive pool: Pick goes straight to the pick screen, Standings to the pool", async () => {
+test("one alive pool: Play goes straight to the pick screen, the pool strip to standings", async () => {
   const p = pages.one;
   await go(p, "/");
-  await p.click('nav[aria-label="Main"] a:has-text("Pick")');
+  await p.click('nav[aria-label="Main"] a:has-text("Play")');
   await p.waitForURL(`**/pool/${poolA}/entry/${entry.one}/pick`);
   await expect(p.getByText("Week 1 pick")).toBeVisible();
-  expect(await currentTab(p)).toBe("Pick");
+  expect(await currentTab(p)).toBe("Play");
 
-  await p.click('nav[aria-label="Main"] a:has-text("Standings")');
+  // The pool's own strip moves between its screens; the bar keeps Play marked.
+  await p.click('nav[aria-label="Pool screens"] a:has-text("Standings")');
   await p.waitForURL(`**/pool/${poolA}`);
   await expect(p.getByText("Alpha Survivor").first()).toBeVisible();
-  expect(await currentTab(p)).toBe("Standings");
+  expect(await currentTab(p)).toBe("Play");
 });
 
-test("several pools: Pick goes to the pool that needs a pick; Standings lists them", async () => {
+test("several pools: Play goes to the pool that needs a pick; Standings lists them", async () => {
   const p = pages.several;
   await go(p, "/pick");
   await p.waitForURL(`**/pool/${poolA}/entry/${entry.severalA}/pick`); // the alive pool, not the one they are out of
   await expect(p.getByText("Week 1 pick")).toBeVisible();
 
-  // Standings opens the same pool, with a tab for each pool the player is in.
-  await go(p, "/standings");
+  // The strip's Standings opens the same pool, with a tab for each pool the player is in.
+  await p.click('nav[aria-label="Pool screens"] a:has-text("Standings")');
   await p.waitForURL(`**/pool/${poolA}`);
   await p.waitForSelector('nav[aria-label="Your pools"] a'); // the standings load after the page changes
   const tabs = await p.$$eval('nav[aria-label="Your pools"] a', (as) => as.map((a) => ({ text: a.textContent!.trim(), href: a.getAttribute("href")! })));
@@ -122,7 +119,39 @@ test("several pools: Pick goes to the pool that needs a pick; Standings lists th
   await expect(p.getByRole("heading", { name: "You're out" })).toBeVisible();
 });
 
-test("only entry eliminated: Pick shows their season, with the way to standings", async () => {
+test("Play remembers the pool and screen last used, and /pick and /standings lead to Play", async () => {
+  const p = pages.several;
+  await go(p, "/");
+  await p.evaluate(() => localStorage.clear()); // earlier tests on this page left a memory
+  await go(p, "/play");
+  await p.waitForURL(`**/pool/${poolA}/entry/${entry.severalA}/pick`);
+
+  // Standings of the second pool, then away to Home: Play comes back to exactly there.
+  await p.click('nav[aria-label="Pool screens"] a:has-text("Standings")');
+  await p.waitForSelector('nav[aria-label="Your pools"] a');
+  await p.click(`nav[aria-label="Your pools"] a[href="/pool/${poolB}"]`);
+  await p.waitForURL(`**/pool/${poolB}`);
+  await p.click('nav[aria-label="Main"] a:has-text("Home")');
+  await p.click('nav[aria-label="Main"] a:has-text("Play")');
+  await p.waitForURL(`**/pool/${poolB}`);
+  expect(await currentTab(p)).toBe("Play");
+
+  // The old addresses lead to the same place.
+  await go(p, "/standings");
+  await p.waitForURL(`**/pool/${poolB}`);
+  await go(p, "/pick");
+  await p.waitForURL(`**/pool/${poolB}`);
+
+  // A pool the player is not in is ignored, and the strip shows Pick and Standings only.
+  await p.evaluate(() => localStorage.setItem("bbb:last-pool", "00000000-0000-0000-0000-000000000000"));
+  await go(p, "/play");
+  await p.waitForURL(`**/pool/${poolA}/entry/${entry.severalA}/pick`);
+  const strip = await p.$$eval('nav[aria-label="Pool screens"] a', (as) => as.map((a) => a.textContent!.trim()));
+  expect(strip).toEqual(["Pick", "Standings"]);
+  expect(await p.$$('nav[aria-label="Play sections"]')).toHaveLength(0);
+});
+
+test("only entry eliminated: Play shows their season, with the way to standings", async () => {
   const p = pages.outonly;
   await go(p, "/pick");
   await p.waitForURL(`**/pool/${poolA}/entry/${entry.outonly}/pick`);
@@ -133,7 +162,7 @@ test("only entry eliminated: Pick shows their season, with the way to standings"
 test("an admin gets an Admin tab that opens the admin area with its own tab bar", async () => {
   const p = pages.admin;
   await go(p, "/");
-  expect(await tabLabels(p)).toBe("Home | Pick | Standings | Menu | Admin");
+  expect(await tabLabels(p)).toBe("Home | Play | Menu | Admin");
 
   await p.click('nav[aria-label="Main"] a:has-text("Admin")');
   await p.waitForURL("**/admin");
@@ -234,7 +263,7 @@ test("a new page opens at the top, whatever the last one was scrolled to", async
     window.scrollTo(0, 400);
   });
   expect(await p.evaluate(() => window.scrollY)).toBeGreaterThan(100);
-  await p.getByRole("link", { name: "Standings" }).click();
+  await p.locator('nav[aria-label="Main"] a:has-text("Play")').click();
   await p.waitForSelector("header");
   await expect.poll(() => p.evaluate(() => window.scrollY)).toBe(0);
 });

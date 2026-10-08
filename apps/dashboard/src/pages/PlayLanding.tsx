@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router";
-import type { MeSummary, SummaryEntry } from "@bbb/shared";
+import type { MeSummary } from "@bbb/shared";
 import { api } from "../lib/api";
 import { attentionOrder, pickPathFor } from "../lib/attention";
+import { lastPoolPath, readLastPool } from "../lib/lastPool";
 
-// The Pick and Standings tabs are per pool, so each needs to know which pool to open. Both
-// use the same choice as Home (the entry that needs attention first), so the three agree.
-// A player in no pool is pointed back to Home.
+// The Play tab opens the pool screen the person was last on (on this device) when they are
+// still in that pool; otherwise the pick screen of the entry that needs attention first, the
+// same choice as Home. A player in no pool is pointed back to Home. There is no section bar yet:
+// Games and Leagues have no content, so Pools is the only section (see playSections).
 
-function Landing({ heading, destination }: { heading: string; destination: (entry: SummaryEntry) => string }) {
+export function PlayLanding() {
   const [summary, setSummary] = useState<MeSummary | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -23,12 +25,14 @@ function Landing({ heading, destination }: { heading: string; destination: (entr
   }
   if (summary === null) return null;
 
+  const remembered = lastPoolPath(readLastPool(), summary.entries);
+  if (remembered) return <Navigate to={remembered} replace />;
   const first = attentionOrder(summary.entries)[0];
-  if (first) return <Navigate to={destination(first)} replace />;
+  if (first) return <Navigate to={pickPathFor(first)} replace />;
 
   return (
     <div className="mx-auto max-w-lg px-6 pb-6 pt-6">
-      <h1 className="text-2xl font-semibold text-brand-text">{heading}</h1>
+      <h1 className="text-2xl font-semibold text-brand-text">Play</h1>
       <p className="mt-4 text-sm text-brand-muted">You haven't joined a pool yet. Join one first, then it will show up here.</p>
       <Link
         to="/"
@@ -38,14 +42,4 @@ function Landing({ heading, destination }: { heading: string; destination: (entr
       </Link>
     </div>
   );
-}
-
-/** The Pick tab: the pick screen of the entry that needs attention. */
-export function PickLanding() {
-  return <Landing heading="Pick" destination={pickPathFor} />;
-}
-
-/** The Standings tab: the standings of the pool that needs attention. */
-export function StandingsLanding() {
-  return <Landing heading="Standings" destination={(entry) => `/pool/${entry.poolId}`} />;
 }

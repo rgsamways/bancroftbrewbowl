@@ -47,7 +47,7 @@ test.afterAll(async () => {
 test("standings: only your own name links to a pick screen", async () => {
   await player.goto(`/pool/${poolId}`);
   await expect(player.getByText("Walk Other")).toBeVisible();
-  const links = await player.$$eval('main a[href*="/entry/"]', (as) => as.map((a) => a.textContent!.trim()));
+  const links = await player.$$eval('main a[href*="/entry/"]:not(nav[aria-label="Pool screens"] a)', (as) => as.map((a) => a.textContent!.trim()));
   expect(links).toHaveLength(1);
   expect(links[0]).toContain("Walk Player");
 });

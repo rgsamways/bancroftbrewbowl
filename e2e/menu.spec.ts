@@ -65,7 +65,7 @@ test("a signed-in player sees the Menu tab marked, and a beer switched off shows
     const page = await signIn(browser, db, db.email("menuplayer"));
     await page.goto("/");
     const labels = await page.$$eval('nav[aria-label="Main"] a', (as) => as.map((a) => a.textContent!.trim()));
-    expect(labels).toEqual(["Home", "Pick", "Standings", "Menu"]);
+    expect(labels).toEqual(["Home", "Play", "Menu"]);
 
     await page.getByRole("link", { name: "Menu" }).click();
     await page.waitForURL("**/menu");

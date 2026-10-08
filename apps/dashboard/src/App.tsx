@@ -35,7 +35,8 @@ import { NewPoolWizard } from "./pages/NewPoolWizard";
 import { AdminNotices } from "./pages/AdminNotices";
 import { AdminBrewery } from "./pages/admin-brewery/AdminBrewery";
 import { AnnouncementWizard, FeatureWizard, SpecialWizard } from "./pages/admin-brewery/wizards";
-import { PickLanding, StandingsLanding } from "./pages/TabLanding";
+import { PlayLanding } from "./pages/PlayLanding";
+import { PoolScreenTabs } from "./components/PoolScreenTabs";
 import { MenuPage, PublicMenuPage } from "./pages/Menu";
 import { Help } from "./pages/Help";
 import { AdminGuide } from "./pages/AdminGuide";
@@ -78,16 +79,19 @@ export default function App() {
         <Route path="/account" element={<Account />} />
         <Route path="/account/password" element={<PasswordPage />} />
         <Route path="/help" element={<Help />} />
-        <Route path="/pick" element={<PickLanding />} />
+        <Route path="/play" element={<PlayLanding />} />
+        <Route path="/pick" element={<Navigate to="/play" replace />} />
         <Route path="/join/:poolId" element={<JoinPage />} />
-        <Route path="/standings" element={<StandingsLanding />} />
+        <Route path="/standings" element={<Navigate to="/play" replace />} />
         <Route path="/menu" element={<MenuPage />} />
         <Route path="/menu/kitchen" element={<MenuPage tab="kitchen" />} />
         <Route path="/menu/music" element={<MenuPage tab="music" />} />
         <Route path="/menu/calendar" element={<MenuPage tab="calendar" />} />
-        <Route path="/pool/:poolId" element={<PoolStandings />} />
+        <Route element={<PoolScreenTabs />}>
+          <Route path="/pool/:poolId" element={<PoolStandings />} />
+          <Route path="/pool/:poolId/entry/:entryId/pick" element={<PickScreen />} />
+        </Route>
         <Route path="/pool/:poolId/recap" element={<PoolRecap />} />
-        <Route path="/pool/:poolId/entry/:entryId/pick" element={<PickScreen />} />
       </Route>
       <Route element={<RequireAdmin />}>
         <Route path="/admin/tv/preview/screens/:id" element={<TvPreview of="screens" />} />

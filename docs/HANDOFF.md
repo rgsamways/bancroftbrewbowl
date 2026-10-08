@@ -2,6 +2,12 @@
 
 _Rewritten 2026-10-07 (end of the long session that added Notices, TV screens and playlists, TV preview, the Calendar, Invite players, and the Standings grid changes). Treat specifics as a snapshot: check `git log`, `openspec list` and the live site first._
 
+## Bottom nav rethink (bottom-nav-rethink, 2026-10-08)
+
+- Player bar is now Home | Play | Menu | (Admin). `/play` (`pages/PlayLanding.tsx`) opens the pool screen last used on this device (`lib/lastPool.ts`, `bbb:last-pool` and `bbb:last-pool-screen` in localStorage, checked against the person's entries), else the pick screen of the entry that needs attention first. `/pick` and `/standings` redirect to `/play`. Pool URLs are unchanged.
+- `components/PoolScreenTabs.tsx` is a layout route around `/pool/:id` and `/pool/:id/entry/:id/pick`: a Pick | Standings strip that also records the last pool. Stats joins it when it has content. `playSections` in `lib/tabs.ts` is where Games and Leagues will appear (hidden until they have content; today no section bar).
+- Tests: `lib/tabs.test.ts`, `lib/lastPool.test.ts`, new memory test in `e2e/frame.spec.ts`; specs that counted `main a[href*="/entry/"]` now exclude the strip. Lint, typecheck, 512 unit, 113 browser tests pass. Not archived until Robin has looked at it on his phone.
+
 ## Start here (2026-10-07, end of session)
 
 **Robin's pick for the first thing next session: rethink the bottom navigation.** Today the player tabs are Home | Pick | Standings | Menu | (Admin). Robin's idea: Home | **Games** | Menu | Admin, where the Games tab has sub-tabs (like Menu has Drinks, Kitchen, Music, Calendar): **Games** (the fun in-brewery games from `docs/IDEAS.md`), **Pools** (Survivor and Pick 'Em), **Leagues** (fantasy leagues, eventually). A pool would get its own tabs: **Pick | Standings | Stats**. My notes for the conversation: Pick and Standings are the weekly habit and are one tap today, so keep Home's hero as the shortcut and remember the last pool and sub-tab; "Games" is an ambiguous name (NFL games, brewery games, pools), "Play" may read better; do not show empty tabs (Games and Leagues have nothing yet); what goes in Stats is undecided (team usage, pick percentages, history?); the Menu tab could stay or become broader. It touches `lib/tabs.ts`, the routes in `App.tsx`, `BottomTabs`, and most e2e specs, so do it first as its own change (`openspec-propose`, plan then wait for Robin's go). Written up in `docs/IDEAS.md` too.

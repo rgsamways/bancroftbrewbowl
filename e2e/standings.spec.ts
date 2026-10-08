@@ -41,7 +41,7 @@ test("standings show alive and eliminated players, with the player's own name as
     await expect(page.getByText("Please drink responsibly.")).toBeVisible();
     await expect(page.getByRole("link", { name: "Show on TV" })).toHaveAttribute("href", `/pool/${poolId}/tv`);
 
-    const links = await page.$$eval('main a[href*="/entry/"]', (as) => as.map((a) => a.textContent!.trim()));
+    const links = await page.$$eval('main a[href*="/entry/"]:not(nav[aria-label="Pool screens"] a)', (as) => as.map((a) => a.textContent!.trim()));
     expect(links).toHaveLength(1);
     expect(links[0]).toContain("Alive Me");
     expect(links[0]).toContain("You");

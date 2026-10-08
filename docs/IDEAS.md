@@ -102,7 +102,7 @@ Robin's idea: a way for players to invite one or more other players, especially 
 
 Robin's thought: when someone who is not signed in opens the site, the page is almost entirely "Sign in to play" (`pages/Login.tsx`, shown for every address except `/menu*` and `/tv/*`). It could be softer, and could show other things a casual visitor might want to see before committing to the signed-in side: what the pool is and how it works, the menu and what is on tap, live music and the calendar, the brewery's location and hours (the location map idea), maybe a glimpse of this week's standings or the scoreboard. Keep sign-in one tap away, not hidden. Open questions: which things are public (menu, music and the future calendar already are; standings and pool names are not), whether the table QR (`/menu`) and the TV QR (home page) should land somewhere different, and how this ties to the invite flow and the first-time-player journey noted above. Not started; needs a design pass and the owner's view on what to show strangers.
 
-## Rethink the bottom navigation (noted 2026-10-07, start of next session)
+## Rethink the bottom navigation (noted 2026-10-07; BUILT 2026-10-08 as `bottom-nav-rethink`, tab named Play; Stats, Games and Leagues still to come)
 
 Robin's idea: the player tabs are Home | Pick | Standings | Menu | (Admin) today. Evolve them to Home | Games | Menu | Admin, where the Games tab has its own sub-tabs, the way Menu has Drinks, Kitchen, Music and Calendar: **Games** (the in-brewery games above), **Pools** (Survivor and Pick 'Em), **Leagues** (fantasy leagues, eventually). A pool then gets its own tabs: **Pick | Standings | Stats**.
 

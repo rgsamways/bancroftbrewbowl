@@ -1,12 +1,11 @@
 import { Link, useLocation } from "react-router";
-import { Beer, House, ShieldCheck, Target, Trophy, type LucideIcon } from "lucide-react";
+import { Beer, Gamepad2, House, ShieldCheck, type LucideIcon } from "lucide-react";
 import { useAccess } from "../lib/useAccess";
 import { activeTab, tabsFor, type TabKey } from "../lib/tabs";
 
 const ICONS: Record<TabKey, LucideIcon> = {
   home: House,
-  pick: Target,
-  standings: Trophy,
+  play: Gamepad2,
   menu: Beer,
   admin: ShieldCheck,
 };

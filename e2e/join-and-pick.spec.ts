@@ -3,12 +3,12 @@ import { TestDb } from "./helpers/db";
 import { signIn } from "./helpers/auth";
 import { apiCall } from "./helpers/api";
 
-// A new player joins a pool, finds the pick screen from the Pick tab, picks a team,
+// A new player joins a pool, finds the pick screen from the Play tab, picks a team,
 // and the pick is saved on the server.
 
 const SEASON = 2993;
 
-test("join a pool, reach the pick screen from the Pick tab, pick a team", async ({ browser }) => {
+test("join a pool, reach the pick screen from the Play tab, pick a team", async ({ browser }) => {
   const db = new TestDb();
   await db.connect();
   try {
@@ -52,8 +52,8 @@ test("join a pool, reach the pick screen from the Pick tab, pick a team", async 
     await page.getByRole("button", { name: "Lock in Chiefs" }).click();
     await expect(page.getByRole("heading", { name: "Locked in" })).toBeVisible();
 
-    // The Pick tab goes to the same screen, and Home now shows the hero.
-    await page.click('nav[aria-label="Main"] a:has-text("Pick")');
+    // The Play tab goes to the same screen, and Home now shows the hero.
+    await page.click('nav[aria-label="Main"] a:has-text("Play")');
     await page.waitForURL(new RegExp(`/pool/${poolId}/entry/[^/]+/pick$`));
     await page.click('nav[aria-label="Main"] a:has-text("Home")');
     await expect(page.getByRole("heading", { name: "Locked in" })).toBeVisible();

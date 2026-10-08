@@ -32,7 +32,7 @@ export function Help() {
           often as you like. The Pick screen shows which kind of pool you're in and when the next game locks.
         </Faq>
         <Faq q="How do I change a pick?">
-          Open the Pick tab, then tap a different team. In Survivor you'll tap Lock in to confirm.
+          Open Play, then tap a different team. In Survivor you'll tap Lock in to confirm.
         </Faq>
         <Faq q="When do results show up?">
           The brewery adds results as games finish, so there can be a short wait. Standings update straight after.
