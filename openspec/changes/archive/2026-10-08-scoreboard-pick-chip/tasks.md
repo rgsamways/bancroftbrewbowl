@@ -6,4 +6,4 @@
 
 ## 2. Finish
 
-- [ ] 2.1 Update `openspec/ROADMAP.md` and `docs/HANDOFF.md`; Robin looks at it on his phone, then sync specs and archive. Normal push to `main`, no schema change.
+- [x] 2.1 Update `openspec/ROADMAP.md` and `docs/HANDOFF.md`; Robin looks at it on his phone, then sync specs and archive. Normal push to `main`, no schema change.
