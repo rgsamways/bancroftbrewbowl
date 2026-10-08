@@ -19,5 +19,5 @@
 ## 5. Verify and ship
 
 - [x] 5.1 `pnpm lint`, `typecheck`, `typecheck:e2e`, `test`, `test:e2e` pass
-- [ ] 5.2 One push to `main` (mind the Vercel build limit); look at it on a phone during a live game
-- [ ] 5.3 Sync specs, archive, update ROADMAP and HANDOFF
+- [x] 5.2 One push to `main` (mind the Vercel build limit); look at it on a phone during a live game
+- [x] 5.3 Sync specs, archive, update ROADMAP and HANDOFF

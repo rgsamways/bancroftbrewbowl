@@ -36,6 +36,10 @@ The system SHALL write one activity record, naming the signed-in admin, each tim
 - **WHEN** an admin sets "Bar TV" to play "Holiday"
 - **THEN** a record says that admin set Bar TV to play Holiday, and no link appears in it
 
+#### Scenario: Posting a notice
+- **WHEN** an admin posts a notice
+- **THEN** a record says that admin posted the notice, naming its title
+
 ### Requirement: Each record says who, what, where and when
 The system SHALL store with each record the admin's id and their name at that time, the kind of change, a plain-English sentence, the pool when there is one, whether it affected the admin's own entry, and the time. The sentence SHALL stay as written even if names or pools change or are deleted later.
 

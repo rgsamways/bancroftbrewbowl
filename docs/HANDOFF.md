@@ -2,6 +2,8 @@
 
 _Rewritten 2026-10-07 (end of the long session that added Notices, TV screens and playlists, TV preview, the Calendar, Invite players, and the Standings grid changes). Treat specifics as a snapshot: check `git log`, `openspec list` and the live site first._
 
+_2026-10-08: Robin confirmed per-game-pick-locking, home-scoreboard, standings-week-by-week, important-notice-banner and invite-players all work; all five are archived, so `openspec list` shows no open changes. The older "not archived" notes below are out of date._
+
 ## Bottom nav rethink (bottom-nav-rethink, 2026-10-08)
 
 - Player bar is now Home | Play | Menu | (Admin). `/play` (`pages/PlayLanding.tsx`) opens the pool screen last used on this device (`lib/lastPool.ts`, `bbb:last-pool` and `bbb:last-pool-screen` in localStorage, checked against the person's entries), else the pick screen of the entry that needs attention first. `/pick` and `/standings` redirect to `/play`. Pool URLs are unchanged.

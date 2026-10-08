@@ -18,5 +18,5 @@
 ## 4. Verify and ship
 
 - [x] 4.1 `pnpm lint`, `typecheck`, `typecheck:e2e`, `test`, `test:e2e` pass
-- [ ] 4.2 Push `main` (no schema change); Robin invites a friend from his phone and watches the journey
-- [ ] 4.3 Sync specs, archive, update ROADMAP and HANDOFF
+- [x] 4.2 Push `main` (no schema change); Robin invites a friend from his phone and watches the journey
+- [x] 4.3 Sync specs, archive, update ROADMAP and HANDOFF

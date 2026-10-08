@@ -36,5 +36,5 @@
 ## 7. Verify and ship
 
 - [x] 7.1 `pnpm lint`, `typecheck`, `typecheck:e2e`, `test`, `test:e2e` pass
-- [ ] 7.2 One push to `main` (batch with other work; mind the Vercel build limit), check the deploy, then Robin switches his pool in Settings (unlock rules, "At each game's kickoff", lock) and watches a real week
-- [ ] 7.3 Sync specs, archive, update ROADMAP, HANDOFF, the How to play and Admin guide copy
+- [x] 7.2 One push to `main` (batch with other work; mind the Vercel build limit), check the deploy, then Robin switches his pool in Settings (unlock rules, "At each game's kickoff", lock) and watches a real week
+- [x] 7.3 Sync specs, archive, update ROADMAP, HANDOFF, the How to play and Admin guide copy
