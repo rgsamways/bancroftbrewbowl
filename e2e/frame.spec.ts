@@ -102,53 +102,73 @@ test("one alive pool: Play goes straight to the pick screen, the pool strip to s
   expect(await currentTab(p)).toBe("Play");
 });
 
-test("several pools: Play goes to the pool that needs a pick; Standings lists them", async () => {
-  const p = pages.several;
-  await go(p, "/pick");
-  await p.waitForURL(`**/pool/${poolA}/entry/${entry.severalA}/pick`); // the alive pool, not the one they are out of
-  await expect(p.getByText("Week 1 pick")).toBeVisible();
-
-  // The strip's Standings opens the same pool, with a tab for each pool the player is in.
-  await p.click('nav[aria-label="Pool screens"] a:has-text("Standings")');
-  await p.waitForURL(`**/pool/${poolA}`);
-  await p.waitForSelector('nav[aria-label="Your pools"] a'); // the standings load after the page changes
-  const tabs = await p.$$eval('nav[aria-label="Your pools"] a', (as) => as.map((a) => ({ text: a.textContent!.trim(), href: a.getAttribute("href")! })));
-  expect(tabs.map((t) => t.href).sort()).toEqual([`/pool/${poolA}`, `/pool/${poolB}`].sort());
-  await p.click(`nav[aria-label="Your pools"] a[href="/pool/${poolB}"]`);
-  await p.waitForURL(`**/pool/${poolB}`);
-  await expect(p.getByRole("heading", { name: "You're out" })).toBeVisible();
-});
-
-test("Play remembers the pool and screen last used, and /pick and /standings lead to Play", async () => {
+test("several pools: Play shows the pool list, the pool that needs a pick first; the header switches pools", async () => {
   const p = pages.several;
   await go(p, "/");
   await p.evaluate(() => localStorage.clear()); // earlier tests on this page left a memory
   await go(p, "/play");
-  await p.waitForURL(`**/pool/${poolA}/entry/${entry.severalA}/pick`);
+  const cards = p.locator("main ul a");
+  await expect(cards).toHaveCount(2);
+  // The alive pool needs a pick, so it leads; the pool they are out of is last.
+  await expect(cards.nth(0)).toContainText("Alpha Survivor");
+  await expect(cards.nth(0)).toContainText("Survivor");
+  await expect(cards.nth(0)).toContainText("Alive");
+  await expect(cards.nth(0)).toContainText(/Pick due/);
+  await expect(cards.nth(1)).toContainText("Bravo Survivor");
+  await expect(cards.nth(1)).toContainText("Out");
+  expect(await noSideways(p)).toBe(true);
 
-  // Standings of the second pool, then away to Home: Play comes back to exactly there.
+  // A card opens the pool on the pick screen (nothing remembered yet).
+  await cards.nth(0).click();
+  await p.waitForURL(`**/pool/${poolA}/entry/${entry.severalA}/pick`);
+  await expect(p.getByText("Week 1 pick")).toBeVisible();
+
+  // The pool name heads the screen and leads back to the list; no chips anywhere.
+  await p.getByRole("link", { name: /Alpha Survivor.*Switch pool/ }).click();
+  await p.waitForURL("**/play");
+  await p.locator("main ul a", { hasText: "Bravo Survivor" }).click();
+  await p.waitForURL(`**/pool/${poolB}/entry/${entry.severalB}/pick`);
   await p.click('nav[aria-label="Pool screens"] a:has-text("Standings")');
-  await p.waitForSelector('nav[aria-label="Your pools"] a');
-  await p.click(`nav[aria-label="Your pools"] a[href="/pool/${poolB}"]`);
   await p.waitForURL(`**/pool/${poolB}`);
+  await expect(p.getByRole("heading", { name: "You're out" })).toBeVisible();
+  expect(await p.$$('nav[aria-label="Your pools"]')).toHaveLength(0);
+});
+
+test("Play remembers the screen last used; one pool goes straight in; /pick and /standings lead to Play", async () => {
+  const p = pages.one;
+  await go(p, "/");
+  await p.evaluate(() => localStorage.clear());
+  await go(p, "/play");
+  await p.waitForURL(`**/pool/${poolA}/entry/${entry.one}/pick`);
+  // One pool: the name is plain text, not a control.
+  expect(await p.$$('main a[aria-label$="Switch pool"]')).toHaveLength(0);
+
+  await p.click('nav[aria-label="Pool screens"] a:has-text("Standings")');
+  await p.waitForURL(`**/pool/${poolA}`);
   await p.click('nav[aria-label="Main"] a:has-text("Home")');
   await p.click('nav[aria-label="Main"] a:has-text("Play")');
-  await p.waitForURL(`**/pool/${poolB}`);
+  await p.waitForURL(`**/pool/${poolA}`);
   expect(await currentTab(p)).toBe("Play");
 
   // The old addresses lead to the same place.
   await go(p, "/standings");
-  await p.waitForURL(`**/pool/${poolB}`);
+  await p.waitForURL(`**/pool/${poolA}`);
   await go(p, "/pick");
-  await p.waitForURL(`**/pool/${poolB}`);
+  await p.waitForURL(`**/pool/${poolA}`);
 
-  // A pool the player is not in is ignored, and the strip shows Pick and Standings only.
-  await p.evaluate(() => localStorage.setItem("bbb:last-pool", "00000000-0000-0000-0000-000000000000"));
-  await go(p, "/play");
-  await p.waitForURL(`**/pool/${poolA}/entry/${entry.severalA}/pick`);
-  const strip = await p.$$eval('nav[aria-label="Pool screens"] a', (as) => as.map((a) => a.textContent!.trim()));
+  // With several pools the list opens the pool on that same remembered screen.
+  const q = pages.several;
+  await go(q, "/");
+  await q.evaluate(() => {
+    localStorage.setItem("bbb:last-pool", "x");
+    localStorage.setItem("bbb:last-pool-screen", "standings");
+  });
+  await go(q, "/play");
+  await q.locator("main ul a", { hasText: "Alpha Survivor" }).click();
+  await q.waitForURL(`**/pool/${poolA}`);
+  await q.waitForSelector('nav[aria-label="Pool screens"] a');
+  const strip = await q.$$eval('nav[aria-label="Pool screens"] a', (as) => as.map((a) => a.textContent!.trim()));
   expect(strip).toEqual(["Pick", "Standings"]);
-  expect(await p.$$('nav[aria-label="Play sections"]')).toHaveLength(0);
 });
 
 test("only entry eliminated: Play shows their season, with the way to standings", async () => {

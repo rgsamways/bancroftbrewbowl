@@ -19,7 +19,7 @@ import { useApi } from "../lib/useApi";
 import { useServerNow } from "../lib/useServerClock";
 import { attentionOrder, pickPathFor } from "../lib/attention";
 import { Countdown } from "../components/Countdown";
-import { PoolChips } from "../components/PoolChips";
+import { PoolSwitcher } from "../components/PoolSwitcher";
 import { DisplayNameForm } from "../components/DisplayNameForm";
 import { InviteButton } from "../components/InviteButton";
 import { InstallCard } from "../components/InstallCard";
@@ -336,11 +336,7 @@ export function Home() {
   return (
     <div className="mx-auto max-w-lg space-y-4 px-6 pb-6 pt-4">
       <NameCard />
-      <PoolChips
-        pools={data.entries.map((e) => ({ id: e.entryId, name: e.poolName }))}
-        selectedId={selected.entryId}
-        onSelect={setChosenId}
-      />
+      <PoolSwitcher entries={data.entries} selectedId={selected.entryId} onSelect={setChosenId} />
       <Hero entry={selected} nowMs={nowMs} onLocked={onLocked} />
       {selected.state !== "season_over" && <InviteButton poolId={selected.poolId} poolName={selected.poolName} />}
       {selected.recapWeek !== null && (

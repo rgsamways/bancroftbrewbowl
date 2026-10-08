@@ -29,6 +29,11 @@ export function rememberPool(last: LastPool, storage: Pick<Storage, "setItem"> =
   }
 }
 
+/** A pool's pick screen or standings, for an entry of the person's in that pool. */
+export function poolScreenPath(entry: { poolId: string; entryId: string }, screen: PoolScreen): string {
+  return screen === "standings" ? `/pool/${entry.poolId}` : `/pool/${entry.poolId}/entry/${entry.entryId}/pick`;
+}
+
 /** Where Play should open: the remembered screen when the person is still in that pool,
  * else null so the caller falls back to the entry that needs attention. */
 export function lastPoolPath(
@@ -37,6 +42,5 @@ export function lastPoolPath(
 ): string | null {
   if (!last) return null;
   const entry = entries.find((e) => e.poolId === last.poolId);
-  if (!entry) return null;
-  return last.screen === "standings" ? `/pool/${entry.poolId}` : `/pool/${entry.poolId}/entry/${entry.entryId}/pick`;
+  return entry ? poolScreenPath(entry, last.screen) : null;
 }

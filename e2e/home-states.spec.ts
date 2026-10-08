@@ -144,7 +144,7 @@ test("pick 'em Home: picks to make, progress, all picked, locked", async ({ brow
   }
 });
 
-test("in two pools Home opens on the one that needs a pick, and the chips switch the hero", async ({ browser }) => {
+test("in two pools Home opens on the one that needs a pick, and the switcher changes the hero", async ({ browser }) => {
   const db = new TestDb();
   await db.connect();
   try {
@@ -162,10 +162,16 @@ test("in two pools Home opens on the one that needs a pick, and the chips switch
     await home(page);
     // The pool needing a pick leads, although it was joined second.
     await expect(page.getByRole("heading", { name: "You're still alive" })).toBeVisible();
-    await expect(page.getByRole("button", { name: pickedName })).toHaveAttribute("aria-pressed", "false");
-    await expect(page.getByRole("button", { name: needsName })).toHaveAttribute("aria-pressed", "true");
+    const switcher = page.getByRole("button", { name: needsName, exact: true });
+    await expect(switcher).toHaveAttribute("aria-expanded", "false");
+    await switcher.click();
+    const list = page.getByRole("list", { name: "Your pools" });
+    await expect(list.getByRole("button", { name: new RegExp(needsName) })).toHaveAttribute("aria-current", "true");
+    await expect(list.getByRole("button", { name: new RegExp(pickedName) })).not.toHaveAttribute("aria-current", "true");
+    await expect(list.getByText("Pick made")).toBeVisible();
 
-    await page.getByRole("button", { name: pickedName }).click();
+    await list.getByRole("button", { name: new RegExp(pickedName) }).click();
+    await expect(list).toHaveCount(0); // choosing closes it
     await expect(page.getByRole("heading", { name: "Locked in" })).toBeVisible();
     await page.reload();
     await expect(page.getByRole("heading", { name: "Locked in" })).toBeVisible(); // the choice is remembered

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lastPoolPath, readLastPool, rememberPool } from "./lastPool.js";
+import { lastPoolPath, poolScreenPath, readLastPool, rememberPool } from "./lastPool.js";
 
 function fakeStorage(initial: Record<string, string> = {}) {
   const data = { ...initial };
@@ -46,5 +46,12 @@ describe("lastPoolPath", () => {
   it("falls back when the pool is gone or nothing is remembered", () => {
     expect(lastPoolPath({ poolId: "gone", screen: "pick" }, entries)).toBeNull();
     expect(lastPoolPath(null, entries)).toBeNull();
+  });
+});
+
+describe("poolScreenPath", () => {
+  it("opens a given pool on the chosen screen", () => {
+    expect(poolScreenPath(entries[1]!, "pick")).toBe("/pool/p2/entry/e2/pick");
+    expect(poolScreenPath(entries[1]!, "standings")).toBe("/pool/p2");
   });
 });

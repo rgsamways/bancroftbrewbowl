@@ -100,28 +100,6 @@ function RowList({
   );
 }
 
-function PoolTabs({ poolId, summary }: { poolId: string; summary: MeSummary | null }) {
-  if (!summary || summary.entries.length < 2) return null;
-  return (
-    <nav aria-label="Your pools" className="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1">
-      {summary.entries.map((e) => (
-        <Link
-          key={e.entryId}
-          to={`/pool/${e.poolId}`}
-          aria-current={e.poolId === poolId ? "page" : undefined}
-          className={`flex min-h-11 shrink-0 items-center rounded-full border px-4 text-sm font-semibold ${
-            e.poolId === poolId
-              ? "border-brand-accent bg-brand-accent-soft text-brand-text"
-              : "border-brand-border bg-brand-surface text-brand-muted"
-          }`}
-        >
-          {e.poolName}
-        </Link>
-      ))}
-    </nav>
-  );
-}
-
 function SurvivorSummary({ data }: { data: PoolStandingsData }) {
   const aliveCount = data.alive.length;
   const out = data.eliminated.length;
@@ -203,7 +181,6 @@ export function PoolStandings() {
 
   return (
     <div className="mx-auto max-w-lg px-6 pb-6 pt-4">
-      <PoolTabs poolId={poolId} summary={summary} />
       {data.pool.type === "survivor" ? <SurvivorSummary data={data} /> : <PickEmSummary data={data} />}
       <PoolTotalCard cents={data.pool.poolTotalCents} />
       {!data.seasonOver && summary?.entries.some((e) => e.poolId === poolId) && (
