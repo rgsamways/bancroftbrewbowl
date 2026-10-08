@@ -83,7 +83,9 @@ test("set up a screen, build a playlist, play it on the private link, change it,
     await expect(tv.locator("header")).toHaveCount(0);
     const strip = tv.getByTestId("tv-strip");
     await expect(strip).toContainText("Play on your phone");
-    await expect(strip.getByRole("img", { name: /QR code/ })).toHaveAttribute("data-url", new RegExp(`^http://localhost:5183$`));
+    // A pool that takes new players: its Standings slide sends people to that pool's join page.
+    await expect(strip.getByRole("img", { name: /QR code/ })).toHaveAttribute("data-url", `http://localhost:5183/join/${poolId}`);
+    await expect(strip).toContainText("Scan to join");
     const stripBox = (await strip.boundingBox())!;
     expect(stripBox.height).toBeGreaterThan(40);
     expect(stripBox.height).toBeLessThan(70);

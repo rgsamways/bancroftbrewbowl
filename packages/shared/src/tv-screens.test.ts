@@ -97,7 +97,7 @@ describe("paginateMenu", () => {
 describe("rotation", () => {
   const empty: TvFeedSlide = { id: "empty", kind: "music", seconds: 10, content: { thisWeekend: [], comingUp: [] } };
   const music: TvFeedSlide = { id: "music", kind: "music", seconds: 10, content: { thisWeekend: [{ id: "e", title: "Band", date: "2026-10-10", startTime: null, endTime: null }], comingUp: [] } };
-  const standings: TvFeedSlide = { id: "pool", kind: "standings", seconds: 15, content: {} as PoolTv };
+  const standings: TvFeedSlide = { id: "pool", kind: "standings", seconds: 15, content: {} as PoolTv, joinPath: null };
   const drinks: TvFeedSlide = { id: "drinks", kind: "drinks", seconds: 20, content: [section("On tap", 2)] };
 
   it("knows which slides have something to show", () => {

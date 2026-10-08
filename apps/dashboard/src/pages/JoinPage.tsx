@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router";
-import type { MeSummary, PoolType } from "@bbb/shared";
+import { needsDisplayName, type MeSummary, type PoolType } from "@bbb/shared";
 import { useSession } from "../lib/auth-client";
 import { api, ApiError } from "../lib/api";
 import { useApi } from "../lib/useApi";
+import { DisplayNameForm } from "../components/DisplayNameForm";
 
 type Pool = { id: string; name: string; seasonYear: number; status: string; type: PoolType; rules?: { pick_deadline_rule?: string } };
 
@@ -45,6 +46,7 @@ export function JoinPage() {
   const { data: summary } = useApi<MeSummary>("/me/summary");
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [savedName, setSavedName] = useState<string | null>(null);
 
   if (poolError) {
     return (
@@ -79,6 +81,9 @@ export function JoinPage() {
     );
   }
 
+  // A brand-new account is still named with its email, which other players must never see.
+  const needsName = savedName === null && needsDisplayName(session?.user.name);
+
   async function join() {
     if (!pool) return;
     setError(null);
@@ -109,16 +114,27 @@ export function JoinPage() {
         ))}
       </ul>
 
-      <div className="mt-6 flex items-center justify-between rounded-[14px] border border-brand-border bg-brand-surface p-4">
-        <div>
-          <p className="text-xs text-brand-muted">You'll join as</p>
-          <p className="font-semibold text-brand-text">{session?.user.name || session?.user.email}</p>
-          <p className="text-xs text-brand-faint">Shown to other players</p>
+      {needsName ? (
+        <div className="mt-6">
+          <DisplayNameForm
+            heading="What should other players call you?"
+            description="You'll show up on the standings with this name. Your email stays private."
+            buttonLabel="Save name and continue"
+            onSaved={setSavedName}
+          />
         </div>
-        <Link to="/account" className="min-h-11 content-center text-sm font-semibold text-brand-accent">
-          Change
-        </Link>
-      </div>
+      ) : (
+        <div className="mt-6 flex items-center justify-between rounded-[14px] border border-brand-border bg-brand-surface p-4">
+          <div>
+            <p className="text-xs text-brand-muted">You&apos;ll join as</p>
+            <p className="font-semibold text-brand-text">{savedName ?? session?.user.name}</p>
+            <p className="text-xs text-brand-faint">Shown to other players</p>
+          </div>
+          <Link to="/account" className="min-h-11 content-center text-sm font-semibold text-brand-accent">
+            Change
+          </Link>
+        </div>
+      )}
 
       {error && (
         <p role="alert" className="mt-4 text-sm text-brand-danger">
@@ -126,9 +142,11 @@ export function JoinPage() {
         </p>
       )}
       <div className="mt-6 space-y-3">
-        <button type="button" onClick={join} disabled={joining} className={primary}>
-          Join {pool.name}
-        </button>
+        {!needsName && (
+          <button type="button" onClick={join} disabled={joining} className={primary}>
+            Join {pool.name}
+          </button>
+        )}
         <Link to="/" className={secondary}>
           Not now
         </Link>

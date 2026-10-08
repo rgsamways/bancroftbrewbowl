@@ -102,11 +102,16 @@ function Player({ feedPath }: { feedPath?: string }) {
 
   const menu = slide?.kind === "drinks" || slide?.kind === "kitchen";
   const origin = window.location.origin;
+  // The strip's QR code goes where the slide sends people: a pool's standings to that pool's join page
+  // (while it takes new players), a menu to the menu, anything else to the home address.
+  const joinPool = slide?.kind === "standings" && slide.joinPath ? { path: slide.joinPath, name: slide.content.pool.name } : null;
+  const qrUrl = joinPool ? `${origin}${joinPool.path}` : menu ? `${origin}/menu` : origin;
+  const stripText = joinPool ? `Scan to join ${joinPool.name}` : menu ? `Scan for the full menu at ${window.location.host}/menu` : `Scan to sign in at ${window.location.host}`;
   const strip = feed.screen.showQr ? (
     <>
-      <Qr url={menu ? `${origin}/menu` : origin} label="QR code to play on your phone" className="h-[44px] w-[44px]" />
+      <Qr url={qrUrl} label="QR code to play on your phone" className="h-[44px] w-[44px]" />
       <b className="text-xl font-semibold text-brand-text">Play on your phone</b>
-      <span className="text-lg text-brand-muted">{menu ? `Scan for the full menu at ${window.location.host}/menu` : `Scan to sign in at ${window.location.host}`}</span>
+      <span className="text-lg text-brand-muted">{stripText}</span>
     </>
   ) : undefined;
 

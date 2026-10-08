@@ -6,6 +6,7 @@ import {
   MAX_SCREENS,
   SLIDE_KIND_TEXT,
   easternToday,
+  joinPathFor,
   createScreenSchema,
   playlistInputSchema,
   updateScreenSchema,
@@ -92,7 +93,7 @@ async function buildFeed(name: string, showQr: boolean, playlistId: string | nul
     if (!row.enabled) continue;
     if (row.kind === "standings" && row.poolId) {
       const pool = await db.query.pools.findFirst({ where: eq(pools.id, row.poolId) });
-      if (pool) slides.push({ id: row.id, kind: "standings", seconds: row.seconds, content: await buildPoolTv(pool) });
+      if (pool) slides.push({ id: row.id, kind: "standings", seconds: row.seconds, content: await buildPoolTv(pool), joinPath: joinPathFor(pool) });
     } else if (row.kind === "drinks" || row.kind === "kitchen") {
       if (!menu) {
         const full = await loadMenu();

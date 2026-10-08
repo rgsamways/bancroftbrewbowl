@@ -70,7 +70,8 @@ export type AdminTv = { playlists: AdminPlaylist[]; screens: AdminScreen[]; pool
 // ---- What a TV reads ----
 
 export type TvFeedSlide =
-  | { id: string; kind: "standings"; seconds: number; content: PoolTv }
+  /** `joinPath` is the pool's join page while it takes new players, else null (the TV strip's QR code uses it). */
+  | { id: string; kind: "standings"; seconds: number; content: PoolTv; joinPath: string | null }
   | { id: string; kind: "drinks" | "kitchen"; seconds: number; content: MenuSection[] }
   | { id: string; kind: "music"; seconds: number; content: PublicMusic }
   /** The next 7 days from today, in the brewery's time. */

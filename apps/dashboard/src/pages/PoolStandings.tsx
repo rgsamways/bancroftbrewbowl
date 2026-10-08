@@ -8,6 +8,7 @@ import {
   type StandingsRow,
 } from "@bbb/shared";
 import { useApi } from "../lib/useApi";
+import { InviteButton } from "../components/InviteButton";
 import { PoolTotalCard } from "../components/PoolTotalCard";
 import { PickGridView } from "../components/PickGridView";
 
@@ -205,6 +206,11 @@ export function PoolStandings() {
       <PoolTabs poolId={poolId} summary={summary} />
       {data.pool.type === "survivor" ? <SurvivorSummary data={data} /> : <PickEmSummary data={data} />}
       <PoolTotalCard cents={data.pool.poolTotalCents} />
+      {!data.seasonOver && summary?.entries.some((e) => e.poolId === poolId) && (
+        <div className="mb-5">
+          <InviteButton poolId={poolId} poolName={data.pool.name} />
+        </div>
+      )}
 
       <div role="group" aria-label="View" className="mb-5 grid grid-cols-2 gap-1.5 rounded-[12px] border border-brand-border bg-brand-surface p-1">
         {([["standings", "Standings"], ["weeks", "Week by week"]] as const).map(([key, label]) => {

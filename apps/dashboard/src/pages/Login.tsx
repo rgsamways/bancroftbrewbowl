@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { SIGN_IN_FAILED_MESSAGE } from "@bbb/shared";
+import { SIGN_IN_FAILED_MESSAGE, safeDestination } from "@bbb/shared";
 import { authClient } from "../lib/auth-client";
 import { PublicPage } from "../components/PublicPage";
 
@@ -82,7 +82,8 @@ export function Login() {
     try {
       const { data, error: signInError } = await authClient.signIn.magicLink({
         email,
-        callbackURL: window.location.origin,
+        // Back to the page they opened (a shared join link, say), never anywhere outside the app.
+        callbackURL: window.location.origin + safeDestination(window.location.pathname + window.location.search),
       });
       // A dropped connection can come back as neither data nor an error, so success
       // means the service actually answered.

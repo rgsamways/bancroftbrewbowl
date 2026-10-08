@@ -14,12 +14,14 @@ import {
   type MeSummary,
   type SummaryEntry,
 } from "@bbb/shared";
-import { authClient, useSession } from "../lib/auth-client";
+import { useSession } from "../lib/auth-client";
 import { useApi } from "../lib/useApi";
 import { useServerNow } from "../lib/useServerClock";
 import { attentionOrder, pickPathFor } from "../lib/attention";
 import { Countdown } from "../components/Countdown";
 import { PoolChips } from "../components/PoolChips";
+import { DisplayNameForm } from "../components/DisplayNameForm";
+import { InviteButton } from "../components/InviteButton";
 import { InstallCard } from "../components/InstallCard";
 import { Scoreboard } from "../components/Scoreboard";
 
@@ -213,55 +215,9 @@ function Hero({ entry, nowMs, onLocked }: { entry: SummaryEntry; nowMs: number; 
  * which is never shown to other players). Never blocks playing; it goes away once saved. */
 function NameCard() {
   const { data: session } = useSession();
-  const [name, setName] = useState("");
-  const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   if (saved || !session || !needsDisplayName(session.user.name)) return null;
-
-  async function save(event: React.FormEvent) {
-    event.preventDefault();
-    const clean = name.trim();
-    if (clean === "" || clean.includes("@")) {
-      setError("Type the name you'd like other players to see.");
-      return;
-    }
-    setBusy(true);
-    setError(null);
-    try {
-      await authClient.updateUser({ name: clean });
-      setSaved(true);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn't save your name");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <form onSubmit={save} aria-label="Display name" className="rounded-[14px] border border-brand-border bg-brand-surface p-4">
-      <label htmlFor="display-name" className="block font-semibold text-brand-text">
-        What should we call you?
-      </label>
-      <p className="mt-1 text-sm text-brand-muted">Other players see this name on Standings. You can change it any time on the Me page.</p>
-      <input
-        id="display-name"
-        value={name}
-        onChange={(event) => setName(event.target.value)}
-        autoComplete="name"
-        maxLength={60}
-        className="mt-3 min-h-11 w-full rounded-[12px] border border-brand-border bg-brand-bg px-3 text-brand-text focus:border-brand-accent focus:outline-none"
-      />
-      {error && (
-        <p role="alert" className="mt-2 text-sm text-brand-danger">
-          {error}
-        </p>
-      )}
-      <button type="submit" disabled={busy} className={`${primaryLink} !mt-3 disabled:opacity-40`}>
-        Save name
-      </button>
-    </form>
-  );
+  return <DisplayNameForm onSaved={() => setSaved(true)} />;
 }
 
 function JoinCards({ pools, heading }: { pools: JoinablePool[]; heading: string }) {
@@ -386,6 +342,7 @@ export function Home() {
         onSelect={setChosenId}
       />
       <Hero entry={selected} nowMs={nowMs} onLocked={onLocked} />
+      {selected.state !== "season_over" && <InviteButton poolId={selected.poolId} poolName={selected.poolName} />}
       {selected.recapWeek !== null && (
         <Link
           to={`/pool/${selected.poolId}/recap`}

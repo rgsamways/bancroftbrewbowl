@@ -172,6 +172,8 @@ describe("TV screens and playlists", () => {
     // The pool's content is exactly what the signed-in TV page shows.
     const signedIn = await call(admin, "GET", `/pools/${p.id}/tv`);
     expect(body.slides[1]!.kind === "standings" && body.slides[1]!.content).toEqual(signedIn.json);
+    // The standings slide offers its pool's join page while the pool takes new players.
+    expect(body.slides[1]!.kind === "standings" && body.slides[1]!.joinPath).toBe(`/join/${p.id}`);
     // Nothing private: no email addresses anywhere in the feed.
     expect(res.body).not.toContain("@");
 
@@ -261,6 +263,22 @@ describe("TV screens and playlists", () => {
     // Reading writes nothing: only the setup records exist.
     const rows = await db.select().from(adminActivity).where(inArray(adminActivity.actorId, [admin.id]));
     expect(rows.every((r) => !r.kind.includes("preview"))).toBe(true);
+  });
+
+  it("gives a finished pool's standings slide no join page, so the TV strip falls back to the home address", async () => {
+    const admin = await person("Zz Admin", true);
+    const g = await god();
+    const s = await screen(g, "Zz Bar TV");
+    const p = await pool();
+    const id = await playlist(admin, "Zz Finished", [{ kind: "standings", poolId: p.id, seconds: 15, enabled: true }]);
+    expect((await call(admin, "PATCH", `/tv/screens/${s.id}`, { playlistId: id })).status).toBe(204);
+    const open = (await feed(s.code!)).json as TvFeed;
+    expect(open.slides[0]!.kind === "standings" && open.slides[0]!.joinPath).toBe(`/join/${p.id}`);
+    await db.update(pools).set({ status: "completed" }).where(eq(pools.id, p.id));
+    const done = (await feed(s.code!)).json as TvFeed;
+    expect(done.slides[0]!.kind === "standings" && done.slides[0]!.joinPath).toBeNull();
+    // Nothing else about the pool is new in the response: still names, counts and points only.
+    expect((await feed(s.code!)).body).not.toContain("@");
   });
 
   it("limits screens and refuses a duplicate screen name", async () => {
