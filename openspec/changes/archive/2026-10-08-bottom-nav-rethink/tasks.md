@@ -18,4 +18,4 @@
 
 ## 4. Finish
 
-- [ ] 4.1 Update `openspec/ROADMAP.md`, `docs/IDEAS.md` and `docs/HANDOFF.md`; look at it on a phone-size window, then sync specs and archive the change. No schema change, so a normal push to `main` (batch with other work; skip `staging` if nothing else needs checking).
+- [x] 4.1 Update `openspec/ROADMAP.md`, `docs/IDEAS.md` and `docs/HANDOFF.md`; look at it on a phone-size window, then sync specs and archive the change. No schema change, so a normal push to `main` (batch with other work; skip `staging` if nothing else needs checking).

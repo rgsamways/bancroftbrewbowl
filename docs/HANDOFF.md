@@ -6,7 +6,7 @@ _Rewritten 2026-10-07 (end of the long session that added Notices, TV screens an
 
 - Player bar is now Home | Play | Menu | (Admin). `/play` (`pages/PlayLanding.tsx`) opens the pool screen last used on this device (`lib/lastPool.ts`, `bbb:last-pool` and `bbb:last-pool-screen` in localStorage, checked against the person's entries), else the pick screen of the entry that needs attention first. `/pick` and `/standings` redirect to `/play`. Pool URLs are unchanged.
 - `components/PoolScreenTabs.tsx` is a layout route around `/pool/:id` and `/pool/:id/entry/:id/pick`: a Pick | Standings strip that also records the last pool. Stats joins it when it has content. `playSections` in `lib/tabs.ts` is where Games and Leagues will appear (hidden until they have content; today no section bar).
-- Tests: `lib/tabs.test.ts`, `lib/lastPool.test.ts`, new memory test in `e2e/frame.spec.ts`; specs that counted `main a[href*="/entry/"]` now exclude the strip. Lint, typecheck, 512 unit, 113 browser tests pass. Not archived until Robin has looked at it on his phone.
+- Tests: `lib/tabs.test.ts`, `lib/lastPool.test.ts`, new memory test in `e2e/frame.spec.ts`; specs that counted `main a[href*="/entry/"]` now exclude the strip. Lint, typecheck, 512 unit, 113 browser tests pass. Archived 2026-10-08 after Robin checked it on his phone. Robin also created and joined the Pick 'Em pool in production that day (it had never existed). Idea parked: a pool switcher on the Pick screen (chips show only on Home and Standings).
 
 ## Start here (2026-10-07, end of session)
 
