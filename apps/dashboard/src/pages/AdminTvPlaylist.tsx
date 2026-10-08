@@ -185,6 +185,14 @@ export function AdminTvPlaylist() {
           <button type="submit" disabled={busy || name.trim() === ""} className={`${buttonClass} disabled:opacity-50`}>
             Save playlist
           </button>
+          {!isNew && (
+            <div>
+              <Link to={`/admin/tv/preview/playlists/${id}`} className={secondaryButtonClass}>
+                Preview
+              </Link>
+              <p className="mt-1 text-xs text-brand-muted">Preview shows the saved playlist. Save your changes first.</p>
+            </div>
+          )}
         </form>
       )}
 

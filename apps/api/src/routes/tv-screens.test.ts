@@ -221,6 +221,48 @@ describe("TV screens and playlists", () => {
     for (const r of rows) expect(r.summary).not.toContain(s.code!);
   });
 
+  it("lets admins preview a screen or a playlist without the private link, and refuses everyone else", async () => {
+    const admin = await person("Zz Admin", true);
+    const player = await person("Zz Player");
+    const g = await god();
+    const s = await screen(g, "Zz Bar TV");
+    const unplayed = await playlist(admin, "Zz Unplayed", [{ kind: "music", seconds: 10, enabled: true }, { kind: "drinks", seconds: 20, enabled: false }]);
+    const played = await playlist(admin, "Zz Played", [{ kind: "drinks", seconds: 20, enabled: true }, { kind: "kitchen", seconds: 10, enabled: true }]);
+    expect((await call(admin, "PATCH", `/tv/screens/${s.id}`, { playlistId: played, showQr: false })).status).toBe(204);
+
+    // A screen's preview is its public feed, and carries no link.
+    const preview = await call(admin, "GET", `/tv/screens/${s.id}/preview`);
+    expect(preview.status).toBe(200);
+    expect(preview.json).toEqual((await feed(s.code!)).json);
+    expect(preview.json.screen).toEqual({ name: "Zz Bar TV", showQr: false });
+    expect(preview.body).not.toContain(s.code!);
+    actAs(as(admin)); // the feed call above signed us out
+    expect((await app.inject({ method: "GET", url: `/tv/screens/${s.id}/preview` })).headers["cache-control"]).toBe("no-store");
+
+    // A playlist no screen plays previews with the QR strip on and its enabled slides only.
+    const loose = await call(admin, "GET", `/tv/playlists/${unplayed}/preview`);
+    expect(loose.status).toBe(200);
+    expect(loose.json.screen).toEqual({ name: "Zz Unplayed", showQr: true });
+    expect(loose.json.slides.map((x: { kind: string }) => x.kind)).toEqual(["music"]);
+
+    // A screen with no playlist previews as an empty feed.
+    expect((await call(admin, "PATCH", `/tv/screens/${s.id}`, { playlistId: null })).status).toBe(204);
+    expect((await call(admin, "GET", `/tv/screens/${s.id}/preview`)).json.slides).toEqual([]);
+
+    // Players, signed-out visitors and unknown or malformed ids.
+    for (const [who, code] of [[null, 401], [player, 403]] as const) {
+      expect((await call(who, "GET", `/tv/screens/${s.id}/preview`)).status).toBe(code);
+      expect((await call(who, "GET", `/tv/playlists/${unplayed}/preview`)).status).toBe(code);
+    }
+    expect((await call(admin, "GET", `/tv/screens/${crypto.randomUUID()}/preview`)).status).toBe(404);
+    expect((await call(admin, "GET", "/tv/screens/not-an-id/preview")).status).toBe(404);
+    expect((await call(admin, "GET", `/tv/playlists/${crypto.randomUUID()}/preview`)).status).toBe(404);
+
+    // Reading writes nothing: only the setup records exist.
+    const rows = await db.select().from(adminActivity).where(inArray(adminActivity.actorId, [admin.id]));
+    expect(rows.every((r) => !r.kind.includes("preview"))).toBe(true);
+  });
+
   it("limits screens and refuses a duplicate screen name", async () => {
     const g = await god();
     await screen(g, "Zz Bar TV");

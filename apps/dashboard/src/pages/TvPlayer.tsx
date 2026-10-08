@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
+import { X } from "lucide-react";
 import { menuPageAt, menuPagesOf, nextSlideIndex, slideDurationMs, slideHasContent, type TvFeed, type TvFeedSlide } from "@bbb/shared";
 import { api, ApiError } from "../lib/api";
 import { Qr } from "../components/Qr";
@@ -56,8 +57,9 @@ function SlideView({ slide, elapsedMs }: { slide: TvFeedSlide; elapsedMs: number
 
 /** A TV: opened by its private link with no sign-in, it plays its playlist's slides in turn and
  * refreshes its content every 30 seconds. A thin strip at the bottom invites people to play. */
-export function TvPlayer() {
+function Player({ feedPath }: { feedPath?: string }) {
   const { code } = useParams();
+  const path = feedPath ?? `/public/tv/${encodeURIComponent(code ?? "")}`;
   const [feed, setFeed] = useState<TvFeed | null>(null);
   const [gone, setGone] = useState(false);
 
@@ -65,7 +67,7 @@ export function TvPlayer() {
     let live = true;
     async function load() {
       try {
-        const next = await api<TvFeed>(`/public/tv/${encodeURIComponent(code ?? "")}`);
+        const next = await api<TvFeed>(path);
         if (live) {
           setFeed(next);
           setGone(false);
@@ -81,7 +83,7 @@ export function TvPlayer() {
       live = false;
       window.clearInterval(timer);
     };
-  }, [code]);
+  }, [path]);
 
   const { slide, elapsedMs } = useRotation(gone || !feed ? [] : feed.slides);
 
@@ -119,5 +121,27 @@ export function TvPlayer() {
         </Message>
       )}
     </TvStage>
+  );
+}
+
+/** A TV page. With `onClose` (admin previews only) a Close button floats in the corner, outside the
+ * TV picture, so it never covers a slide and a real TV never shows it. */
+export function TvPlayer({ feedPath, onClose }: { feedPath?: string; onClose?: () => void } = {}) {
+  return (
+    <>
+      <Player feedPath={feedPath} />
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close preview"
+          data-testid="tv-preview-close"
+          className="fixed right-3 top-3 z-50 flex min-h-11 items-center gap-1.5 rounded-full bg-black/70 px-4 text-sm font-semibold text-white backdrop-blur"
+        >
+          <X className="h-4 w-4" aria-hidden="true" />
+          Close
+        </button>
+      )}
+    </>
   );
 }

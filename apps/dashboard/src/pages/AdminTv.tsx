@@ -55,7 +55,12 @@ export function AdminTv() {
               <ul className="overflow-hidden rounded-[14px] border border-brand-border bg-brand-surface">
                 {data.screens.map((s) => (
                   <li key={s.id} data-testid="tv-screen" className="space-y-3 border-b border-brand-border px-4 py-3 last:border-b-0">
-                    <p className="text-brand-text">{s.name}</p>
+                    <p className="flex items-center justify-between gap-3 text-brand-text">
+                      {s.name}
+                      <Link to={`/admin/tv/preview/screens/${s.id}`} aria-label={`Preview ${s.name}`} className="inline-flex min-h-11 items-center rounded-[12px] border border-brand-border px-4 text-sm font-semibold hover:border-brand-accent">
+                        Preview
+                      </Link>
+                    </p>
                     <label className="block text-sm font-semibold text-brand-text">
                       Plays
                       <select
@@ -84,7 +89,7 @@ export function AdminTv() {
                 {problem}
               </p>
             )}
-            <p className="mt-2 text-xs text-brand-muted">A change shows on the TV within about 30 seconds.</p>
+            <p className="mt-2 text-xs text-brand-muted">A change shows on the TV within about 30 seconds. Preview shows the saved playlist.</p>
           </section>
 
           <section>
@@ -92,8 +97,8 @@ export function AdminTv() {
             {data.playlists.length > 0 && (
               <ul className="mb-3 overflow-hidden rounded-[14px] border border-brand-border bg-brand-surface">
                 {data.playlists.map((p) => (
-                  <li key={p.id} data-testid="tv-playlist" className="border-b border-brand-border last:border-b-0">
-                    <Link to={`/admin/tv/playlists/${p.id}`} className="flex min-h-14 items-center gap-3 px-4 py-2 hover:bg-brand-surface-raised">
+                  <li key={p.id} data-testid="tv-playlist" className="flex items-center border-b border-brand-border last:border-b-0">
+                    <Link to={`/admin/tv/playlists/${p.id}`} className="flex min-h-14 min-w-0 flex-1 items-center gap-3 px-4 py-2 hover:bg-brand-surface-raised">
                       <span className="min-w-0 flex-1">
                         <span className="block text-brand-text">{p.name}</span>
                         <span className="block truncate text-sm text-brand-muted">
@@ -102,6 +107,9 @@ export function AdminTv() {
                         </span>
                       </span>
                       <ChevronRight className="h-4 w-4 flex-none text-brand-faint" aria-hidden="true" />
+                    </Link>
+                    <Link to={`/admin/tv/preview/playlists/${p.id}`} aria-label={`Preview ${p.name}`} className="mr-3 inline-flex min-h-11 flex-none items-center rounded-[12px] border border-brand-border px-4 text-sm font-semibold hover:border-brand-accent">
+                      Preview
                     </Link>
                   </li>
                 ))}

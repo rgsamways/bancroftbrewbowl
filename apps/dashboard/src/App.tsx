@@ -18,6 +18,7 @@ import { ActivityPage } from "./pages/ActivityPage";
 import { PoolStandings } from "./pages/PoolStandings";
 import { PoolTv } from "./pages/PoolTv";
 import { TvPlayer } from "./pages/TvPlayer";
+import { TvPreview } from "./pages/TvPreview";
 import { PoolRecap } from "./pages/PoolRecap";
 import { OperatorSchedule } from "./pages/operator/OperatorSchedule";
 import { AdminTv } from "./pages/AdminTv";
@@ -85,6 +86,8 @@ export default function App() {
         <Route path="/pool/:poolId/entry/:entryId/pick" element={<PickScreen />} />
       </Route>
       <Route element={<RequireAdmin />}>
+        <Route path="/admin/tv/preview/screens/:id" element={<TvPreview of="screens" />} />
+        <Route path="/admin/tv/preview/playlists/:id" element={<TvPreview of="playlists" />} />
         <Route element={<AdminLayout />}>
           <Route path="/admin" element={<NextStep />} />
           <Route path="/admin/results" element={<AdminResults />} />

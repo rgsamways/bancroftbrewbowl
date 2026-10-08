@@ -76,6 +76,35 @@ async function loadAdminTv(operator: boolean): Promise<AdminTv> {
   };
 }
 
+/** What a TV shows for a playlist: its enabled slides in order, each with its content. The public TV
+ * feed and the admin previews both use this, so a preview is exactly what a TV will show. */
+async function buildFeed(name: string, showQr: boolean, playlistId: string | null): Promise<TvFeed> {
+  const rows = playlistId
+    ? await db.select().from(tvPlaylistSlides).where(eq(tvPlaylistSlides.playlistId, playlistId)).orderBy(asc(tvPlaylistSlides.position))
+    : [];
+
+  let menu: MenuSection[][] | null = null;
+  let music: PublicMusic | null = null;
+  const slides: TvFeedSlide[] = [];
+  for (const row of rows) {
+    if (!row.enabled) continue;
+    if (row.kind === "standings" && row.poolId) {
+      const pool = await db.query.pools.findFirst({ where: eq(pools.id, row.poolId) });
+      if (pool) slides.push({ id: row.id, kind: "standings", seconds: row.seconds, content: await buildPoolTv(pool) });
+    } else if (row.kind === "drinks" || row.kind === "kitchen") {
+      if (!menu) {
+        const full = await loadMenu();
+        menu = [full.drinks, full.kitchen];
+      }
+      slides.push({ id: row.id, kind: row.kind, seconds: row.seconds, content: row.kind === "drinks" ? menu[0]! : menu[1]! });
+    } else if (row.kind === "music") {
+      music ??= await loadPublicMusic();
+      slides.push({ id: row.id, kind: "music", seconds: row.seconds, content: music });
+    }
+  }
+  return { screen: { name, showQr }, slides };
+}
+
 export async function tvScreenRoutes(fastify: FastifyInstance) {
   // ---- The public feed a TV loads, keyed by its private code ---------------------------------
 
@@ -87,31 +116,33 @@ export async function tvScreenRoutes(fastify: FastifyInstance) {
       reply.status(404).send(NOT_FOUND);
       return;
     }
-    const rows = screen.playlistId
-      ? await db.select().from(tvPlaylistSlides).where(eq(tvPlaylistSlides.playlistId, screen.playlistId)).orderBy(asc(tvPlaylistSlides.position))
-      : [];
+    reply.send(await buildFeed(screen.name, screen.showQr, screen.playlistId));
+  });
 
-    let menu: MenuSection[][] | null = null;
-    let music: PublicMusic | null = null;
-    const slides: TvFeedSlide[] = [];
-    for (const row of rows) {
-      if (!row.enabled) continue;
-      if (row.kind === "standings" && row.poolId) {
-        const pool = await db.query.pools.findFirst({ where: eq(pools.id, row.poolId) });
-        if (pool) slides.push({ id: row.id, kind: "standings", seconds: row.seconds, content: await buildPoolTv(pool) });
-      } else if (row.kind === "drinks" || row.kind === "kitchen") {
-        if (!menu) {
-          const full = await loadMenu();
-          menu = [full.drinks, full.kitchen];
-        }
-        slides.push({ id: row.id, kind: row.kind, seconds: row.seconds, content: row.kind === "drinks" ? menu[0]! : menu[1]! });
-      } else if (row.kind === "music") {
-        music ??= await loadPublicMusic();
-        slides.push({ id: row.id, kind: "music", seconds: row.seconds, content: music });
-      }
+  // ---- Previews for admins: the same feed a TV gets, without the private link -----------------
+
+  fastify.get("/tv/screens/:id/preview", async (request, reply) => {
+    if (!(await requireAdmin(request, reply))) return;
+    reply.header("Cache-Control", "no-store");
+    const { id } = request.params as { id: string };
+    const screen = isId(id) ? await db.query.tvScreens.findFirst({ where: eq(tvScreens.id, id) }) : undefined;
+    if (!screen) {
+      reply.status(404).send(NOT_FOUND);
+      return;
     }
-    const feed: TvFeed = { screen: { name: screen.name, showQr: screen.showQr }, slides };
-    reply.send(feed);
+    reply.send(await buildFeed(screen.name, screen.showQr, screen.playlistId));
+  });
+
+  fastify.get("/tv/playlists/:id/preview", async (request, reply) => {
+    if (!(await requireAdmin(request, reply))) return;
+    reply.header("Cache-Control", "no-store");
+    const { id } = request.params as { id: string };
+    const playlist = isId(id) ? await db.query.tvPlaylists.findFirst({ where: eq(tvPlaylists.id, id) }) : undefined;
+    if (!playlist) {
+      reply.status(404).send(NOT_FOUND);
+      return;
+    }
+    reply.send(await buildFeed(playlist.name, true, playlist.id));
   });
 
   // ---- Playlists and screens, for admins -----------------------------------------------------

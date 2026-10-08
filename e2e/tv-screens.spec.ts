@@ -148,3 +148,74 @@ test("a signed-out visitor with a wrong link sees only that it is not active", a
   await expect(page.getByTestId("tv-strip")).toHaveCount(0);
   await ctx.close();
 });
+
+test("an admin previews a screen and a playlist full-screen with a Close button; a real TV has none; a player cannot", async ({ browser }) => {
+  const db = new TestDb();
+  await db.connect();
+  try {
+    await clean(db);
+    await db.query(`insert into menu_items (kind, section, name, style, abv, sort_order, available) values ('beer', 'On tap', 'E2E Hazy Beer', 'IPA', '6%', 9301, true)`);
+    const soon = new Date(Date.now() + 2 * 86400_000).toISOString().slice(0, 10);
+    await db.query(`insert into music_events (title, event_date, start_time) values ('E2E Band Night', $1, '20:00')`, [soon]);
+    const playlistId = (await db.query(`insert into tv_playlists (name) values ('E2E Preview List') returning id`)).rows[0].id as string;
+    await db.query(`insert into tv_playlist_slides (playlist_id, kind, position, seconds, enabled) values ($1, 'drinks', 0, 20, true), ($1, 'music', 1, 10, true)`, [playlistId]);
+    const code = "e2e-preview-code-0123456789abcdefghijklmnopqrstuvwxyz";
+    const screenId = (await db.query(`insert into tv_screens (name, code, playlist_id) values ('E2E Preview TV', $1, $2) returning id`, [code, playlistId])).rows[0].id as string;
+
+    const larkEmail = db.email("tvpreviewlark");
+    const lark = await signIn(browser, db, larkEmail);
+    await db.setUser(larkEmail, "Lark Admin", true);
+    await lark.setViewportSize(TV);
+    await lark.clock.install({ time: new Date() });
+
+    // From a screen.
+    await lark.goto("/admin/tv");
+    await expect(lark.getByText("Preview shows the saved playlist.")).toBeVisible();
+    await lark.getByRole("link", { name: "Preview E2E Preview TV" }).click();
+    await lark.waitForURL(`**/admin/tv/preview/screens/${screenId}`);
+    await expect(lark.getByTestId("tv-slide")).toContainText("E2E Hazy Beer");
+    await expect(lark.getByTestId("tv-strip")).toContainText("Play on your phone");
+    await expect(lark.getByTestId("tv-preview-close")).toBeVisible();
+    await lark.clock.fastForward(21_000);
+    await expect(lark.getByTestId("tv-music")).toContainText("E2E Band Night");
+    await lark.getByRole("button", { name: "Close preview" }).click();
+    await lark.waitForURL("**/admin/tv");
+
+    // From a playlist in the list, and from its editor.
+    await lark.getByRole("link", { name: "Preview E2E Preview List" }).click();
+    await lark.waitForURL(`**/admin/tv/preview/playlists/${playlistId}`);
+    await expect(lark.getByTestId("tv-slide")).toContainText("E2E Hazy Beer");
+    await lark.getByRole("button", { name: "Close preview" }).click();
+    await lark.waitForURL("**/admin/tv");
+    await lark.goto(`/admin/tv/playlists/${playlistId}`);
+    await expect(lark.getByText("Preview shows the saved playlist. Save your changes first.")).toBeVisible();
+    await lark.getByRole("link", { name: "Preview", exact: true }).click();
+    await lark.waitForURL(`**/admin/tv/preview/playlists/${playlistId}`);
+    await expect(lark.getByTestId("tv-preview-close")).toBeVisible();
+    await lark.getByRole("button", { name: "Close preview" }).click();
+    await lark.waitForURL(`**/admin/tv/playlists/${playlistId}`);
+
+    // A real TV on the private link has no Close button.
+    const ctx = await browser.newContext({ viewport: TV });
+    const tv = await ctx.newPage();
+    await tv.goto(`/tv/${code}`);
+    await expect(tv.getByTestId("tv-slide")).toContainText("E2E Hazy Beer");
+    await expect(tv.getByTestId("tv-preview-close")).toHaveCount(0);
+    await ctx.close();
+
+    // A player gets nothing from a preview address or its API.
+    const playerEmail = db.email("tvpreviewplayer");
+    const player = await signIn(browser, db, playerEmail);
+    await db.setUser(playerEmail, "Pat Plain");
+    expect((await apiCall(player, "GET", `/tv/screens/${screenId}/preview`)).status).toBe(403);
+    await player.goto(`/admin/tv/preview/screens/${screenId}`);
+    await expect(player.getByTestId("tv-slide")).toHaveCount(0);
+    await expect(player.getByTestId("tv-preview-close")).toHaveCount(0);
+
+    await lark.context().close();
+    await player.context().close();
+  } finally {
+    await clean(db);
+    await db.close();
+  }
+});
