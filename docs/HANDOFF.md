@@ -12,7 +12,7 @@ _Rewritten 2026-10-07 (end of the long session that added Notices, TV screens an
 
 - Pool-name chips are gone. With 2+ pools `/play` is a list of pool cards (`PoolList` in `pages/PlayLanding.tsx`: name, type, standing, what needs doing, needs-a-pick first) that open the pool on the last-used screen; one pool still goes straight in. Every pool screen has a pool-name header (`PoolScreenTabs`) that links to `/play` with 2+ pools. Home has `components/PoolSwitcher.tsx` (name + chevron, inline list).
 - `lib/entryNeed.ts` (`entryNeed`, `entryStanding`) is the one place the card and switcher wording lives; `poolScreenPath` is in `lib/lastPool.ts`.
-- Lint, typecheck, 518 unit and 113 browser tests pass. Not checked: four long-named pools on a 390 px screen (only two-pool fixtures exist). Not archived until Robin has looked at it on his phone.
+- Lint, typecheck, 518 unit and 113 browser tests pass. Not checked: four long-named pools on a 390 px screen (only two-pool fixtures exist). Archived 2026-10-08 after Robin checked it on his phone.
 
 ## Start here (2026-10-07, end of session)
 

@@ -16,4 +16,4 @@
 
 ## 4. Finish
 
-- [ ] 4.1 Update `openspec/ROADMAP.md` and `docs/HANDOFF.md`; look at it in a phone-size window with two and four pools, then sync specs and archive. No schema change, so a normal push to `main`.
+- [x] 4.1 Update `openspec/ROADMAP.md` and `docs/HANDOFF.md`; look at it in a phone-size window with two and four pools, then sync specs and archive. No schema change, so a normal push to `main`.
