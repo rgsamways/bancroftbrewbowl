@@ -111,29 +111,34 @@ function GameRow({ game, pickPools, manyPools }: { game: ScoreboardGame; pickPoo
       ].map((side) => {
         const pools = pickPools.get(side.team);
         return (
-          <div key={side.team} className="flex min-h-9 items-center gap-2.5">
-            <span
-              aria-hidden="true"
-              style={teamCircleStyle(side.team)}
-              className="grid h-6 w-6 flex-none place-items-center rounded-full text-[9px] font-bold"
-            >
-              {side.team}
-            </span>
-            <span className={`min-w-0 truncate text-sm ${winner === side.team || !final ? "font-semibold text-brand-text" : "text-brand-muted"}`}>
-              {teamNickname(side.team)}
-            </span>
-            {side.record && <span className="text-xs text-brand-faint">{side.record}</span>}
-            {pools && (
-              <span className="rounded-full bg-brand-accent-soft px-2 py-0.5 text-xs font-semibold text-brand-accent">
-                Your pick{manyPools ? ` · ${pools.join(", ")}` : ""}
+          <div key={side.team}>
+            <div className="flex min-h-9 items-center gap-2.5">
+              <span
+                aria-hidden="true"
+                style={teamCircleStyle(side.team)}
+                className="grid h-6 w-6 flex-none place-items-center rounded-full text-[9px] font-bold"
+              >
+                {side.team}
               </span>
+              <span className={`min-w-0 truncate text-sm ${winner === side.team || !final ? "font-semibold text-brand-text" : "text-brand-muted"}`}>
+                {teamNickname(side.team)}
+              </span>
+              {side.record && <span className="text-xs text-brand-faint">{side.record}</span>}
+              <span
+                data-testid="scoreboard-score"
+                className={`ml-auto text-lg tabular-nums ${winner === side.team || (!final && live) ? "font-semibold text-brand-text" : "text-brand-muted"}`}
+              >
+                {side.score !== null ? side.score : ""}
+              </span>
+            </div>
+            {pools && (
+              // On its own line under the team, so a long list of pool names never squeezes the team name.
+              <p className="mb-1 ml-[34px]">
+                <span className="inline-block rounded-full bg-brand-accent-soft px-2 py-0.5 text-xs font-semibold text-brand-accent">
+                  Your pick{manyPools ? ` · ${pools.join(", ")}` : ""}
+                </span>
+              </p>
             )}
-            <span
-              data-testid="scoreboard-score"
-              className={`ml-auto text-lg tabular-nums ${winner === side.team || (!final && live) ? "font-semibold text-brand-text" : "text-brand-muted"}`}
-            >
-              {side.score !== null ? side.score : ""}
-            </span>
           </div>
         );
       })}
