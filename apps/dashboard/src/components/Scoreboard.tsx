@@ -59,7 +59,6 @@ export function Scoreboard() {
 
   const pickPools = new Map<string, string[]>();
   for (const p of data.yourPicks) for (const team of p.teams) pickPools.set(team, [...(pickPools.get(team) ?? []), p.poolName]);
-  const manyPools = data.yourPicks.length > 1;
   const shown = showAll ? data.games : data.games.slice(0, SHOWN);
 
   return (
@@ -67,7 +66,7 @@ export function Scoreboard() {
       <h2 className="mb-2 text-sm font-semibold text-brand-muted">NFL scoreboard &middot; Week {data.weekNumber}</h2>
       <ul className="space-y-3">
         {shown.map((game) => (
-          <GameRow key={`${game.awayTeam}-${game.homeTeam}`} game={game} pickPools={pickPools} manyPools={manyPools} />
+          <GameRow key={`${game.awayTeam}-${game.homeTeam}`} game={game} pickPools={pickPools} />
         ))}
       </ul>
       {data.games.length > SHOWN && (
@@ -89,7 +88,7 @@ export function Scoreboard() {
   );
 }
 
-function GameRow({ game, pickPools, manyPools }: { game: ScoreboardGame; pickPools: Map<string, string[]>; manyPools: boolean }) {
+function GameRow({ game, pickPools }: { game: ScoreboardGame; pickPools: Map<string, string[]> }) {
   const live = game.state === "live";
   const label = game.state === "upcoming" && !game.statusText ? formatKickoff(game.kickoff) : game.statusText || "Final";
   const final = game.state === "final";
@@ -111,34 +110,33 @@ function GameRow({ game, pickPools, manyPools }: { game: ScoreboardGame; pickPoo
       ].map((side) => {
         const pools = pickPools.get(side.team);
         return (
-          <div key={side.team}>
-            <div className="flex min-h-9 items-center gap-2.5">
-              <span
-                aria-hidden="true"
-                style={teamCircleStyle(side.team)}
-                className="grid h-6 w-6 flex-none place-items-center rounded-full text-[9px] font-bold"
-              >
-                {side.team}
-              </span>
-              <span className={`min-w-0 truncate text-sm ${winner === side.team || !final ? "font-semibold text-brand-text" : "text-brand-muted"}`}>
-                {teamNickname(side.team)}
-              </span>
-              {side.record && <span className="text-xs text-brand-faint">{side.record}</span>}
-              <span
-                data-testid="scoreboard-score"
-                className={`ml-auto text-lg tabular-nums ${winner === side.team || (!final && live) ? "font-semibold text-brand-text" : "text-brand-muted"}`}
-              >
-                {side.score !== null ? side.score : ""}
-              </span>
-            </div>
+          <div
+            key={side.team}
+            className={`flex min-h-9 items-center gap-2.5 ${pools ? "-mx-2 rounded-[10px] bg-brand-accent-soft px-2" : ""}`}
+          >
+            <span
+              aria-hidden="true"
+              style={teamCircleStyle(side.team)}
+              className="grid h-6 w-6 flex-none place-items-center rounded-full text-[9px] font-bold"
+            >
+              {side.team}
+            </span>
+            <span className={`min-w-0 truncate text-sm ${winner === side.team || !final ? "font-semibold text-brand-text" : "text-brand-muted"}`}>
+              {teamNickname(side.team)}
+            </span>
+            {side.record && <span className="flex-none text-xs text-brand-faint">{side.record}</span>}
             {pools && (
-              // On its own line under the team, so a long list of pool names never squeezes the team name.
-              <p className="mb-1 ml-[34px]">
-                <span className="inline-block rounded-full bg-brand-accent-soft px-2 py-0.5 text-xs font-semibold text-brand-accent">
-                  Your pick{manyPools ? ` · ${pools.join(", ")}` : ""}
-                </span>
-              </p>
+              // Short on purpose: pool names are long and live on the pick screens.
+              <span className="flex-none rounded-full border border-brand-accent px-2 py-0.5 text-xs font-semibold text-brand-accent">
+                Your pick{pools.length > 1 ? ` ×${pools.length}` : ""}
+              </span>
             )}
+            <span
+              data-testid="scoreboard-score"
+              className={`ml-auto flex-none text-lg tabular-nums ${winner === side.team || (!final && live) ? "font-semibold text-brand-text" : "text-brand-muted"}`}
+            >
+              {side.score !== null ? side.score : ""}
+            </span>
           </div>
         );
       })}

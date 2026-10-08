@@ -39,6 +39,9 @@ test("Home shows the scoreboard: live first, own pick marked, byes, show all, an
     await db.createGame(SEASON, 1, "DET", "NYJ", 2);
     const entry = await db.createEntry(poolId, userId);
     await db.addPick(entry, 1, "KC");
+    // The same team picked in a second pool: one short chip with a count, never the pool names.
+    const second = await db.createPool("Second Scoreboard Pool With A Very Long Name", SEASON);
+    await db.addPick(await db.createEntry(second, userId), 1, "KC");
     void g;
 
     await setEspn({ mode: "ok", byes: { "1": ["CAR"] }, games: GAMES });
@@ -58,7 +61,11 @@ test("Home shows the scoreboard: live first, own pick marked, byes, show all, an
     await expect(rows.first()).toContainText("3-1");
     // Only my own pick is marked.
     await expect(section.getByText("Your pick")).toHaveCount(1);
-    await expect(rows.first().getByText("Your pick")).toBeVisible();
+    await expect(rows.first().getByText("Your pick ×2")).toBeVisible();
+    await expect(section.getByText("Scoreboard Pool")).toHaveCount(0);
+    // The chip never costs the team its name.
+    const name = rows.first().getByText("Chiefs");
+    expect(await name.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
     await expect(rows.nth(1)).toHaveAttribute("data-state", "upcoming");
 
     await section.getByRole("button", { name: "Show all 8 games" }).click();
