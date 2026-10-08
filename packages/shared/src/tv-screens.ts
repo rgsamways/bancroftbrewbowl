@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { calendarHasEntries, type PublicCalendarDay } from "./calendar.js";
 import type { MenuItem, MenuSection } from "./menu.js";
 import type { PublicMusic } from "./music.js";
 import type { PoolTv } from "./tv-recap.js";
@@ -6,13 +7,14 @@ import type { PoolTv } from "./tv-recap.js";
 // TV screens: a playlist is an ordered list of slides; a screen is one physical TV with its own
 // private link that plays one playlist. Shared between the API and the browser. No Node imports.
 
-export const SLIDE_KINDS = ["standings", "drinks", "kitchen", "music"] as const;
+export const SLIDE_KINDS = ["standings", "drinks", "kitchen", "music", "calendar"] as const;
 export type SlideKind = (typeof SLIDE_KINDS)[number];
 export const SLIDE_KIND_TEXT: Record<SlideKind, string> = {
   standings: "Standings",
   drinks: "Drinks",
   kitchen: "Kitchen",
   music: "Music",
+  calendar: "Calendar",
 };
 
 export const MAX_PLAYLISTS = 20;
@@ -70,13 +72,16 @@ export type AdminTv = { playlists: AdminPlaylist[]; screens: AdminScreen[]; pool
 export type TvFeedSlide =
   | { id: string; kind: "standings"; seconds: number; content: PoolTv }
   | { id: string; kind: "drinks" | "kitchen"; seconds: number; content: MenuSection[] }
-  | { id: string; kind: "music"; seconds: number; content: PublicMusic };
+  | { id: string; kind: "music"; seconds: number; content: PublicMusic }
+  /** The next 7 days from today, in the brewery's time. */
+  | { id: string; kind: "calendar"; seconds: number; content: PublicCalendarDay[] };
 export type TvFeed = { screen: { name: string; showQr: boolean }; slides: TvFeedSlide[] };
 
 /** Whether a slide has anything to show; an empty one is skipped. */
 export function slideHasContent(slide: TvFeedSlide): boolean {
   if (slide.kind === "standings") return true;
   if (slide.kind === "music") return slide.content.thisWeekend.length + slide.content.comingUp.length > 0;
+  if (slide.kind === "calendar") return calendarHasEntries(slide.content);
   return slide.content.some((s) => s.items.some((i) => i.available));
 }
 

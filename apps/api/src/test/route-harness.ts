@@ -11,6 +11,7 @@ import { nflRoutes } from "../routes/nfl.js";
 import { breweryRoutes } from "../routes/brewery.js";
 import { noticeRoutes } from "../routes/notices.js";
 import { tvScreenRoutes } from "../routes/tv-screens.js";
+import { calendarRoutes } from "../routes/calendar.js";
 import { wipeoutRoutes } from "../routes/wipeouts.js";
 import { standingsRoutes } from "../routes/standings.js";
 import { tvRoutes } from "../routes/tv.js";
@@ -56,6 +57,7 @@ export async function buildTestApp(): Promise<FastifyInstance> {
   await app.register(breweryRoutes);
   await app.register(noticeRoutes);
   await app.register(tvScreenRoutes);
+  await app.register(calendarRoutes);
   await app.ready();
   return app;
 }

@@ -43,7 +43,8 @@ describe("playlist and screen schemas", () => {
     expect(bad({ kind: "drinks", poolId: POOL, seconds: 15, enabled: true })).toBe(false); // pool on a menu slide
     expect(bad({ kind: "drinks", seconds: 4, enabled: true })).toBe(false);
     expect(bad({ kind: "drinks", seconds: 121, enabled: true })).toBe(false);
-    expect(bad({ kind: "calendar", seconds: 15, enabled: true })).toBe(false); // not a kind yet
+    expect(bad({ kind: "calendar", seconds: 15, enabled: true })).toBe(true);
+    expect(bad({ kind: "weather", seconds: 15, enabled: true })).toBe(false); // not a kind
     expect(bad({ kind: "drinks", seconds: 15, enabled: true, extra: 1 })).toBe(false);
     expect(playlistInputSchema.safeParse({ name: "", slides: [] }).success).toBe(false);
     expect(playlistInputSchema.safeParse({ name: "x", slides: Array(13).fill({ kind: "music", seconds: 15, enabled: true }) }).success).toBe(false);
@@ -100,7 +101,13 @@ describe("rotation", () => {
   const drinks: TvFeedSlide = { id: "drinks", kind: "drinks", seconds: 20, content: [section("On tap", 2)] };
 
   it("knows which slides have something to show", () => {
-    expect([empty, music, standings, drinks, { ...drinks, content: [section("On tap", 2, 2)] }].map(slideHasContent)).toEqual([false, true, true, true, false]);
+    const week = (n: number): TvFeedSlide => ({
+      id: "cal",
+      kind: "calendar",
+      seconds: 15,
+      content: [{ date: "2026-10-07", entries: Array.from({ length: n }, (_, i) => ({ key: `k${i}`, title: "Trivia", startTime: null, endTime: null, type: "event" as const, note: null, link: null })) }],
+    });
+    expect([empty, music, standings, drinks, { ...drinks, content: [section("On tap", 2, 2)] }, week(0), week(2)].map(slideHasContent)).toEqual([false, true, true, true, false, false, true]);
   });
 
   it("moves to the next slide, wraps round, and skips empty ones", () => {

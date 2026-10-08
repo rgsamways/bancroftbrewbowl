@@ -10,6 +10,7 @@ const TOOLS: Item[] = [
   { to: "/admin/pools", title: "All pools", detail: "Players, picks and settings" },
   { to: "/admin/activity", title: "Activity", detail: "Who changed what" },
   { to: "/admin/notices", title: "Notices", detail: "An important message at the top of every page" },
+  { to: "/admin/calendar", title: "Calendar", detail: "Bands, specials, events and closures" },
   { to: "/admin/tv", title: "TV screens", detail: "What each TV in the brewery shows" },
   { to: "/admin/brewery", title: "From the brewery", detail: "Features, specials, music, announcements" },
   { to: "/admin/results", title: "Season schedule", detail: "Check the schedule is loaded" },

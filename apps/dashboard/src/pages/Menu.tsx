@@ -11,6 +11,7 @@ import {
   type PublicMusic,
 } from "@bbb/shared";
 import { useApi } from "../lib/useApi";
+import { CalendarWeek } from "../components/CalendarWeek";
 
 // The menu: what is pouring and what the kitchen has. Anyone can read it (the table QR code
 // opens /menu with no sign-in); signed in, it sits inside the app with the Menu tab. Prices show
@@ -92,6 +93,9 @@ function SubTabs() {
       <NavLink to="/menu/music" className={cls}>
         Music
       </NavLink>
+      <NavLink to="/menu/calendar" className={cls}>
+        Calendar
+      </NavLink>
     </nav>
   );
 }
@@ -120,12 +124,13 @@ function MenuBody({ kitchen }: { kitchen: boolean }) {
   );
 }
 
-export type MenuTab = "drinks" | "kitchen" | "music";
+export type MenuTab = "drinks" | "kitchen" | "music" | "calendar";
 
 const SUBTITLE: Record<MenuTab, string> = {
   drinks: "What's pouring at the brewery.",
   kitchen: "Straight out of the smokehouse.",
   music: "Live music at the brewery.",
+  calendar: "What's on at the brewery.",
 };
 
 function EventRow({ event }: { event: MusicEvent }) {
@@ -181,7 +186,7 @@ function MenuContent({ tab }: { tab: MenuTab }) {
       <div className="mt-4">
         <SubTabs />
       </div>
-      {tab === "music" ? <MusicBody /> : <MenuBody kitchen={tab === "kitchen"} />}
+      {tab === "calendar" ? <CalendarWeek /> : tab === "music" ? <MusicBody /> : <MenuBody kitchen={tab === "kitchen"} />}
     </>
   );
 }

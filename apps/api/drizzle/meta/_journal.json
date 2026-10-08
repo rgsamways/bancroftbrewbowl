@@ -85,6 +85,13 @@
       "when": 1791415132258,
       "tag": "0011_wild_amphibian",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791418722775,
+      "tag": "0012_tired_enchantress",
+      "breakpoints": true
     }
   ]
 }

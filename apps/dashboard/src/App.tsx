@@ -21,6 +21,8 @@ import { TvPlayer } from "./pages/TvPlayer";
 import { TvPreview } from "./pages/TvPreview";
 import { PoolRecap } from "./pages/PoolRecap";
 import { OperatorSchedule } from "./pages/operator/OperatorSchedule";
+import { AdminCalendar } from "./pages/AdminCalendar";
+import { AdminCalendarEntry } from "./pages/AdminCalendarEntry";
 import { AdminTv } from "./pages/AdminTv";
 import { AdminTvPlaylist } from "./pages/AdminTvPlaylist";
 import { OperatorTv } from "./pages/operator/OperatorTv";
@@ -61,6 +63,7 @@ export default function App() {
         <Route path="/menu" element={<PublicMenuPage />} />
         <Route path="/menu/kitchen" element={<PublicMenuPage tab="kitchen" />} />
         <Route path="/menu/music" element={<PublicMenuPage tab="music" />} />
+        <Route path="/menu/calendar" element={<PublicMenuPage tab="calendar" />} />
         <Route path="*" element={<Login />} />
       </Routes>
     );
@@ -81,6 +84,7 @@ export default function App() {
         <Route path="/menu" element={<MenuPage />} />
         <Route path="/menu/kitchen" element={<MenuPage tab="kitchen" />} />
         <Route path="/menu/music" element={<MenuPage tab="music" />} />
+        <Route path="/menu/calendar" element={<MenuPage tab="calendar" />} />
         <Route path="/pool/:poolId" element={<PoolStandings />} />
         <Route path="/pool/:poolId/recap" element={<PoolRecap />} />
         <Route path="/pool/:poolId/entry/:entryId/pick" element={<PickScreen />} />
@@ -95,6 +99,8 @@ export default function App() {
           <Route path="/admin/activity" element={<ActivityPage />} />
           <Route path="/admin/brewery" element={<AdminBrewery />} />
           <Route path="/admin/notices" element={<AdminNotices />} />
+          <Route path="/admin/calendar" element={<AdminCalendar />} />
+          <Route path="/admin/calendar/:id" element={<AdminCalendarEntry />} />
           <Route path="/admin/tv" element={<AdminTv />} />
           <Route path="/admin/tv/playlists/:id" element={<AdminTvPlaylist />} />
           <Route path="/admin/guide" element={<AdminGuide />} />

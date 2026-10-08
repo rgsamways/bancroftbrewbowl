@@ -5,6 +5,7 @@ import {
   MAX_PLAYLISTS,
   MAX_SCREENS,
   SLIDE_KIND_TEXT,
+  easternToday,
   createScreenSchema,
   playlistInputSchema,
   updateScreenSchema,
@@ -26,6 +27,7 @@ import { parseBody } from "../lib/validate.js";
 import { buildPoolTv } from "../lib/pool-tv.js";
 import { loadMenu } from "./menu.js";
 import { loadPublicMusic } from "./music.js";
+import { loadPublicCalendar } from "../lib/calendar.js";
 
 // TV screens. A playlist is an ordered list of slides; a screen is one physical TV with its own
 // private link (a long random code) that plays one playlist. Any admin edits playlists and chooses
@@ -100,6 +102,9 @@ async function buildFeed(name: string, showQr: boolean, playlistId: string | nul
     } else if (row.kind === "music") {
       music ??= await loadPublicMusic();
       slides.push({ id: row.id, kind: "music", seconds: row.seconds, content: music });
+    } else if (row.kind === "calendar") {
+      const today = easternToday(new Date());
+      slides.push({ id: row.id, kind: "calendar", seconds: row.seconds, content: (await loadPublicCalendar(today, today)).days });
     }
   }
   return { screen: { name, showQr }, slides };

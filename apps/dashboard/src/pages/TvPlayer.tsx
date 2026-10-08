@@ -7,6 +7,7 @@ import { Qr } from "../components/Qr";
 import { TvStage } from "../components/TvLayout";
 import { MenuSlide } from "../components/tv/MenuSlide";
 import { MusicSlide } from "../components/tv/MusicSlide";
+import { CalendarSlide } from "../components/tv/CalendarSlide";
 import { PoolTvSections } from "./PoolTv";
 
 const REFRESH_MS = 30_000;
@@ -50,6 +51,7 @@ function SlideView({ slide, elapsedMs }: { slide: TvFeedSlide; elapsedMs: number
     );
   }
   if (slide.kind === "music") return <MusicSlide music={slide.content} />;
+  if (slide.kind === "calendar") return <CalendarSlide days={slide.content} />;
   const pages = menuPagesOf(slide);
   const index = menuPageAt(slide, elapsedMs);
   return <MenuSlide title={slide.kind === "drinks" ? "Drinks" : "Kitchen"} page={pages[index]!} pageIndex={index} pageCount={pages.length} />;

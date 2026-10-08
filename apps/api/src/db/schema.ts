@@ -440,6 +440,56 @@ export const tvScreens = pgTable(
   (table) => [uniqueIndex("tv_screens_name_lower_idx").on(sql`lower(${table.name})`)]
 );
 
+// The brewery calendar: dated entries with simple repeats, and one-day changes to a repeating
+// entry. Days are computed when asked for (packages/shared/src/calendar.ts); nothing is stored per
+// day. `type`, `repeat` and `link_kind` are plain text checked in app code.
+export const calendarEntries = pgTable(
+  "calendar_entries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    title: text("title").notNull(),
+    entryDate: date("entry_date", { mode: "string" }).notNull(),
+    startTime: time("start_time"),
+    endTime: time("end_time"),
+    type: text("type").notNull(),
+    note: text("note"),
+    linkKind: text("link_kind"),
+    linkTarget: text("link_target"),
+    linkLabel: text("link_label"),
+    repeat: text("repeat").notNull().default("none"),
+    repeatUntil: date("repeat_until", { mode: "string" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [index("calendar_entries_date_idx").on(table.entryDate)]
+);
+
+/** One day of a repeating entry that was cancelled, or replaced: then these fields are that day's
+ * whole details. */
+export const calendarExceptions = pgTable(
+  "calendar_exceptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    entryId: uuid("entry_id")
+      .notNull()
+      .references(() => calendarEntries.id, { onDelete: "cascade" }),
+    exceptionDate: date("exception_date", { mode: "string" }).notNull(),
+    cancelled: boolean("cancelled").notNull().default(false),
+    title: text("title"),
+    startTime: time("start_time"),
+    endTime: time("end_time"),
+    type: text("type"),
+    note: text("note"),
+    linkKind: text("link_kind"),
+    linkTarget: text("link_target"),
+    linkLabel: text("link_label"),
+  },
+  (table) => [unique("calendar_exceptions_entry_date_unique").on(table.entryId, table.exceptionDate)]
+);
+
 export const poolsRelations = relations(pools, ({ many }) => ({
   entries: many(entries),
 }));
